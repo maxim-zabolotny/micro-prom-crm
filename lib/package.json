@@ -30,7 +30,9 @@
     "ts:build": "NODE_ENV=production tsc -p tsconfig.production.json",
     "ts:build:dev": "NODE_ENV=development tsc -p tsconfig.production.json",
     "init": "npm install && npm run ts:patch",
-    "pkg:precommit": "npm audit && npm run lint:errors && npm run test"
+    "pkg:precommit": "npm audit && npm run lint:errors && npm run test",
+    "link": "echo 'cd ./dist/{libraryName} && npm link'",
+    "link:microtron": "cd ./dist/microtron && npm link && echo '\n=== link name: microtron ==='"
   },
   "dependencies": {
     "axios": "^0.27.2",
