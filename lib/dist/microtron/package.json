@@ -1,7 +1,7 @@
 {
   "name": "microtron",
   "version": "1.0.0",
-  "main": "microtron.node.js",
+  "main": "./microtron.node.js",
   "description": "",
   "keywords": [],
   "author": "Denys Zolotarenko",
@@ -14,7 +14,7 @@
     "moment": "^2.29.3",
     "url-join": "^4.0.0"
   },
-  "browser": "microtron.web.js",
+  "browser": "./microtron.web.js",
   "files": [
     "*"
   ],
