@@ -22,7 +22,6 @@
   },
   "ignorePatterns": ["dist/**"],
   "rules": {
-    "tsdoc/syntax": "warn",
     "indent": ["error", 2, { "SwitchCase": 1 }],
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
@@ -45,6 +44,7 @@
       "parser": "@typescript-eslint/parser",
       "rules": {
         "import/extensions": 0,
+        "import/prefer-default-export": 0,
         "@typescript-eslint/no-shadow": ["error"],
         "@typescript-eslint/ban-types": [
           "error",
