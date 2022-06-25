@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    // "sourceRoot": "/",
+  },
+  "exclude": [
+    "test",
+    "node_modules"
+  ]
+}
