@@ -1,0 +1,25 @@
+{
+  "name": "microtron",
+  "version": "1.0.0",
+  "main": "microtron.node.js",
+  "description": "",
+  "keywords": [],
+  "author": "Denys Zolotarenko",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "axios": "^0.27.2",
+    "http-errors": "^2.0.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.3",
+    "url-join": "^4.0.0"
+  },
+  "browser": "microtron.web.js",
+  "files": [
+    "*"
+  ],
+  "types": "./index.d.ts",
+  "typescript": {
+    "definition": "./index.d.ts"
+  }
+}
