@@ -1,14 +1,14 @@
-import { Course } from './core/course'
-import { Category } from './core/category'
-import { Product } from './core/product'
-import { Request } from './core/request'
+/*lib*/
+import { Course } from './core/course';
+import { Category } from './core/category';
+import { Product } from './core/product';
+import { Request } from './core/request';
+/*other*/
 
-class MicrotronAPI {
+export default class MicrotronAPI {
+  public static Course = Course;
+  public static Category = Category;
+  public static Product = Product;
 
-    public static Course = Course;
-    public static Category = Category;
-    public static Product = Product;
-
-    public static Request = Request;
-
+  public static Request = Request;
 }

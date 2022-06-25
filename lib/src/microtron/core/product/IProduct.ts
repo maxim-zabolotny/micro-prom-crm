@@ -1,19 +1,19 @@
-import { Currency } from '../types';
+import { Currency } from '../types/api';
 
 export interface IProductRaw {
     id: number;
     categoryId: string;
 
     name: string;
-    vendorCode: string;    // Артикль
+    vendorCode: string; // Артикль
 
     currency: string;
     price: number;
     quantity?: number;
 
-    price_s?: number;      // Цена неоф.
-    quantity_s?: number;   // Остаток неоф.
-    RRP: string;           // РРЦ (грн)
+    price_s?: number; // Цена неоф.
+    quantity_s?: number; // Остаток неоф.
+    RRP: string; // РРЦ (грн)
 
     brand: string;
     warranty: number;
@@ -24,7 +24,7 @@ export interface IProductRaw {
 export interface IProductFullRaw extends IProductRaw {
     url: string;
     images: string[];
-    description: string;  // с тегами HTML
+    description: string; // с тегами HTML
 }
 
 export interface IProduct extends Omit<IProductRaw, 'categoryId' | 'currency'> {
@@ -32,4 +32,8 @@ export interface IProduct extends Omit<IProductRaw, 'categoryId' | 'currency'> {
     currency: Currency;
 }
 
-export interface IProductFull extends IProduct, IProductFullRaw {}
+export interface IProductFull extends IProduct {
+    url: string;
+    images: string[];
+    description: string; // с тегами HTML
+}

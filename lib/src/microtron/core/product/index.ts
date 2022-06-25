@@ -1,60 +1,64 @@
 /*external modules*/
-import _ from 'lodash'
+import _ from 'lodash';
 /*lib*/
-import { Request } from '../request/'
+import { Request } from '../request';
 /*types*/
-import { Currency, Lang } from "../types";
+import { Currency, Lang } from '../types/api';
+import {
+  IProduct, IProductFull, IProductRaw, IProductFullRaw,
+} from './IProduct';
+import { IProductRequestOptions } from './IOptions';
 import { IResponse, IResponseRaw } from '../request/IResponse';
-import { IProduct, IProductFull, IProductRaw, IProductFullRaw } from './IProduct'
-import { IProductRequestOptions } from "./IOptions";
+/*other*/
 
 export type TEntity = IProduct | IProductFull;
 export type TRawEntity = IProductRaw | IProductFullRaw;
 
+export type TGetProductsOptions = Omit<IProductRequestOptions, 'full'>;
+
 export class Product extends Request {
+  private parseResult(data: IResponseRaw<TRawEntity[]>): IResponse<TEntity[]> {
+    const { data: responseData, ...responseFields } = super.parse<TRawEntity[]>(data);
 
-    private parse(data: IResponseRaw<TRawEntity[]>): IResponse<TEntity[]> {
-        const { data: responseData, ...responseFields } = super.parse<TRawEntity[]>(data);
+    return {
+      ...responseFields,
+      data: _.map(
+        responseData,
+        (productData) => ({
+          ...productData,
+          categoryId: Number(productData.categoryId),
+          currency: productData.currency as Currency,
+        }),
+      ) as TEntity[],
+    };
+  }
 
-        return {
-            ...responseFields,
-            data: _.map(
-                responseData,
-                data => ({
-                    ...data,
-                    categoryId: Number(data.categoryId),
-                    currency: data.currency as Currency
-                })
-            ) as TEntity[]
-        }
+  public async getProducts(options?: TGetProductsOptions, full?: false): Promise<IProduct[]>;
+  public async getProducts(options?: TGetProductsOptions, full?: true): Promise<IProductFull[]>;
+
+  public async getProducts(options: TGetProductsOptions = {}, full = false): Promise<TEntity[]> {
+    const {
+      lang = Lang.UA,
+      categoryIds = [],
+      local = false,
+    } = options;
+
+    try {
+      const response = await this.makeRequest<TRawEntity[]>(Product.PATH, {
+        lang,
+        categoryIds,
+        local,
+        full,
+      });
+      return this.parseResult(response.data).data;
+    } catch (error) {
+      if (process.env.IS_DEBUG) {
+        console.log('Product:error => ', error);
+      }
+
+      throw error;
     }
+  }
 
-    public async getProducts(options?: Omit<IProductRequestOptions, 'full'>, full?: false): Promise<IProduct[]>;
-    public async getProducts(options?: Omit<IProductRequestOptions, 'full'>, full?: true): Promise<IProductFull[]>;
-
-    public async getProducts(options?: Omit<IProductRequestOptions, 'full'>, full = false): Promise<TEntity[]> {
-        const {
-            lang = Lang.UA,
-            categoryIds = [],
-            local = false,
-        } = options;
-
-        try {
-            const response = await this.makeRequest<TRawEntity[]>(Product.PATH, {
-                lang,
-                categoryIds,
-                local,
-                full,
-            })
-            return this.parse(response.data).data;
-        } catch (error) {
-            if(process.env.IS_DEBUG) {
-                console.log('Product:error => ', error)
-            }
-
-            throw error;
-        }
-    }
-
-    private static PATH = 'products'
+  private static PATH = 'products';
 }
