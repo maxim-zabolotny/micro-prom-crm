@@ -1,0 +1,68 @@
+version: "3"
+services:
+
+  crm_web:
+    container_name: crm_web
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      - crm_api
+    links:
+      - crm_api:crm_api
+    volumes:
+      - ./client:/home/app/crm_web
+      - /client/node_modules
+    tty: true
+    restart: "always"
+    entrypoint: /bin/bash
+    command: -s
+
+  crm_api:
+    container_name: crm_api
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      NODE_ENV: development
+    depends_on:
+      - database
+    links:
+      - database:database
+    volumes:
+      - ./server:/home/app/crm_server
+      - ./server/lib:/home/app/crm_server/lib
+      - /server/node_modules
+    tty: true
+    restart: "always"
+    entrypoint: /bin/bash
+    command: -s
+
+  database:
+    image: mongo:5.0
+    container_name: crm_database
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: main-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongodb:/data/db
+
+#  redis:
+#    image: redis:5.0.3-alpine
+#    container_name: crm_redis
+#    ports:
+#      - "6379:6379"
+#    tty: true
+#    restart: "always"
+
