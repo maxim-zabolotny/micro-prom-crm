@@ -3,6 +3,9 @@
 /node_modules
 /lib
 
+# Env
+.env
+
 # Logs
 logs
 *.log
