@@ -33,16 +33,7 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
   }
 
   public async getCategories(lang: Lang = Lang.UA): Promise<TEntity[]> {
-    try {
-      const response = await this.makeRequest(Category.PATH, { lang });
-      return this.parseResult(response.data).data;
-    } catch (error) {
-      if (process.env.IS_DEBUG) {
-        console.log('Category:error => ', error);
-      }
-
-      throw error;
-    }
+    return Request.requestWrapper(Category, this, { lang })
   }
 
   public async getProducts<TProduct extends TProductEntity>(category: Pick<TEntity, 'id'>, options: Omit<IProductRequestOptions, 'categoryIds'> = {}): Promise<TProduct[]> {
@@ -62,5 +53,5 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
     return makeTree<TEntity, ICategoriesTree[]>(categories, 'parentId', 0);
   }
 
-  private static PATH = 'categories';
+  static readonly PATH = 'categories';
 }

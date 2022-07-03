@@ -23,17 +23,8 @@ export class Course extends Request<TEntity, TRawEntity> {
   }
 
   public async getCourse(): Promise<TEntity> {
-    try {
-      const response = await this.makeRequest(Course.PATH);
-      return this.parseResult(response.data).data;
-    } catch (error) {
-      if (process.env.IS_DEBUG) {
-        console.log('Course:error => ', error);
-      }
-
-      throw error;
-    }
+    return Request.requestWrapper(Course, this, {})
   }
 
-  private static PATH = 'courses';
+  static readonly PATH = 'courses';
 }

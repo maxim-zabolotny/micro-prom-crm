@@ -8,7 +8,7 @@ import {
   IProduct, IProductFull, IProductRaw, IProductFullRaw,
 } from './IProduct';
 import { IProductRequestOptions } from './IOptions';
-import { IResponse, IResponseRaw } from '../request/IResponse';
+import { IResponseRaw } from '../request/IResponse';
 /*other*/
 
 export type TEntity = IProduct | IProductFull;
@@ -43,22 +43,13 @@ export class Product extends Request<TEntity[], TRawEntity[]> {
       local = false,
     } = options;
 
-    try {
-      const response = await this.makeRequest(Product.PATH, {
-        lang,
-        categoryIds,
-        local,
-        full,
-      });
-      return this.parseResult(response.data).data;
-    } catch (error) {
-      if (process.env.IS_DEBUG) {
-        console.log('Product:error => ', error);
-      }
-
-      throw error;
-    }
+    return Request.requestWrapper(Product, this, {
+      lang,
+      categoryIds,
+      local,
+      full,
+    })
   }
 
-  private static PATH = 'products';
+  static readonly PATH = 'products';
 }
