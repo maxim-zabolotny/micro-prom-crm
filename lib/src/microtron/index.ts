@@ -6,7 +6,7 @@ import { Request } from './core/request';
 /*types*/
 import * as Types from './core/types/api';
 /*utils*/
-import * as Utils from './core/utils'
+import * as Utils from './core/utils';
 /*other*/
 
 export default class MicrotronAPI {

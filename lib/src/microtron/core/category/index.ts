@@ -6,7 +6,7 @@ import { Product, TEntity as TProductEntity } from '../product';
 /*types*/
 import { Lang } from '../types/api';
 import { ICategory, ICategoryRaw, ICategoriesTree } from './ICategorie';
-import {IResponseRaw} from '../request/IResponse';
+import { IResponseRaw } from '../request/IResponse';
 import { IProductRequestOptions } from '../product/IOptions';
 /*utils*/
 import { makeTree } from '../utils';
@@ -33,7 +33,7 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
   }
 
   public async getCategories(lang: Lang = Lang.UA): Promise<TEntity[]> {
-    return Request.requestWrapper(Category, this, { lang })
+    return Request.requestWrapper(Category, this, { lang });
   }
 
   public async getProducts<TProduct extends TProductEntity>(category: Pick<TEntity, 'id'>, options: Omit<IProductRequestOptions, 'categoryIds'> = {}): Promise<TProduct[]> {

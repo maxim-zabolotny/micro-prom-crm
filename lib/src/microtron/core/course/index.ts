@@ -23,7 +23,7 @@ export class Course extends Request<TEntity, TRawEntity> {
   }
 
   public async getCourse(): Promise<TEntity> {
-    return Request.requestWrapper(Course, this, {})
+    return Request.requestWrapper(Course, this, {});
   }
 
   static readonly PATH = 'courses';

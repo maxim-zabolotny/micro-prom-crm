@@ -48,7 +48,7 @@ export class Product extends Request<TEntity[], TRawEntity[]> {
       categoryIds,
       local,
       full,
-    })
+    });
   }
 
   static readonly PATH = 'products';

@@ -4,10 +4,12 @@ import moment from 'moment';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import urlJoin from 'url-join';
 /*lib*/
-import {MicroError} from "../error";
+import { MicroError } from '../error';
 /*types*/
 import { TObject } from '../types';
-import { IResponse, IResponseRaw, IResponseErrorRaw, IResponseError } from './IResponse';
+import {
+  IResponse, IResponseRaw, IResponseErrorRaw, IResponseError,
+} from './IResponse';
 /*other*/
 
 type TUnknownRec = TObject.TUnknownRec;
@@ -72,7 +74,7 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
       timestamp: date,
       status: data.status,
       errors: data.errors,
-    }
+    };
   }
 
   protected async makeRequest(
@@ -93,11 +95,11 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
   public static METHOD = 'POST';
 
   public static isErrorCase(response: object): response is IResponseErrorRaw {
-    return 'errors' in response
+    return 'errors' in response;
   }
 
   public static isBasicCase<TEntity>(response: object): response is IResponseRaw<TEntity> {
-    return 'data' in response
+    return 'data' in response;
   }
 
   protected static async requestWrapper<
@@ -112,16 +114,16 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
     try {
       const response = await instance.makeRequest(entity.PATH, data);
 
-      if(Request.isErrorCase(response.data)) {
+      if (Request.isErrorCase(response.data)) {
         const errorData = instance.parseError(response.data);
         throw new MicroError(errorData, response.config, entity.PATH);
       }
 
-      if(Request.isBasicCase<TRawInstance>(response.data)) {
+      if (Request.isBasicCase<TRawInstance>(response.data)) {
         return instance.parseResult(response.data).data;
       }
 
-      throw new Error(`Unknown response case!`)
+      throw new Error('Unknown response case!');
     } catch (error) {
       if (process.env.IS_DEBUG) {
         console.log(`${entity.name}:error => `, error);
