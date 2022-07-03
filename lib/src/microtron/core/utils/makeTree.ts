@@ -4,10 +4,11 @@ import _ from 'lodash';
 
 export function makeTree<
   TEntity extends object,
-  TTree extends Array<TEntity & { children: TEntity[] }>,
+  TKey extends keyof TEntity,
+  TTree extends Array<Omit<TEntity, TKey> & { children: TEntity[] }>,
 >(
   nodes: TEntity[],
-  key: keyof TEntity,
+  key: TKey,
   id: number,
 ): TTree {
   return _.chain(nodes)
@@ -16,7 +17,7 @@ export function makeTree<
       (tree, node) => [
         ...tree,
         {
-          ...node,
+          ..._.omit(node, key),
           children: makeTree(nodes, key, _.get(node, 'id')),
         },
       ],

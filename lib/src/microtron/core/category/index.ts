@@ -50,7 +50,7 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
   }
 
   public static buildCategoriesTree(categories: TEntity[]) {
-    return makeTree<TEntity, ICategoriesTree[]>(categories, 'parentId', 0);
+    return makeTree<TEntity, 'parentId', ICategoriesTree[]>(categories, 'parentId', 0);
   }
 
   static readonly PATH = 'categories';

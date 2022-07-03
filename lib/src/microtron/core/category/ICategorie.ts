@@ -12,6 +12,6 @@ export interface ICategory {
     name: string;
 }
 
-export interface ICategoriesTree extends ICategory {
+export interface ICategoriesTree extends Omit<ICategory, 'parentId'> {
     children: ICategory[];
 }
