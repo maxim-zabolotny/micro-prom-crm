@@ -18,7 +18,7 @@ export type TGetProductsOptions = Omit<IProductRequestOptions, 'full'>;
 
 export class Product extends Request {
   private parseResult(data: IResponseRaw<TRawEntity[]>): IResponse<TEntity[]> {
-    const { data: responseData, ...responseFields } = super.parse<TRawEntity[]>(data);
+    const { data: responseData, ...responseFields } = super.parseData<TRawEntity[]>(data);
 
     return {
       ...responseFields,

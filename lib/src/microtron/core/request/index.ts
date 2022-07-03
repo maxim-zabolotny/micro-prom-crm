@@ -6,7 +6,7 @@ import urlJoin from 'url-join';
 /*lib*/
 /*types*/
 import { TObject } from '../types';
-import { IResponse, IResponseRaw } from './IResponse';
+import { IResponse, IResponseRaw, IResponseErrorRaw, IResponseError } from './IResponse';
 /*other*/
 
 type TUnknownRec = TObject.TUnknownRec;
@@ -54,7 +54,7 @@ export class Request {
     return this;
   }
 
-  protected parse<TEntity>(
+  protected parseData<TEntity>(
     data: IResponseRaw<unknown>,
   ): IResponse<TEntity> {
     const date = moment(data.timestamp, 'DD.MM.YYYY HH:mm:ss').toDate();
