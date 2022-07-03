@@ -9,3 +9,15 @@ export interface IResponse<IEntity> {
     status: boolean;
     data: IEntity;
 }
+
+export interface IResponseErrorRaw {
+    timestamp: string;
+    status: false;
+    errors: string;
+}
+
+export interface IResponseError {
+    timestamp: Date;
+    status: false;
+    errors: string;
+}

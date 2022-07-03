@@ -65,6 +65,15 @@ export class Request {
     };
   }
 
+  protected parseError(data: IResponseErrorRaw): IResponseError {
+    const date = moment(data.timestamp, 'DD.MM.YYYY HH:mm:ss').toDate();
+    return {
+      timestamp: date,
+      status: data.status,
+      errors: data.errors,
+    }
+  }
+
   protected async makeRequest<TEntity>(
     resource: string,
     data: TUnknownRec = {},
@@ -81,4 +90,12 @@ export class Request {
 
   public static HOST = 'https://api.microtron.ua';
   public static METHOD = 'POST';
+
+  public static isErrorCase(response: object): boolean {
+    return 'errors' in response
+  }
+
+  public static isBasicCase(response: object): boolean {
+    return 'data' in response
+  }
 }
