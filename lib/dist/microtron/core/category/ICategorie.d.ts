@@ -8,6 +8,6 @@ export interface ICategory {
     parentId: number;
     name: string;
 }
-export interface ICategoriesTree extends ICategory {
+export interface ICategoriesTree extends Omit<ICategory, 'parentId'> {
     children: ICategory[];
 }

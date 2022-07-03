@@ -1,3 +1,3 @@
-export declare function makeTree<TEntity extends object, TTree extends Array<TEntity & {
+export declare function makeTree<TEntity extends object, TKey extends keyof TEntity, TTree extends Array<Omit<TEntity, TKey> & {
     children: TEntity[];
-}>>(nodes: TEntity[], key: keyof TEntity, id: number): TTree;
+}>>(nodes: TEntity[], key: TKey, id: number): TTree;
