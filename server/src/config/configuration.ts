@@ -15,9 +15,12 @@ export default () => {
   mongo.url = `mongodb://${mongo.username}:${mongo.password}@${mongo.host}:${mongo.port}/${mongo.name}`;
 
   const secrets = {
-    jwtSecret: process.env.JWT_SECRET,
-    microtronToken: process.env.MICROTRON_TOKEN,
-    promToken: process.env.PROM_TOKEN,
+    jwt: process.env.JWT_SECRET,
+  }
+
+  const tokens = {
+    microtron: process.env.MICROTRON_TOKEN,
+    prom: process.env.PROM_TOKEN,
   }
 
   const PORT = parseInt(process.env.PORT, 10);
@@ -31,5 +34,6 @@ export default () => {
     redis,
     mongo,
     secrets,
+    tokens,
   }
 };
