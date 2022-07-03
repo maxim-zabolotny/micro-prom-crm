@@ -1,9 +1,17 @@
 import { Request } from '../request';
 import { ICourse, ICourseRaw } from './ICourse';
+import { IResponseRaw } from '../request/IResponse';
 export declare type TEntity = ICourse;
 export declare type TRawEntity = ICourseRaw;
-export declare class Course extends Request {
-    private parseResult;
+export declare class Course extends Request<TEntity, TRawEntity> {
+    protected parseResult(data: IResponseRaw<TRawEntity>): {
+        data: {
+            bank: number;
+            street: number;
+        };
+        timestamp: Date;
+        status: boolean;
+    };
     getCourse(): Promise<TEntity>;
-    private static PATH;
+    static readonly PATH = "courses";
 }
