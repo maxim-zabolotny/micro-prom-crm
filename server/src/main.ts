@@ -1,14 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-
-// import microtron from '../../lib/dist/microtron/microtron.node.js';
-// console.log('microtron => ', microtron)
-
-import microtron from '@lib/microtron';
-console.log('microtron => ', microtron)
+import {ConfigService} from "@nestjs/config";
 
 async function bootstrap() {
+  // INIT
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT);
+
+  // GET SERVICES
+  const configService = app.get(ConfigService);
+
+  console.log('configs => ', configService)
+
+  // START
+  await app.listen(configService.get('port'));
 }
+
 bootstrap();
