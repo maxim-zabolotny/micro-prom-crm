@@ -4,6 +4,7 @@ import moment from 'moment';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import urlJoin from 'url-join';
 /*lib*/
+import {MicroError} from "../error";
 /*types*/
 import { TObject } from '../types';
 import { IResponse, IResponseRaw, IResponseErrorRaw, IResponseError } from './IResponse';
@@ -97,5 +98,36 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
 
   public static isBasicCase<TEntity>(response: object): response is IResponseRaw<TEntity> {
     return 'data' in response
+  }
+
+  protected static async requestWrapper<
+    TInstance,
+    TRawInstance,
+    TEntity extends { name: string, readonly PATH: string },
+  >(
+    entity: TEntity,
+    instance: Request<TInstance, TRawInstance>,
+    data: TUnknownRec = {},
+  ): Promise<TInstance> {
+    try {
+      const response = await instance.makeRequest(entity.PATH, data);
+
+      if(Request.isErrorCase(response.data)) {
+        const errorData = instance.parseError(response.data);
+        throw new MicroError(errorData, response.config, entity.PATH);
+      }
+
+      if(Request.isBasicCase<TRawInstance>(response.data)) {
+        return instance.parseResult(response.data).data;
+      }
+
+      throw new Error(`Unknown response case!`)
+    } catch (error) {
+      if (process.env.IS_DEBUG) {
+        console.log(`${entity.name}:error => `, error);
+      }
+
+      throw error;
+    }
   }
 }
