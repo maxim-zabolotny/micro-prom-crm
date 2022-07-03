@@ -6,7 +6,7 @@ import { Product, TEntity as TProductEntity } from '../product';
 /*types*/
 import { Lang } from '../types/api';
 import { ICategory, ICategoryRaw, ICategoriesTree } from './ICategorie';
-import { IResponse, IResponseRaw } from '../request/IResponse';
+import {IResponseRaw} from '../request/IResponse';
 import { IProductRequestOptions } from '../product/IOptions';
 /*utils*/
 import { makeTree } from '../utils';
@@ -15,9 +15,9 @@ import { makeTree } from '../utils';
 export type TEntity = ICategory;
 export type TRawEntity = ICategoryRaw;
 
-export class Category extends Request {
-  private parseResult(data: IResponseRaw<TRawEntity[]>): IResponse<TEntity[]> {
-    const { data: responseData, ...responseFields } = super.parseData<TRawEntity[]>(data);
+export class Category extends Request<TEntity[], TRawEntity[]> {
+  protected parseResult(data: IResponseRaw<TRawEntity[]>) {
+    const { data: responseData, ...responseFields } = super.parseData(data);
 
     return {
       ...responseFields,
@@ -34,7 +34,7 @@ export class Category extends Request {
 
   public async getCategories(lang: Lang = Lang.UA): Promise<TEntity[]> {
     try {
-      const response = await this.makeRequest<TRawEntity[]>(Category.PATH, { lang });
+      const response = await this.makeRequest(Category.PATH, { lang });
       return this.parseResult(response.data).data;
     } catch (error) {
       if (process.env.IS_DEBUG) {

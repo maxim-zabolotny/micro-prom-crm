@@ -11,7 +11,7 @@ import { IResponse, IResponseRaw, IResponseErrorRaw, IResponseError } from './IR
 
 type TUnknownRec = TObject.TUnknownRec;
 
-export class Request {
+export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
   protected config: AxiosRequestConfig;
   protected token: string;
   protected force: boolean;
@@ -54,14 +54,14 @@ export class Request {
     return this;
   }
 
-  protected parseData<TEntity>(
-    data: IResponseRaw<unknown>,
-  ): IResponse<TEntity> {
+  protected abstract parseResult(data: IResponseRaw<TRawInstance>): IResponse<TInstance>;
+
+  protected parseData(data: IResponseRaw<TRawInstance>): IResponse<TRawInstance> {
     const date = moment(data.timestamp, 'DD.MM.YYYY HH:mm:ss').toDate();
     return {
       timestamp: date,
       status: data.status,
-      data: data.data as TEntity,
+      data: data.data,
     };
   }
 
@@ -74,10 +74,10 @@ export class Request {
     }
   }
 
-  protected async makeRequest<TEntity>(
+  protected async makeRequest(
     resource: string,
     data: TUnknownRec = {},
-  ): Promise<AxiosResponse<IResponseRaw<TEntity>>> {
+  ): Promise<AxiosResponse<IResponseRaw<TRawInstance> | IResponseError>> {
     const path = urlJoin(Request.HOST, resource);
     const body = _.merge({}, data, { token: this.token });
 
@@ -91,11 +91,11 @@ export class Request {
   public static HOST = 'https://api.microtron.ua';
   public static METHOD = 'POST';
 
-  public static isErrorCase(response: object): boolean {
+  public static isErrorCase(response: object): response is IResponseErrorRaw {
     return 'errors' in response
   }
 
-  public static isBasicCase(response: object): boolean {
+  public static isBasicCase<TEntity>(response: object): response is IResponseRaw<TEntity> {
     return 'data' in response
   }
 }

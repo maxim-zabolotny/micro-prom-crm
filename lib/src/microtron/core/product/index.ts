@@ -16,9 +16,9 @@ export type TRawEntity = IProductRaw | IProductFullRaw;
 
 export type TGetProductsOptions = Omit<IProductRequestOptions, 'full'>;
 
-export class Product extends Request {
-  private parseResult(data: IResponseRaw<TRawEntity[]>): IResponse<TEntity[]> {
-    const { data: responseData, ...responseFields } = super.parseData<TRawEntity[]>(data);
+export class Product extends Request<TEntity[], TRawEntity[]> {
+  protected parseResult(data: IResponseRaw<TRawEntity[]>) {
+    const { data: responseData, ...responseFields } = super.parseData(data);
 
     return {
       ...responseFields,
@@ -44,7 +44,7 @@ export class Product extends Request {
     } = options;
 
     try {
-      const response = await this.makeRequest<TRawEntity[]>(Product.PATH, {
+      const response = await this.makeRequest(Product.PATH, {
         lang,
         categoryIds,
         local,
