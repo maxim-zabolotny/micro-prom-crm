@@ -12,7 +12,7 @@ export default () => {
     name: process.env.MONGO_DATABASE_NAME,
     url: '' // mongodb://username:password@host:port/database
   }
-  mongo.url = `mongodb://${mongo.username}:${mongo.password}@${mongo.host}:${mongo.port}/${mongo.name}`;
+  mongo.url = `mongodb://${mongo.username}:${mongo.password}@${mongo.host}:${mongo.port}`;
 
   const secrets = {
     jwt: process.env.JWT_SECRET,
