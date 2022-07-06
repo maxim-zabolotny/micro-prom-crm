@@ -1,6 +1,15 @@
-import {Body, Controller, DefaultValuePipe, Get, HttpCode, ParseBoolPipe, Post, Query} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  HttpCode,
+  ParseBoolPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { MicrotronService } from './microtron.service';
-import {SaveCategoriesDto} from "./dto/save-categories.dto";
+import { SaveCategoriesDto } from './dto/save-categories.dto';
 
 @Controller('microtron')
 export class MicrotronController {
@@ -8,25 +17,24 @@ export class MicrotronController {
 
   @Get('categories')
   @HttpCode(200)
-  async getCategories(@Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean) {
-    return this.microtronService.getCategories(force);
-  }
-
-  @Get('categories-tree')
-  @HttpCode(200)
-  getCategoriesTree(@Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean) {
-    return this.microtronService.getCategoriesTree(force);
+  async getCategories(
+    @Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean,
+    @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
+  ) {
+    return this.microtronService.getCategoriesByAPI(force, tree);
   }
 
   @Get('saved-categories')
   @HttpCode(200)
-  getSavedCategories(): string {
-    return `GET /saved-categories`;
+  getSavedCategories(
+    @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
+  ) {
+    return this.microtronService.getSavedCategories(tree);
   }
 
   @Post('save-categories')
   @HttpCode(201)
-  saveCategories(@Body() categories: SaveCategoriesDto): string {
-    return `POST /save-categories`;
+  saveCategories(@Body() categoriesData: SaveCategoriesDto) {
+    return this.microtronService.saveCategories(categoriesData);
   }
 }
