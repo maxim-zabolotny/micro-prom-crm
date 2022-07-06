@@ -85,6 +85,7 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
     const body = _.merge({}, data, { token: this.token });
 
     return axios({
+      ...this.config,
       method: Request.METHOD,
       url: path,
       data: body,
