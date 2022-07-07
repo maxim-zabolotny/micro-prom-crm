@@ -6,6 +6,8 @@ import {
   Constant,
   ConstantSchema,
 } from '../../database/schemas/constant.schema';
+import { CategoriesController } from './categories/categories.controller';
+import { CategoriesService } from './categories/categories.service';
 
 @Module({
   imports: [
@@ -16,7 +18,7 @@ import {
       },
     ]),
   ],
-  controllers: [MicrotronController],
-  providers: [MicrotronService],
+  controllers: [MicrotronController, CategoriesController],
+  providers: [MicrotronService, CategoriesService],
 })
 export class MicrotronModule {}
