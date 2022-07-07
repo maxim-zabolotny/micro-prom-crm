@@ -23,6 +23,9 @@
       ],
       "@schemas/*": [
         "src/database/schemas/*"
+      ],
+      "@common/*": [
+        "src/common/*"
       ]
     }
   }

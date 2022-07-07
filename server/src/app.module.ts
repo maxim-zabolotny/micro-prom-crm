@@ -1,11 +1,16 @@
-import {MiddlewareConsumer, Module, NestModule, RequestMethod} from '@nestjs/common';
-import {MongooseModule} from '@nestjs/mongoose';
-import {ConfigModule, ConfigService} from '@nestjs/config';
-import {AppController} from './app.controller';
-import {AppService} from './app.service';
-import {MicrotronModule} from './modules/microtron/microtron.module';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { MicrotronModule } from './modules/microtron/microtron.module';
 import configuration from './config/configuration';
-import {LoggerMiddleware} from './common/middlewares';
+import { LoggerMiddleware } from '@common/middlewares';
 
 @Module({
   imports: [
