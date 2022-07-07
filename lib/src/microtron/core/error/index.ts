@@ -8,7 +8,9 @@ import { IResponseError } from '../request/IResponse';
 
 export type TMicroErrorResponse = Pick<AxiosResponse, 'status' | 'statusText' | 'headers' | 'config'>
 
-export class MicroError extends Error {
+export class MicroError {
+  public readonly name: string;
+
   public readonly timestamp: Date;
   public readonly errors: string;
   public readonly path: string;
@@ -16,7 +18,7 @@ export class MicroError extends Error {
   public readonly response: TMicroErrorResponse;
 
   constructor(data: IResponseError, path: string, response: TMicroErrorResponse) {
-    super(data.errors);
+    this.name = MicroError.name;
 
     this.timestamp = data.timestamp;
     this.errors = data.errors;
