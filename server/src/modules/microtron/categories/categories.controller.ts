@@ -7,11 +7,14 @@ import {
   ParseBoolPipe,
   Post,
   Query,
+  UseFilters,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
+import { MicrotronExceptionFilter } from '@common/filters';
 
 @Controller('/microtron/categories')
+@UseFilters(MicrotronExceptionFilter)
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
