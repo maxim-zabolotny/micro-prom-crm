@@ -7,6 +7,8 @@ import { Request } from './core/request';
 import * as Types from './core/types/api';
 /*utils*/
 import * as Utils from './core/utils';
+/*errors*/
+import { MicroError } from './core/error';
 /*other*/
 
 export default class MicrotronAPI {
@@ -18,4 +20,6 @@ export default class MicrotronAPI {
 
   public static Utils = Utils;
   public static Types = Types;
+
+  public static MicroError = MicroError;
 }
