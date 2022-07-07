@@ -21,6 +21,9 @@
       "@lib/*": [
         "./lib/*"
       ],
+      "@schemas/*": [
+        "src/database/schemas/*"
+      ]
     }
   }
 }

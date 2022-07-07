@@ -7,10 +7,7 @@ import {
   ICategory,
   ICategoriesTree,
 } from '@lib/microtron/core/category/ICategorie';
-import {
-  Constant,
-  ConstantDocument,
-} from '../../../database/schemas/constant.schema';
+import { Constant, ConstantDocument } from '@schemas/constant';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
@@ -76,9 +73,7 @@ export class CategoriesService {
     return [];
   }
 
-  public async save(
-    categoriesData: SaveCategoriesDto,
-  ): Promise<boolean> {
+  public async save(categoriesData: SaveCategoriesDto): Promise<boolean> {
     const categories: ICategory[] = (categoriesData.isTree
       ? MicrotronAPI.Utils.fromTree(
           categoriesData.categories as ICategoriesTree[],
