@@ -117,7 +117,7 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
 
       if (Request.isErrorCase(response.data)) {
         const errorData = instance.parseError(response.data);
-        throw new MicroError(errorData, response.config, entity.PATH);
+        throw new MicroError(errorData, entity.PATH, response);
       }
 
       if (Request.isBasicCase<TRawInstance>(response.data)) {
