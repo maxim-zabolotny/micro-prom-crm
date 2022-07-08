@@ -1,0 +1,27 @@
+{
+  "name": "apertium",
+  "version": "1.0.0",
+  "main": "./apertium.node.js",
+  "description": "",
+  "keywords": [],
+  "author": "Denys Zolotarenko",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.12",
+    "form-data": "^4.0.0",
+    "http-errors": "^2.0.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.3",
+    "url-join": "^4.0.0"
+  },
+  "browser": "./apertium.web.js",
+  "files": [
+    "*"
+  ],
+  "types": "./index.d.ts",
+  "typescript": {
+    "definition": "./index.d.ts"
+  }
+}
