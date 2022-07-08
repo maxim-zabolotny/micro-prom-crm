@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   ParseBoolPipe,
-  Post,
+  Put,
   Query,
   UseFilters,
 } from '@nestjs/common';
@@ -35,7 +35,7 @@ export class CategoriesController {
     return this.categoriesService.getSaved(tree);
   }
 
-  @Post('/save')
+  @Put('/save')
   @HttpCode(201)
   save(@Body() categoriesData: SaveCategoriesDto) {
     return this.categoriesService.save(categoriesData);

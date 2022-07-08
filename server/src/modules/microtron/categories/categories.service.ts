@@ -73,7 +73,9 @@ export class CategoriesService {
     return [];
   }
 
-  public async save(categoriesData: SaveCategoriesDto): Promise<boolean> {
+  public async save(
+    categoriesData: SaveCategoriesDto,
+  ): Promise<{ success: boolean }> {
     const categories: ICategory[] = (categoriesData.isTree
       ? MicrotronAPI.Utils.fromTree(
           categoriesData.categories as ICategoriesTree[],
@@ -87,7 +89,9 @@ export class CategoriesService {
       savedCategories.value = JSON.stringify(categories);
       await savedCategories.save();
 
-      return true;
+      return {
+        success: true,
+      };
     }
 
     const categoriesConstant = new this.constantModel({
@@ -96,6 +100,8 @@ export class CategoriesService {
     });
     await categoriesConstant.save();
 
-    return true;
+    return {
+      success: true,
+    };
   }
 }
