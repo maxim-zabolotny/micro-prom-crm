@@ -5,9 +5,16 @@ export interface ICategoryRaw {
     name: string;
 }
 
+// export interface ICategory {
+//     id: number;
+//     parentId: number;
+//
+//     name: string;
+// }
+
 export interface ICategory {
-    id: number;
-    parentId: number;
+    id: string;
+    parentId: string;
 
     name: string;
 }

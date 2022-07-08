@@ -28,7 +28,8 @@ export interface IProductFullRaw extends IProductRaw {
 }
 
 export interface IProduct extends Omit<IProductRaw, 'categoryId' | 'currency'> {
-    categoryId: number;
+    // categoryId: number;
+    categoryId: string;
     currency: Currency;
 }
 

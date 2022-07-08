@@ -21,14 +21,15 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
 
     return {
       ...responseFields,
-      data: _.map(
-        responseData,
-        (categoryData) => ({
-          ...categoryData,
-          id: Number(categoryData.id),
-          parentId: Number(categoryData.parentId),
-        }),
-      ) as TEntity[],
+      data: responseData,
+      // data: _.map(
+      //   responseData,
+      //   (categoryData) => ({
+      //     ...categoryData,
+      //     id: Number(categoryData.id),
+      //     parentId: Number(categoryData.parentId),
+      //   }),
+      // ) as TEntity[],
     };
   }
 

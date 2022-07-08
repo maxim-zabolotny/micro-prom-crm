@@ -26,7 +26,7 @@ export class Product extends Request<TEntity[], TRawEntity[]> {
         responseData,
         (productData) => ({
           ...productData,
-          categoryId: Number(productData.categoryId),
+          // categoryId: Number(productData.categoryId),
           currency: productData.currency as Currency,
         }),
       ) as TEntity[],
