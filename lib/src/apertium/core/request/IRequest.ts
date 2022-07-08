@@ -3,7 +3,7 @@ export interface IDetectLanguageRequest {
 }
 
 export interface ITranslateRequest extends IDetectLanguageRequest {
-  langpair: string; // rus|urk
+  langpair: string; // example: rus|urk
   markUnknown: 'yes' | 'no';
   prefs: string;
 }

@@ -45,7 +45,7 @@ export class Request {
     };
   }
 
-  protected buildTranslateLanguageBody(text: string, from: string, to: string): ITranslateRequest {
+  protected buildTranslateLanguageBody(text: string, from: Lang, to: Lang): ITranslateRequest {
     return {
       q: text,
       langpair: `${from}|${to}`,
@@ -66,7 +66,7 @@ export class Request {
     return lang as Lang;
   }
 
-  public async translate(text: string, from: string, to: string) {
+  public async translate(text: string, from: Lang, to: Lang) {
     const { data } = await this.makeRequest<ITranslateResponse>(
       Endpoints.TRANSLATE,
       this.buildTranslateLanguageBody(text, from, to),
