@@ -23,7 +23,8 @@ export function fromTree(tree, idKey, parentIdKey, transformer = (v) => v) {
             return transformer(childNode);
           }),
           idKey,
-          parentIdKey
+          parentIdKey,
+          transformer
         )
       );
     }

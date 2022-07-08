@@ -10,7 +10,7 @@ export function makeTree(nodes, key, id, transformer = (v) => v) {
         ...tree,
         {
           ...transformer(_.omit(node, key)),
-          children: makeTree(nodes, key, _.get(node, 'id'))
+          children: makeTree(nodes, key, _.get(node, 'id'), transformer)
         }
       ],
       []
