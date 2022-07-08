@@ -8,7 +8,6 @@ import * as Types from './core/types/api';
 
 export default class GoogleTranslateAPI {
   public static Request = Request;
-  public static Endpoints = Endpoints;
 
   public static Types = Types;
 }
