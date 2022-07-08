@@ -8,7 +8,7 @@ export declare type TEntity = ICategory;
 export declare type TRawEntity = ICategoryRaw;
 export declare class Category extends Request<TEntity[], TRawEntity[]> {
     protected parseResult(data: IResponseRaw<TRawEntity[]>): {
-        data: ICategory[];
+        data: ICategoryRaw[];
         timestamp: Date;
         status: boolean;
     };

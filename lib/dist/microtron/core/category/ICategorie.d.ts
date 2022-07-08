@@ -4,8 +4,8 @@ export interface ICategoryRaw {
     name: string;
 }
 export interface ICategory {
-    id: number;
-    parentId: number;
+    id: string;
+    parentId: string;
     name: string;
 }
 export interface ICategoriesTree extends Omit<ICategory, 'parentId'> {
