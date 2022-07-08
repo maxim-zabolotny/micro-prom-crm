@@ -10,9 +10,9 @@ export declare class Request {
     });
     protected makeRequest<TResult>(resource: Endpoints, body: TRequestData): Promise<AxiosResponse<TResult>>;
     protected buildDetectLanguageBody(text: string): IDetectLanguageRequest;
-    protected buildTranslateLanguageBody(text: string, from: string, to: string): ITranslateRequest;
+    protected buildTranslateLanguageBody(text: string, from: Lang, to: Lang): ITranslateRequest;
     detectLanguage(text: string): Promise<Lang>;
-    translate(text: string, from: string, to: string): Promise<string>;
+    translate(text: string, from: Lang, to: Lang): Promise<string>;
     static isBrowser(): boolean;
     static HOST: string;
     static METHOD: string;
