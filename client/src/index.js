@@ -1,7 +1,11 @@
+/*external modules*/
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+/*app*/
 import App from './App';
+/*styles*/
+import './index.css';
+/*other*/
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
