@@ -8,9 +8,9 @@ export class LoggerMiddleware implements NestMiddleware {
   private readonly logger = new Logger(this.constructor.name);
 
   use(req: Request, res: Response, next: NextFunction) {
-    const { baseUrl, method } = req;
+    const { method, url } = req;
 
-    this.logger.debug(`REQUEST: ${method} ${baseUrl}`);
+    this.logger.debug(`REQUEST: ${method} ${url}`);
 
     next();
   }
