@@ -22,6 +22,7 @@ export default () => {
     microtron: process.env.MICROTRON_TOKEN,
     prom: process.env.PROM_TOKEN,
     telegram: process.env.TELEGRAM_TOKEN,
+    ngrok: process.env.NGROK_TOKEN,
   };
 
   const PORT = parseInt(process.env.PORT, 10);
