@@ -7,7 +7,11 @@ import {
   ICategory,
   ICategoriesTree,
 } from '@lib/microtron/core/category/ICategorie';
-import { Constant, ConstantDocument } from '@schemas/constant';
+import {
+  Constant,
+  ConstantDocument,
+  ConstantEntities,
+} from '@schemas/constant';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
@@ -37,7 +41,7 @@ export class CategoriesService {
 
   private async retrieveFromDB(): Promise<ConstantDocument | null> {
     const categories = await this.constantModel
-      .findOne({ name: Constant.ENTITIES.CATEGORIES })
+      .findOne({ name: ConstantEntities.CATEGORIES })
       .exec();
 
     if (!_.isNull(categories)) {
@@ -95,7 +99,7 @@ export class CategoriesService {
     }
 
     const categoriesConstant = new this.constantModel({
-      name: Constant.ENTITIES.CATEGORIES,
+      name: ConstantEntities.CATEGORIES,
       value: JSON.stringify(categories),
     });
     await categoriesConstant.save();
