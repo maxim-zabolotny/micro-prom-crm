@@ -15,7 +15,7 @@ export class ConstantSeed {
     @InjectModel(Constant.name) private constantModel: Model<ConstantDocument>,
   ) {}
 
-  @Command({ command: 'create:constants', describe: 'create a constants' })
+  @Command({ command: 'create:constants', describe: 'create constants' })
   async create() {
     const selectedCategories = await Data.SelectedCategories.read();
 
@@ -25,6 +25,6 @@ export class ConstantSeed {
     });
     await categoriesConstant.save();
 
-    console.log('SAVED: categoriesConstant => ', categoriesConstant.toObject());
+    console.log('SAVED: constant => ', categoriesConstant.toObject());
   }
 }

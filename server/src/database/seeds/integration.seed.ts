@@ -15,7 +15,7 @@ export class IntegrationSeed {
     private integrationModel: Model<IntegrationDocument>,
   ) {}
 
-  @Command({ command: 'create:integration', describe: 'create a integration' })
+  @Command({ command: 'create:integrations', describe: 'create integrations' })
   async create() {
     const integration = new this.integrationModel({
       with: IntegrationWith.Microtron,

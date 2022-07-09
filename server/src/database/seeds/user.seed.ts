@@ -14,7 +14,7 @@ export class UserSeed {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  @Command({ command: 'create:user', describe: 'create a user' })
+  @Command({ command: 'create:users', describe: 'create users' })
   async create() {
     const users = await Data.Users.read();
 
