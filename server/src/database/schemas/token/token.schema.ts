@@ -15,6 +15,9 @@ export class Token {
 
   @Prop({ type: String, isRequired: true })
   data: string;
+
+  @Prop({ type: Date, isRequired: true })
+  expireIn: Date;
 }
 
 export const TokenSchema = SchemaFactory.createForClass(Token);
