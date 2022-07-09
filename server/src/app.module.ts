@@ -1,18 +1,14 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import {MiddlewareConsumer, Module, NestModule, RequestMethod,} from '@nestjs/common';
 import * as cors from 'cors';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { MicrotronModule } from './modules/microtron/microtron.module';
+import {MongooseModule} from '@nestjs/mongoose';
+import {ConfigModule, ConfigService} from '@nestjs/config';
+import {AppController} from './app.controller';
+import {AppService} from './app.service';
+import {MicrotronModule} from './modules/microtron/microtron.module';
 import configuration from './config/configuration';
-import { LoggerMiddleware } from '@common/middlewares';
-import { TelegramModule } from './modules/telegram/telegram.module';
+import {LoggerMiddleware} from '@common/middlewares';
+import {TelegramModule} from './modules/telegram/telegram.module';
+import {SeedsModule} from './modules/seeds/seeds.module';
 
 @Module({
   imports: [
@@ -36,6 +32,7 @@ import { TelegramModule } from './modules/telegram/telegram.module';
     }),
     MicrotronModule,
     TelegramModule,
+    SeedsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -44,6 +41,6 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(cors(), LoggerMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
+      .forRoutes({path: '*', method: RequestMethod.ALL});
   }
 }
