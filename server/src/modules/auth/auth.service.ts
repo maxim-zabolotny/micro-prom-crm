@@ -1,11 +1,11 @@
 /*external modules*/
-import _ from 'lodash';
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Token, TokenDocument, TokenLevel } from '@schemas/token';
+import { IVerifyTokenResult } from '@common/interfaces/token';
 /*services*/
 /*@common*/
 /*@entities*/
@@ -15,40 +15,52 @@ import {
 export class AuthService {
   private readonly logger = new Logger(this.constructor.name);
 
-  // constructor(
-  //   @InjectRepository(UserEntity)
-  //   private usersRepository: Repository<UserEntity>,
-  // ) {
-  // }
-  //
-  // private generateAuthToken(user: Pick<UserModel, 'id' | 'email'>) {
-  //   // property name of sub need for hold our userId value to be consistent with JWT standards.
-  //   const payload = { email: user.email, sub: user.id };
-  //
-  //   return {
-  //     accessToken: this.jwtService.sign(payload),
-  //   };
-  // }
-  //
-  // public async checkAuthToken(user: UserEntity, code: number) {
-  //   const client = await this.redisService.getConnection();
-  //
-  //   const verifyCode = await client.get(user.email);
-  //   if (!verifyCode)
-  //     throw new NotFoundException(
-  //       'Verify code not found. Please resend verify code.',
-  //     );
-  //
-  //   if (parseInt(verifyCode, 10) !== code) {
-  //     throw new BadRequestException('Invalid verification code');
-  //   }
-  //
-  //   user.verified = true;
-  //   await user.save();
-  //
-  //   this.logger.debug('User verified email', _.pick(user, ['id', 'email']));
-  //
-  //   return user;
-  // }
+  constructor(
+    private configService: ConfigService,
+    @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
+  ) {}
 
+  private generateAuthTokenData(key: string) {
+    return crypto
+      .createHmac('sha256', this.configService.get('token.secret'))
+      .update(key)
+      .digest('hex');
+  }
+
+  private async generateAuthToken(level: TokenLevel): Promise<TokenDocument> {
+    const key = crypto.randomBytes(32).toString('hex');
+    const data = this.generateAuthTokenData(key);
+
+    const expireMinutes = this.configService.get<number>('token.expireMinutes');
+    const expireTime = 1000 * 60 * expireMinutes;
+    const expireIn = new Date().valueOf() + expireTime;
+
+    const token = new this.tokenModel({
+      level,
+      key,
+      data,
+      expireIn,
+    });
+    await token.save();
+
+    return token.toObject();
+  }
+
+  private async verifyAuthToken(
+    tokenId: Types.ObjectId,
+  ): Promise<IVerifyTokenResult> {
+    const token = await this.tokenModel.findById(tokenId).exec();
+    if (!token) {
+      throw new NotFoundException({ tokenId }, 'Token not found!');
+    }
+
+    const isExpired = token.expireIn >= new Date().valueOf();
+    const isCorrect = token.data === this.generateAuthTokenData(token.key);
+
+    return {
+      isExpired,
+      isCorrect,
+      isValid: isExpired && isCorrect,
+    };
+  }
 }
