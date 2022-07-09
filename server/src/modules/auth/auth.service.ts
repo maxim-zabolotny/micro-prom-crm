@@ -9,6 +9,7 @@ import { IVerifyTokenResult } from '@common/interfaces/token';
 /*services*/
 /*@common*/
 /*@entities*/
+
 /*@interfaces*/
 
 @Injectable()
@@ -20,14 +21,14 @@ export class AuthService {
     @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
   ) {}
 
-  private generateAuthTokenData(key: string) {
+  public generateAuthTokenData(key: string) {
     return crypto
       .createHmac('sha256', this.configService.get('token.secret'))
       .update(key)
       .digest('hex');
   }
 
-  private async generateAuthToken(level: TokenLevel): Promise<TokenDocument> {
+  public async generateAuthToken(level: TokenLevel): Promise<TokenDocument> {
     const key = crypto.randomBytes(32).toString('hex');
     const data = this.generateAuthTokenData(key);
 
@@ -46,7 +47,7 @@ export class AuthService {
     return token.toObject();
   }
 
-  private async verifyAuthToken(
+  public async verifyAuthToken(
     tokenId: Types.ObjectId,
   ): Promise<IVerifyTokenResult> {
     const token = await this.tokenModel.findById(tokenId).exec();
