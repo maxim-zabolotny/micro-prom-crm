@@ -8,6 +8,7 @@ export type TokenDocument = Token & Document;
 export class Token {
   @Prop({
     type: String,
+    unique: true,
     isRequired: true,
     enum: [...Object.values(TokenLevel)],
   })
