@@ -10,7 +10,7 @@ import { CrmModule } from './crm/crm.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: function (configService: ConfigService) {
-        this.botName = configService.get('telegram.botName')
+        this.botName = configService.get('telegram.botName');
 
         return {
           token: configService.get('telegram.token'),

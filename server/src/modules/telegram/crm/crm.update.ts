@@ -24,19 +24,18 @@ export class CrmUpdate {
     private readonly bot: Telegraf<Context>,
     private readonly crmService: CrmService,
   ) {
-    console.log('---------------------------------- START')
     // bot.start((ctx) => ctx.reply('Бот запущен.'));
   }
 
   @Start()
   async onStart(): Promise<string> {
-    const me = await this.bot.telegram.getMe();
-    return `Hey, I'm ${me.first_name}`;
+    // const me = await this.bot.telegram.getMe();
+    return `Бот запущен`;
   }
 
   @Help()
   async onHelp(): Promise<string> {
-    return 'Send me any text';
+    return 'Пусто';
   }
 
   // @Command('admin')
@@ -45,23 +44,23 @@ export class CrmUpdate {
   //   return 'Welcome judge';
   // }
 
-  @On('text')
-  onMessage(
-    @Message(/*'text', new ReverseTextPipe()*/) reversedText: string,
-  ): string {
-    return this.crmService.echo(reversedText);
-  }
+  // @On('text')
+  // onMessage(
+  //   @Message(/*'text', new ReverseTextPipe()*/) reversedText: string,
+  // ): string {
+  //   return this.crmService.echo(reversedText);
+  // }
 
-  @Hears(['hi', 'hello', 'hey', 'qq'])
-  onGreetings(
-    @UpdateType() updateType: TelegrafUpdateType,
-    @Sender('first_name') firstName: string,
-  ): string {
-    return `Hey ${firstName}`;
-  }
+  // @Hears(['hi', 'hello', 'hey', 'qq'])
+  // onGreetings(
+  //   @UpdateType() updateType: TelegrafUpdateType,
+  //   @Sender('first_name') firstName: string,
+  // ): string {
+  //   return `Hey ${firstName}`;
+  // }
 
-  @Command('scene')
-  async onSceneCommand(@Ctx() ctx: Scenes.SceneContext): Promise<void> {
-    await ctx.scene.enter('HELLO_SCENE_ID');
-  }
+  // @Command('scene')
+  // async onSceneCommand(@Ctx() ctx: Scenes.SceneContext): Promise<void> {
+  //   await ctx.scene.enter('HELLO_SCENE_ID');
+  // }
 }
