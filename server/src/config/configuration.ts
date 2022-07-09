@@ -14,6 +14,12 @@ export default () => {
   };
   mongo.url = `mongodb://${mongo.username}:${mongo.password}@${mongo.host}:${mongo.port}`;
 
+  const telegram = {
+    webhook: process.env.TELEGRAM_WEBHOOK,
+    token: process.env.TELEGRAM_TOKEN,
+    botName: process.env.TELEGRAM_BOT_NAME,
+  };
+
   const secrets = {
     jwt: process.env.JWT_SECRET,
   };
@@ -21,7 +27,6 @@ export default () => {
   const tokens = {
     microtron: process.env.MICROTRON_TOKEN,
     prom: process.env.PROM_TOKEN,
-    telegram: process.env.TELEGRAM_TOKEN,
     ngrok: process.env.NGROK_TOKEN,
   };
 
@@ -35,6 +40,7 @@ export default () => {
     isProd: process.env.NODE_ENV === 'production',
     redis,
     mongo,
+    telegram,
     secrets,
     tokens,
   };

@@ -12,7 +12,7 @@ import { AppService } from './app.service';
 import { MicrotronModule } from './modules/microtron/microtron.module';
 import configuration from './config/configuration';
 import { LoggerMiddleware } from '@common/middlewares';
-import { TelegrafModule } from 'nestjs-telegraf';
+import { TelegramModule } from './modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -34,16 +34,8 @@ import { TelegrafModule } from 'nestjs-telegraf';
         };
       },
     }),
-    TelegrafModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: function (configService: ConfigService) {
-        return {
-          token: configService.get('tokens.telegram'),
-        };
-      },
-    }),
     MicrotronModule,
+    TelegramModule,
   ],
   controllers: [AppController],
   providers: [AppService],
