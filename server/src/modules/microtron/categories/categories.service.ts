@@ -15,6 +15,7 @@ import {
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
+import { Data } from '../../../data';
 
 @Injectable()
 export class CategoriesService {
@@ -88,9 +89,13 @@ export class CategoriesService {
         )
       : categoriesData.categories) as unknown as ICategory[];
 
+    await Data.SelectedCategories.write(categories);
+
+    const categoriesJSON = JSON.stringify(categories);
+
     const savedCategories = await this.retrieveFromDB();
     if (savedCategories) {
-      savedCategories.value = JSON.stringify(categories);
+      savedCategories.value = categoriesJSON;
       await savedCategories.save();
 
       return {
@@ -100,7 +105,7 @@ export class CategoriesService {
 
     const categoriesConstant = new this.constantModel({
       name: ConstantEntities.CATEGORIES,
-      value: JSON.stringify(categories),
+      value: categoriesJSON,
     });
     await categoriesConstant.save();
 
