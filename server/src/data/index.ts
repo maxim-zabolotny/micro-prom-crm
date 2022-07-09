@@ -18,4 +18,15 @@ export namespace Data {
       await fs.writeFile(filePathSRC, data, { encoding: 'utf-8' });
     }
   }
+
+  export namespace Users {
+    export const fileName = 'users.json';
+    export const filePathDist = path.join(__dirname, fileName);
+    export const filePathSRC = filePathDist.replace('dist', 'src');
+
+    export async function read(): Promise<ICategory[]> {
+      const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
+      return JSON.parse(data);
+    }
+  }
 }

@@ -1,0 +1,20 @@
+[
+  {
+    "telegramId": 347255152,
+    "chatId": 347255152,
+    "name": "денис",
+    "username": "skroll17",
+    "token": {
+      "level": "admin"
+    }
+  },
+  {
+    "telegramId": 673874731,
+    "chatId": 673874731,
+    "name": "Аня",
+    "username": "Anya1922",
+    "token": {
+      "level": "sales"
+    }
+  }
+]
