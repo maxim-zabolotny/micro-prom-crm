@@ -24,7 +24,7 @@ export namespace Data {
     export const filePathDist = path.join(__dirname, fileName);
     export const filePathSRC = filePathDist.replace('dist', 'src');
 
-    export async function read(): Promise<ICategory[]> {
+    export async function read() {
       const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
       return JSON.parse(data);
     }
