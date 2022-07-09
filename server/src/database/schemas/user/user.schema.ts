@@ -6,11 +6,11 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true, collection: 'users' })
 export class User {
-  @Prop({ type: String, isRequired: true })
-  telegramId: string;
+  @Prop({ type: Number, isRequired: true })
+  telegramId: number;
 
-  @Prop({ type: String, isRequired: true })
-  chatId: string;
+  @Prop({ type: Number, isRequired: true })
+  chatId: number;
 
   @Prop({ type: String, isRequired: true })
   name: string;
