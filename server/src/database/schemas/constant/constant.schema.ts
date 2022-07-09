@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { ConstantEntities } from '@schemas/constant/constant.entities';
+import { ConstantEntities } from '@schemas/constant/constant-entities.enum';
 
 export type ConstantDocument = Constant & Document;
 
