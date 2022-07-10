@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { IntegrationWith } from '@schemas/integration/integration-with.enum';
+import { IntegrationCompany } from '@schemas/integration/integration-company.enum';
 
 export type IntegrationDocument = Integration & Document;
 
@@ -10,9 +10,9 @@ export class Integration {
     type: String,
     unique: true,
     isRequired: true,
-    enum: [...Object.values(IntegrationWith)],
+    enum: [...Object.values(IntegrationCompany)],
   })
-  with: IntegrationWith;
+  company: IntegrationCompany;
 }
 
 export const IntegrationSchema = SchemaFactory.createForClass(Integration);

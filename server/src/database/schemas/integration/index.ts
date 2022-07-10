@@ -3,4 +3,4 @@ export {
   IntegrationSchema,
   IntegrationDocument,
 } from './integration.schema';
-export { IntegrationWith } from './integration-with.enum';
+export { IntegrationCompany } from './integration-company.enum';
