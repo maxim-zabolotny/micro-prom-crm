@@ -16,5 +16,13 @@
     "token": {
       "level": "sales"
     }
+  },
+  {
+    "telegramId": 560731563,
+    "chatId": 560731563,
+    "name": "Алексей",
+    "token": {
+      "level": "provider"
+    }
   }
 ]
