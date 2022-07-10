@@ -6,7 +6,7 @@ import {
   Integration,
   IntegrationDocument,
 } from '@schemas/integration/integration.schema';
-import { IntegrationWith } from '@schemas/integration/integration-with.enum';
+import { IntegrationCompany } from '@schemas/integration';
 
 @Injectable()
 export class IntegrationSeed {
@@ -18,7 +18,7 @@ export class IntegrationSeed {
   @Command({ command: 'create:integrations', describe: 'create integrations' })
   async create() {
     const integration = new this.integrationModel({
-      with: IntegrationWith.Microtron,
+      company: IntegrationCompany.Microtron,
     });
     await integration.save();
     console.log('SAVED: integration => ', integration);
