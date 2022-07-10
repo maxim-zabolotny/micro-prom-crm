@@ -1,11 +1,10 @@
 /*external modules*/
-import _ from 'lodash';
 /*lib*/
 import { Request } from '../request';
 import { Product, TEntity as TProductEntity } from '../product';
 /*types*/
 import { Lang } from '../types/api';
-import { ICategory, ICategoryRaw, ICategoriesTree } from './ICategorie';
+import { ICategoriesTree, ICategory, ICategoryRaw } from './ICategorie';
 import { IResponseRaw } from '../request/IResponse';
 import { IProductRequestOptions } from '../product/IOptions';
 /*utils*/
