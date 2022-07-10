@@ -23,9 +23,9 @@
     "lib:dir-init": "mkdir ./lib",
     "lib:recopy": "rm -rf ./lib && npm run lib:copy",
     "seeds": "npm run seeds:users && npm run seeds:constants && npm run seeds:integrations",
-    "seeds:users": "CLI_PATH=./src/cli.js npx nestjs-command create:user",
-    "seeds:constants": "CLI_PATH=./src/cli.js npx nestjs-command create:constants",
-    "seeds:integrations": "CLI_PATH=./src/cli.js npx nestjs-command create:integration"
+    "seeds:users": "CLI_PATH=./src/cli.ts npx nestjs-command create:users",
+    "seeds:constants": "CLI_PATH=./src/cli.ts npx nestjs-command create:constants",
+    "seeds:integrations": "CLI_PATH=./src/cli.ts npx nestjs-command create:integrations"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
