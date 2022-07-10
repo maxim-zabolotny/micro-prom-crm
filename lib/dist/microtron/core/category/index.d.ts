@@ -1,7 +1,7 @@
 import { Request } from '../request';
 import { TEntity as TProductEntity } from '../product';
 import { Lang } from '../types/api';
-import { ICategory, ICategoryRaw, ICategoriesTree } from './ICategorie';
+import { ICategoriesTree, ICategory, ICategoryRaw } from './ICategorie';
 import { IResponseRaw } from '../request/IResponse';
 import { IProductRequestOptions } from '../product/IOptions';
 export declare type TEntity = ICategory;

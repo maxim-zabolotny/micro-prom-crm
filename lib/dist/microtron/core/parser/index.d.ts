@@ -1,5 +1,7 @@
 import * as cheerio from 'cheerio';
 import { ISettings } from './ISettings';
+import { IResult, IResultBody, IResultHead } from './IResult';
+export declare type TCheerioEl = cheerio.Cheerio<cheerio.Element>;
 export declare class Parser {
     readonly htmlPage: string;
     readonly $root: cheerio.CheerioAPI;
@@ -16,32 +18,12 @@ export declare class Parser {
     private getProductDetails;
     private getProductSpecifications;
     getTitle(): string;
-    parseHead(): {
-        og: Record<string, unknown>;
-        product: Record<string, unknown>;
-        base: Record<string, unknown>;
-    };
-    parseBody(): {
-        name: string;
-        description: string;
-        details: Record<string, string>;
-        specifications: Record<string, string>;
-    };
-    parse(): {
-        title: string;
-        head: {
-            og: Record<string, unknown>;
-            product: Record<string, unknown>;
-            base: Record<string, unknown>;
-        };
-        body: {
-            name: string;
-            description: string;
-            details: Record<string, string>;
-            specifications: Record<string, string>;
-        };
-    };
+    parseHead(): IResultHead;
+    parseBody(): IResultBody;
+    parse(): IResult;
     static load(link: string): Promise<Parser>;
     static replaceMultipleSpaces(text: string): string;
+    static isUsedProduct(productName: string): boolean;
+    static isNewProduct(productName: string): boolean;
     static readonly SETTINGS: ISettings;
 }
