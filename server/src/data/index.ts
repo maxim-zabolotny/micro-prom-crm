@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { promises as fs } from 'fs';
 import { ICategory } from '@lib/microtron/core/category/ICategorie';
+import { IUserSeed } from '@common/interfaces/user';
 
 export namespace Data {
   export namespace SelectedCategories {
@@ -24,7 +25,7 @@ export namespace Data {
     export const filePathDist = path.join(__dirname, fileName);
     export const filePathSRC = filePathDist.replace('dist', 'src');
 
-    export async function read() {
+    export async function read(): Promise<IUserSeed[]> {
       const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
       return JSON.parse(data);
     }
