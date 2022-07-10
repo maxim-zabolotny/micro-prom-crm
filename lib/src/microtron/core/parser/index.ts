@@ -4,8 +4,22 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 /*lib*/
 /*types*/
-import { IHEADSettingEntity, ISettings } from './ISettings';
+import { IHEADSettingEntity, IHEADSettingKeyEntity, ISettings } from './ISettings';
+import {
+  IResult,
+  IResultBody,
+  IResultHead,
+  IResultHeadBase,
+  IResultHeadOG,
+  IResultHeadProduct,
+  THeadResultKeys,
+  THeadResults,
+  TProductDetails,
+  TProductSpecifications,
+} from './IResult';
 /*other*/
+
+export type TCheerioEl = cheerio.Cheerio<cheerio.Element>;
 
 export class Parser {
   public readonly htmlPage: string;
@@ -16,26 +30,32 @@ export class Parser {
     this.$root = cheerio.load(htmlPage);
   }
 
-  private parseMetaTags($tags: cheerio.Cheerio<cheerio.Element>, entity: IHEADSettingEntity) {
-    const result: Record<string, unknown> = {};
+  private parseMetaTags<TResult extends THeadResults>(
+    $tags: TCheerioEl,
+    entity: IHEADSettingEntity<TResult>,
+  ): TResult {
+    const result: TResult = {} as any;
 
     $tags.each((_i, $el) => {
       const attributes = this.$root($el).attr();
       const attrKey = _.get(attributes, entity.attrKey, '');
 
       if (attrKey.startsWith(entity.wildcard)) {
-        const entityKey = _.find(entity.keys, ({ value }) => attrKey.endsWith(value));
+        const entityKey = _.find(
+          entity.keys,
+          (keyEntity) => _.endsWith(attrKey, _.get(keyEntity, 'value')),
+        ) as IHEADSettingKeyEntity<THeadResultKeys>;
         if (!entityKey) return; // continue
 
         const content = _.get(attributes, entity.attrValue);
-        result[entityKey.alias] = content;
+        _.set(result, entityKey.alias, content);
       }
     });
 
     return result;
   }
 
-  private parseElementText($el: cheerio.Cheerio<cheerio.Element>, replaceSpaces = false) {
+  private parseElementText($el: TCheerioEl, replaceSpaces = false): string {
     const text = $el
       .text()
       .trim();
@@ -43,8 +63,8 @@ export class Parser {
     return replaceSpaces ? Parser.replaceMultipleSpaces(text) : text;
   }
 
-  private parseProductDetails($el: cheerio.Cheerio<cheerio.Element>) {
-    const result: Record<string, string> = {};
+  private parseProductDetails($el: TCheerioEl): TProductDetails {
+    const result: TProductDetails = {};
 
     $el
       .children()
@@ -69,8 +89,8 @@ export class Parser {
     return result;
   }
 
-  private parseProductSpecifications($el: cheerio.Cheerio<cheerio.Element>) {
-    const result: Record<string, string> = {};
+  private parseProductSpecifications($el: TCheerioEl): TProductSpecifications {
+    const result: TProductSpecifications = {};
 
     $el
       .children()
@@ -92,44 +112,44 @@ export class Parser {
     return result;
   }
 
-  private getHeadOG($tags: cheerio.Cheerio<cheerio.Element>) {
-    return this.parseMetaTags($tags, Parser.SETTINGS.HEAD.OG);
+  private getHeadOG($tags: TCheerioEl): IResultHeadOG {
+    return this.parseMetaTags<IResultHeadOG>($tags, Parser.SETTINGS.HEAD.OG);
   }
 
-  private getHeadProduct($tags: cheerio.Cheerio<cheerio.Element>) {
-    return this.parseMetaTags($tags, Parser.SETTINGS.HEAD.PRODUCT);
+  private getHeadProduct($tags: TCheerioEl): IResultHeadProduct {
+    return this.parseMetaTags<IResultHeadProduct>($tags, Parser.SETTINGS.HEAD.PRODUCT);
   }
 
-  private getHeadBase($tags: cheerio.Cheerio<cheerio.Element>) {
-    return this.parseMetaTags($tags, Parser.SETTINGS.HEAD.BASE);
+  private getHeadBase($tags: TCheerioEl): IResultHeadBase {
+    return this.parseMetaTags<IResultHeadBase>($tags, Parser.SETTINGS.HEAD.BASE);
   }
 
-  private getProductName($body: cheerio.Cheerio<cheerio.Element>) {
+  private getProductName($body: TCheerioEl): string {
     const $el = $body.find(Parser.SETTINGS.BODY.NAME.selector);
     return this.parseElementText($el, true);
   }
 
-  private getProductDescription($body: cheerio.Cheerio<cheerio.Element>) {
+  private getProductDescription($body: TCheerioEl): string {
     const $el = $body.find(Parser.SETTINGS.BODY.DESCRIPTION.selector);
     return this.parseElementText($el, false);
   }
 
-  private getProductDetails($body: cheerio.Cheerio<cheerio.Element>) {
+  private getProductDetails($body: TCheerioEl): TProductDetails {
     const $el = $body.find(Parser.SETTINGS.BODY.DETAILS.selector);
     return this.parseProductDetails($el);
   }
 
-  private getProductSpecifications($body: cheerio.Cheerio<cheerio.Element>) {
+  private getProductSpecifications($body: TCheerioEl): TProductSpecifications {
     const $el = $body.find(Parser.SETTINGS.BODY.SPECIFICATIONS.selector);
     return this.parseProductSpecifications($el);
   }
 
-  public getTitle() {
+  public getTitle(): string {
     const $title = this.$root('title');
     return $title.text().trim();
   }
 
-  public parseHead() {
+  public parseHead(): IResultHead {
     const $metaTags = this
       .$root('head')
       .find('meta');
@@ -141,7 +161,7 @@ export class Parser {
     };
   }
 
-  public parseBody() {
+  public parseBody(): IResultBody {
     const $body = this.$root('body');
 
     return {
@@ -152,7 +172,7 @@ export class Parser {
     };
   }
 
-  public parse() {
+  public parse(): IResult {
     return {
       title: this.getTitle(),
       head: this.parseHead(),
@@ -167,6 +187,10 @@ export class Parser {
 
   public static replaceMultipleSpaces(text: string) {
     return text.replace(/\s{2,}/g, ' ');
+  }
+
+  public static isUsedProduct(productName: string) { // Б/У - Б/В
+    return (productName.startsWith('Б/У') || productName.startsWith('Б/В'));
   }
 
   public static readonly SETTINGS: ISettings = {
