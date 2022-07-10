@@ -1,4 +1,4 @@
-import { Currency } from '../types/api';
+import { Currency, ProductAvailability, ProductCondition } from '../types/api';
 
 // HEAD
 export interface IResultHeadOG {
@@ -11,8 +11,8 @@ export interface IResultHeadOG {
 
 export interface IResultHeadProduct {
   brand: string;
-  availability: string; // 'in stock'
-  condition: string; // 'new'
+  availability: ProductAvailability;
+  condition: ProductCondition;
   price: string;
   currency: Currency;
   retailerItemId: string;
