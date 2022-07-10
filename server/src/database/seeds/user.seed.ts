@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { Command } from 'nestjs-command';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -20,13 +19,11 @@ export class UserSeed {
 
     await Promise.all(
       users.map(async (userData) => {
-        const token = await this.authService.generateAuthToken(
-          userData.token.level,
-        );
+        const token = await this.authService.generateAuthToken();
         console.log('SAVED: token => ', token);
 
         const user = new this.userModel({
-          ..._.omit(userData, ['token']),
+          ...userData,
           token,
         });
         await user.save();
