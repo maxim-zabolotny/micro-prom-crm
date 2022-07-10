@@ -48,6 +48,7 @@ export interface IResultBody {
 
 // RESULT
 export interface IResult {
+  new: boolean;
   title: string;
   head: IResultHead;
   body: IResultBody;

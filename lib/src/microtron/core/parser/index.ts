@@ -173,10 +173,15 @@ export class Parser {
   }
 
   public parse(): IResult {
-    return {
+    const parseResult = {
       title: this.getTitle(),
       head: this.parseHead(),
       body: this.parseBody(),
+    };
+
+    return {
+      ...parseResult,
+      new: Parser.isNewProduct(parseResult.body.name),
     };
   }
 
@@ -191,6 +196,10 @@ export class Parser {
 
   public static isUsedProduct(productName: string) { // Б/У - Б/В
     return (productName.startsWith('Б/У') || productName.startsWith('Б/В'));
+  }
+
+  public static isNewProduct(productName: string) {
+    return !this.isUsedProduct(productName);
   }
 
   public static readonly SETTINGS: ISettings = {
