@@ -1,38 +1,47 @@
 /*external modules*/
-import _ from 'lodash'
-import axios from 'axios';
-import { Tree, Button } from 'antd';
-import React, { useState, useEffect } from 'react';
+import _ from "lodash";
+import axios from "axios";
+import { Button, Tree } from "antd";
+import React, { useEffect, useState } from "react";
 /*utils*/
-import { makeTree } from './utils/makeTree'
+import { makeTree } from "./utils/makeTree";
 /*styles*/
-import './App.css';
+import "./App.css";
+
+const hostName = "192.168.3.18"; //'localhost'
 
 const API = {
-  host: 'http://localhost:8080/microtron',
+  host: `http://${hostName}:8080/microtron`,
   async getCategories(tree = false) {
-    const { data } = await axios.get(`${this.host}/categories`, { params: { tree }});
+    const { data } = await axios.get(`${this.host}/categories`, {
+      params: { tree },
+    });
     return data;
   },
   async getSavedCategories(tree = false) {
-    const { data } = await axios.get(`${this.host}/categories/saved`, { params: { tree }});
+    const { data } = await axios.get(`${this.host}/categories/saved`, {
+      params: { tree },
+    });
     return data;
   },
   async saveCategories(categories, isTree = false) {
-    const { data } = await axios.put(`${this.host}/categories/save`, { categories, isTree });
+    const { data } = await axios.put(`${this.host}/categories/save`, {
+      categories,
+      isTree,
+    });
     return data;
   },
   addKeyAndTitle(category) {
     return {
       ...category,
       title: category.name,
-      key: category.id
-    }
+      key: category.id,
+    };
   },
   removeKeyAndTitle(category) {
-    return _.omit(category, ['title', 'key'])
-  }
-}
+    return _.omit(category, ["title", "key"]);
+  },
+};
 
 function App() {
   const [error, setError] = React.useState(null);
@@ -44,7 +53,7 @@ function App() {
   const [categoriesTree, setCategoriesTree] = useState([]);
 
   const onCheck = (checkedKeysValue) => {
-    console.log('onCheck', checkedKeysValue);
+    console.log("onCheck", checkedKeysValue);
     setCheckedKeys(checkedKeysValue);
   };
 
@@ -52,21 +61,21 @@ function App() {
     setLoading(true);
 
     try {
-      console.log('START -> loadCategories')
+      console.log("START -> loadCategories");
       const rawData = saved
         ? await API.getSavedCategories(false)
-        : await API.getCategories(false)
+        : await API.getCategories(false);
 
       setCategories(rawData);
 
-      const tree = makeTree(rawData, 'parentId', 0, API.addKeyAndTitle)
-      setCategoriesTree(tree)
+      const tree = makeTree(rawData, "parentId", 0, API.addKeyAndTitle);
+      setCategoriesTree(tree);
 
-      console.log('END -> loadCategories')
+      console.log("END -> loadCategories");
     } catch (err) {
-      setError(err)
+      setError(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -75,45 +84,45 @@ function App() {
 
     try {
       const result = await API.saveCategories(categories, false);
-      console.log('save result => ', result)
+      console.log("save result => ", result);
     } catch (err) {
-      setError(err)
+      setError(err);
     } finally {
       setLoading(false);
     }
   }
 
   async function loadFromAPI() {
-    await loadCategories(false)
+    await loadCategories(false);
   }
 
   async function loadSaved() {
-    await loadCategories(true)
+    await loadCategories(true);
   }
 
   function removeChecked() {
-    const updatedCategories = _.filter(categories, category => !_.includes(checkedKeys, category.id));
+    const updatedCategories = _.filter(
+      categories,
+      (category) => !_.includes(checkedKeys, category.id)
+    );
 
-    const tree = makeTree(updatedCategories, 'parentId', 0, API.addKeyAndTitle)
+    const tree = makeTree(updatedCategories, "parentId", 0, API.addKeyAndTitle);
 
     setCategories(updatedCategories);
-    setCategoriesTree(tree)
+    setCategoriesTree(tree);
 
     setCheckedKeys([]);
   }
 
-  useEffect(
-    () => {
-      loadSaved();
-    },
-    []
-  )
+  useEffect(() => {
+    loadSaved();
+  }, []);
 
   if (error) return `Error: ${error.message}`;
 
   return (
-    <div className={'App'}>
-      <div className={'App-buttons'}>
+    <div className={"App"}>
+      <div className={"App-buttons"}>
         <Button type="primary" loading={loading} onClick={save}>
           Save
         </Button>
@@ -127,18 +136,18 @@ function App() {
           Remove checked
         </Button>
       </div>
-      <div className={'App-line'} />
-      {
-        categories.length
-          ? <Tree
-            checkable
-            autoExpandParent={false}
-            onCheck={onCheck}
-            checkedKeys={checkedKeys}
-            treeData={categoriesTree}
-          />
-          : <span style={{ color: 'red' }}>No saved categories</span>
-      }
+      <div className={"App-line"} />
+      {categories.length ? (
+        <Tree
+          checkable
+          autoExpandParent={false}
+          onCheck={onCheck}
+          checkedKeys={checkedKeys}
+          treeData={categoriesTree}
+        />
+      ) : (
+        <span style={{ color: "red" }}>No saved categories</span>
+      )}
     </div>
   );
 }

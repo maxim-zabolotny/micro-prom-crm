@@ -1,5 +1,6 @@
 /*external modules*/
-import _ from 'lodash';
+import _ from "lodash";
+
 /*other*/
 
 export function fromTree(tree, idKey, parentIdKey, transformer = (v) => v) {
@@ -8,7 +9,7 @@ export function fromTree(tree, idKey, parentIdKey, transformer = (v) => v) {
   tree.forEach((node) => {
     const localNodes = [];
 
-    const rootNode = transformer(_.omit(node, 'children'));
+    const rootNode = transformer(_.omit(node, "children"));
     if (_.isEmpty(_.get(rootNode, parentIdKey))) {
       _.set(rootNode, parentIdKey, 0);
     }
