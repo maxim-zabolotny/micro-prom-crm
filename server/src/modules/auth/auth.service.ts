@@ -4,8 +4,9 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Token, TokenDocument, TokenLevel } from '@schemas/token';
+import { Token, TokenDocument } from '@schemas/token';
 import { IVerifyTokenResult } from '@common/interfaces/token';
+import { User, UserDocument } from '@schemas/user';
 /*services*/
 /*@common*/
 /*@entities*/
@@ -19,6 +20,7 @@ export class AuthService {
   constructor(
     private configService: ConfigService,
     @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   public generateAuthTokenData(key: string) {
@@ -28,7 +30,7 @@ export class AuthService {
       .digest('hex');
   }
 
-  public async generateAuthToken(level: TokenLevel): Promise<TokenDocument> {
+  public async generateAuthToken(): Promise<TokenDocument> {
     const key = crypto.randomBytes(32).toString('hex');
     const data = this.generateAuthTokenData(key);
 
@@ -37,7 +39,6 @@ export class AuthService {
     const expireIn = new Date().valueOf() + expireTime;
 
     const token = new this.tokenModel({
-      level,
       key,
       data,
       expireIn,
@@ -55,13 +56,26 @@ export class AuthService {
       throw new NotFoundException({ tokenId }, 'Token not found!');
     }
 
-    const isExpired = token.expireIn >= new Date().valueOf();
+    const isExpired = new Date().valueOf() >= token.expireIn;
     const isCorrect = token.data === this.generateAuthTokenData(token.key);
 
     return {
       isExpired,
       isCorrect,
-      isValid: isExpired && isCorrect,
+      isValid: !isExpired && isCorrect,
     };
+  }
+
+  public async getUserByToken(tokenId: Types.ObjectId): Promise<UserDocument> {
+    const user = await this.userModel
+      .findOne({
+        tokens: tokenId,
+      })
+      .exec();
+    if (!user) {
+      throw new NotFoundException({ tokenId }, 'User not found!');
+    }
+
+    return user;
   }
 }
