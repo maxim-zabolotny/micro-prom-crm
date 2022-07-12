@@ -15,9 +15,9 @@ import { CategoriesService } from './categories.service';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { MicrotronExceptionFilter } from '@common/filters';
 import { JwtAuthGuard, RolesGuard } from '@common/guards';
-import { Roles } from '@common/decorators';
+import { Roles, Timeout } from '@common/decorators';
 import { UserRole } from '@schemas/user';
-import { LoggingInterceptor } from '@common/interceptors';
+import { LoggingInterceptor, TimeoutInterceptor } from '@common/interceptors';
 
 @Controller('/microtron/categories')
 @UseFilters(MicrotronExceptionFilter)
@@ -27,6 +27,8 @@ export class CategoriesController {
 
   @Get('/')
   @HttpCode(200)
+  @Timeout(5000)
+  @UseInterceptors(TimeoutInterceptor)
   async get(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean,
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
