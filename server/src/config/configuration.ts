@@ -20,7 +20,7 @@ export default () => {
     botName: process.env.TELEGRAM_BOT_NAME,
   };
 
-  const token = {
+  const jwtToken = {
     secret: process.env.TOKEN_SECRET,
     expireMinutes: parseInt(process.env.TOKEN_EXPIRE_MINUTES, 10),
   };
@@ -42,7 +42,7 @@ export default () => {
     redis,
     mongo,
     telegram,
-    token,
+    jwtToken,
     tokens,
   };
 };
