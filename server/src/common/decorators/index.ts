@@ -3,3 +3,4 @@ export { Roles } from './roles.decorator';
 export { Timeout } from './timeout.decorator';
 export { Auth } from './auth.decorator';
 export { TimeoutLimit } from './timeout-limit.decorator';
+export { DisableEndpoint } from './disable-endpoint.decorator';
