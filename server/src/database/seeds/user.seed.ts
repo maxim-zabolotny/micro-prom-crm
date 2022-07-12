@@ -19,13 +19,7 @@ export class UserSeed {
 
     await Promise.all(
       users.map(async (userData) => {
-        const token = await this.authService.generateAuthToken();
-        console.log('SAVED: token => ', token);
-
-        const user = new this.userModel({
-          ...userData,
-          token,
-        });
+        const user = new this.userModel(userData);
         await user.save();
         console.log('SAVED: user => ', user);
       }),
