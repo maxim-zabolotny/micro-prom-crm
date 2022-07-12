@@ -9,6 +9,7 @@ import {
   Query,
   UseFilters,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
@@ -16,9 +17,11 @@ import { MicrotronExceptionFilter } from '@common/filters';
 import { JwtAuthGuard, RolesGuard } from '@common/guards';
 import { Roles } from '@common/decorators';
 import { UserRole } from '@schemas/user';
+import { LoggingInterceptor } from '@common/interceptors';
 
 @Controller('/microtron/categories')
 @UseFilters(MicrotronExceptionFilter)
+@UseInterceptors(LoggingInterceptor)
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
