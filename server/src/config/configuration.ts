@@ -20,6 +20,13 @@ export default () => {
     botName: process.env.TELEGRAM_BOT_NAME,
   };
 
+  const client = {
+    domain: process.env.CLIENT_TUNNEL_DOMAIN,
+    localPort: process.env.CLIENT_LOCAL_PORT,
+    url: '',
+  };
+  client.url = `https://${client.domain}.loca.lt`;
+
   const jwtToken = {
     secret: process.env.TOKEN_SECRET,
     expireMinutes: parseInt(process.env.TOKEN_EXPIRE_MINUTES, 10),
@@ -39,6 +46,7 @@ export default () => {
     env: process.env.NODE_ENV,
     isDev: process.env.NODE_ENV === 'development',
     isProd: process.env.NODE_ENV === 'production',
+    client,
     redis,
     mongo,
     telegram,
