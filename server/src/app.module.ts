@@ -14,7 +14,6 @@ import configuration from './config/configuration';
 import { LoggerMiddleware } from '@common/middlewares';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { SeedsModule } from './modules/seeds/seeds.module';
-import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -36,7 +35,6 @@ import { AuthModule } from './modules/auth/auth.module';
         };
       },
     }),
-    AuthModule,
     MicrotronModule,
     TelegramModule,
     SeedsModule,
@@ -45,9 +43,24 @@ import { AuthModule } from './modules/auth/auth.module';
   providers: [AppService],
 })
 export class AppModule implements NestModule {
+  constructor(private configService: ConfigService) {}
+
   configure(consumer: MiddlewareConsumer) {
+    const whitelist = this.configService.get('cors.whiteList');
+
     consumer
-      .apply(cors(), LoggerMiddleware)
+      .apply(
+        cors({
+          origin: function (origin, callback) {
+            if (whitelist.includes(origin)) {
+              callback(null, origin);
+            } else {
+              callback(new Error('Not allowed by CORS'));
+            }
+          },
+        }),
+        LoggerMiddleware,
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
