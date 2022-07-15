@@ -5,6 +5,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as _ from 'lodash';
 import { ILog } from './interfaces/log.interface';
 import { IOptions, IPublicOptions } from './interfaces/options.interface';
+import { ConfigService } from '@nestjs/config';
 /*services*/
 /*@common*/
 /*@entities*/
@@ -25,6 +26,8 @@ export class NgrokService {
 
   private processUrl: string | null = null;
 
+  constructor(private configService: ConfigService) {}
+
   private parseLog(message: string): ILog | null {
     if (message[0] === '{') {
       return JSON.parse(message);
@@ -39,6 +42,11 @@ export class NgrokService {
     if (!resultOpts.proto) resultOpts.proto = 'http';
     if (!resultOpts.hostHeader) resultOpts.hostHeader = 'rewrite';
     if (!resultOpts.logLevel) resultOpts.logLevel = 'info';
+
+    // default auth token
+    if (!resultOpts.authToken) {
+      resultOpts.authToken = this.configService.get('tokens.ngrok');
+    }
 
     resultOpts.log = 'stdout';
     resultOpts.logFormat = 'json';
