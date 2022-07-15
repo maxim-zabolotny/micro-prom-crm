@@ -1,0 +1,49 @@
+[
+  {
+    "lvl": "info",
+    "msg": "no configuration paths supplied",
+    "t": "2022-07-14T21:24:00.686194064+03:00"
+  },
+  {
+    "lvl": "info",
+    "msg": "using configuration at default config path",
+    "path": "/home/dzolo/snap/ngrok/79/.config/ngrok/ngrok.yml",
+    "t": "2022-07-14T21:24:00.686271122+03:00"
+  },
+  {
+    "err": "\u003cnil\u003e",
+    "lvl": "info",
+    "msg": "open config file",
+    "path": "/home/dzolo/snap/ngrok/79/.config/ngrok/ngrok.yml",
+    "t": "2022-07-14T21:24:00.686289543+03:00"
+  },
+  {
+    "addr": "127.0.0.1:4040",
+    "lvl": "info",
+    "msg": "starting web service",
+    "obj": "web",
+    "t": "2022-07-14T21:24:00.687344275+03:00"
+  },
+  {
+    "lvl": "info",
+    "msg": "tunnel session started",
+    "obj": "tunnels.session",
+    "t": "2022-07-14T21:24:02.876276355+03:00"
+  },
+  {
+    "id": "d4f4059c5f55",
+    "lvl": "info",
+    "msg": "client session established",
+    "obj": "csess",
+    "t": "2022-07-14T21:24:02.876380369+03:00"
+  },
+  {
+    "addr": "http://localhost:8080",
+    "lvl": "info",
+    "msg": "started tunnel",
+    "name": "command_line",
+    "obj": "tunnels",
+    "t": "2022-07-14T21:24:02.936725955+03:00",
+    "url": "https://c086-178-151-203-112.eu.ngrok.io"
+  }
+]
