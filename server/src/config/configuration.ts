@@ -38,6 +38,10 @@ export default () => {
     ngrok: process.env.NGROK_TOKEN,
   };
 
+  const cors = {
+    whiteList: [client.url, `http://localhost:${client.localPort}`],
+  };
+
   const PORT = parseInt(process.env.PORT, 10);
 
   return {
@@ -47,6 +51,7 @@ export default () => {
     isDev: process.env.NODE_ENV === 'development',
     isProd: process.env.NODE_ENV === 'production',
     client,
+    cors,
     redis,
     mongo,
     telegram,
