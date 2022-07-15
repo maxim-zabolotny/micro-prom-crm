@@ -8,6 +8,7 @@ services:
       dockerfile: ./client/Dockerfile
     ports:
       - "3000:3000"
+#      - "80" # for dev we don't need to expose port
     environment:
       PORT: 3000
       NODE_ENV: development
@@ -66,3 +67,12 @@ services:
 #    tty: true
 #    restart: "always"
 
+  localtunnel:
+    image: efrecon/localtunnel
+    command:
+      --local-host crm_web --port 3000 --subdomain micropromcrm
+    links:
+      - crm_web
+    depends_on:
+      - crm_web
+    restart: "always"
