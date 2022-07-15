@@ -3,9 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as _ from 'lodash';
-import { ILog } from './interfaces/log.interface';
-import { IOptions, IPublicOptions } from './interfaces/options.interface';
 import { ConfigService } from '@nestjs/config';
+import { ILog, IOptions, IPublicOptions } from '@common/interfaces/ngrok';
 /*services*/
 /*@common*/
 /*@entities*/
