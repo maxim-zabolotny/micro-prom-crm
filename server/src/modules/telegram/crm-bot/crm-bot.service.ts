@@ -7,6 +7,7 @@ import { TelegrafException } from 'nestjs-telegraf';
 import { MarkdownHelper } from '../common/helpers';
 import { AuthService } from '../../auth/auth.service';
 import { ConfigService } from '@nestjs/config';
+import { NgrokService } from '../../ngrok/ngrok.service';
 
 @Injectable()
 export class CrmBotService {
@@ -14,6 +15,7 @@ export class CrmBotService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly ngrokService: NgrokService,
   ) {}
 
   private async getUserByTelegramId(
@@ -43,6 +45,17 @@ export class CrmBotService {
 
   public getClientUrl() {
     const url = this.configService.get('client.url');
+
+    const urlMsg = MarkdownHelper.bold('URL');
+    const urlText = MarkdownHelper.monospaced(url);
+
+    return `${urlMsg}: ${urlText}`;
+  }
+
+  public async getServerUrl() {
+    const url = await this.ngrokService.connect({
+      port: this.configService.get('port'),
+    });
 
     const urlMsg = MarkdownHelper.bold('URL');
     const urlText = MarkdownHelper.monospaced(url);

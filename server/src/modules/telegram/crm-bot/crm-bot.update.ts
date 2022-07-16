@@ -39,4 +39,10 @@ export class CrmBotUpdate {
     const message = this.crmBotService.getClientUrl();
     await ctx.replyWithMarkdown(message);
   }
+
+  @Command('getServerUrl')
+  async onGetServerUrlCommand(@Ctx() ctx: Context): Promise<void> {
+    const message = await this.crmBotService.getServerUrl();
+    await ctx.replyWithMarkdown(message);
+  }
 }
