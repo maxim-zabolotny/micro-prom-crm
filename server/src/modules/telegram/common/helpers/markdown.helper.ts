@@ -7,6 +7,10 @@ export class MarkdownHelper {
     return `*${text}*`;
   }
 
+  static italic(text: string): string {
+    return `_${text}_`;
+  }
+
   static monospaced(text: string): string {
     return `\`${text}\``;
   }
