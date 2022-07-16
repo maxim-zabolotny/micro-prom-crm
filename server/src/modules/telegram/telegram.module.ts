@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CrmModule } from './crm/crm.module';
+import { CrmBotModule } from './crm-bot/crm-bot.module';
 
 @Module({
   imports: [
-    CrmModule,
+    CrmBotModule,
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -14,7 +14,7 @@ import { CrmModule } from './crm/crm.module';
 
         return {
           token: configService.get('telegram.token'),
-          include: [CrmModule],
+          include: [CrmBotModule],
         };
       },
     }),
