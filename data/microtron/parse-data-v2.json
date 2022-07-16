@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Мат.плата з процесором Gigabyte GA-J1800N-D2H",
+    "description": "Мат.плата з процесором Gigabyte GA-J1800N-D2H, Celeron J1800 (2x2.41-2.58 GHz), 2xDDR3 SO-DIMM, HD Graphics, 2xSATA2, 1xPCI-E 1x 2.0, ALC887, RTL8118AS, 1xUSB3.0/6xUSB2.0, VGA/HDMI, Mini-ITX",
+    "brand": "Gigabyte",
+    "availability": "В наявності",
+    "cost": {
+      "price": 2205,
+      "currency": "UAH"
+    },
+    "specifications": {
+      "Bluetooth": "немає",
+      "VGA": "1",
+      "Wi-Fi": "немає",
+      "Аудіо": "ALC887",
+      "Кількість HDMI": "1",
+      "Кількість PCI-E x1": "1",
+      "Кількість слотів": "2",
+      "Підтримка кількох відеокарт": "немає",
+      "Порти USB 2.0": "6",
+      "Порти USB 3.0": "1",
+      "Процесор": "Intel J1800 (2x2.41GHz)",
+      "Роз'єми SATA3": "2",
+      "Тип пам'яті": "DDR3",
+      "Форм-фактор": "Mini ITX"
+    },
+    "new": true,
+    "available": true,
+    "url": "https://microtron.ua/mat-plata-z-procesorom-gigabyte-ga-j1800n-d2h/p117073"
+  },
+  {
+    "name": "Захисне скло для Xiaomi Redmi Note 3, 0.25 мм, 2,5D, Pro+",
+    "description": "Захисне скло для Xiaomi Redmi Note 3, 0.25 мм, 2,5D, Pro+",
+    "brand": "NoNaMe",
+    "availability": "Нет в наличии",
+    "cost": {
+      "price": 0,
+      "currency": "UAH"
+    },
+    "specifications": {
+      "Тип": "захисне скло"
+    },
+    "new": true,
+    "available": false,
+    "url": "https://microtron.ua/zahisne-sklo-dlya-xiaomi-redmi-note-3-0-25-mm-2-5d-pro/p137194"
+  },
+  {
+    "name": "Б/В Процесор Intel Core i5 (LGA1150) i5-4430, Tray, 4x3.0 GHz (CM8064601464802)",
+    "description": "Б/В Процесор Intel Core i5 (LGA1150) i5-4430, Tray, 4x3.0 GHz (Turbo Boost 3.2 GHz), HD Graphic 4600 (1100 MHz), L3 6Mb, Haswell, 22 nm, TDP 84W (CM8064601464802)",
+    "brand": "Intel",
+    "availability": "В наявності",
+    "cost": {
+      "price": 1600,
+      "currency": "UAH"
+    },
+    "specifications": {
+      "Сокет": "LGA1150",
+      "Тип": "процесор"
+    },
+    "new": false,
+    "available": true,
+    "url": "https://microtron.ua/b-v-procesor-intel-core-i5-lga1150-i5-4430-tray-4x3-0-ghz-cm8064601464802/p216922"
+  },
+  {
+    "name": "Б/В Системний блок: Lenovo ThinkCentre E73, Black, Slim, i5-4430, 4Gb DDR3, 320Gb, DVD-RW",
+    "description": "Б/В Системний блок: Lenovo ThinkCentre E73, Black, Slim, Core i5-4430 (4x3,0 GHz), 4Gb DDR3, 320Gb HDD, DVD-RW, VGA/DP, 1xPCI-E16x, 2xPCI-E 1x, 4xSATA, 2xUSB на передній панелі / 4xUSB на задній панелі",
+    "brand": "NoNaMe",
+    "availability": "В наявності",
+    "cost": {
+      "price": 5644,
+      "currency": "UAH"
+    },
+    "specifications": {
+      "Тип": "системний блок"
+    },
+    "new": false,
+    "available": true,
+    "url": "https://microtron.ua/b-v-sistemnij-blok-lenovo-thinkcentre-e73-black-slim-i5-4430-4gb-ddr3-320gb-dvd-rw/p189127"
+  },
+  {
+    "name": "Б/В Процесор Intel Core i5 (LGA1155) i5-2500, Tray, 4x3.3 GHz (CM8062300834203)",
+    "description": "Б/В Процесор Intel Core i5 (LGA1155) i5-2500, Tray, 4x3.3 GHz (Turbo Boost 3.7 GHz), HD Graphic 2000 (1100 MHz), L3 6Mb, Sandy Bridge, 32 nm, TDP 95W (CM8062300834203)",
+    "brand": "Intel",
+    "availability": "Нет в наличии",
+    "cost": {
+      "price": 1200,
+      "currency": "UAH"
+    },
+    "specifications": {
+      "Сокет": "LGA1155",
+      "Тип": "процесор"
+    },
+    "new": false,
+    "available": false,
+    "url": "https://microtron.ua/b-v-procesor-intel-core-i5-lga1155-i5-2500-tray-4x3-3-ghz-cm8062300834203/p150450"
+  }
+]
