@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@schemas/user';
 import { ConfigModule } from '@nestjs/config';
 import { NgrokModule } from '../../ngrok/ngrok.module';
+import { NotificationBotService } from './notification.service';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { NgrokModule } from '../../ngrok/ngrok.module';
       },
     ]),
   ],
-  providers: [CrmBotService, CrmBotUpdate],
+  providers: [CrmBotService, CrmBotUpdate, NotificationBotService],
+  exports: [NotificationBotService],
 })
 export class CrmBotModule {}

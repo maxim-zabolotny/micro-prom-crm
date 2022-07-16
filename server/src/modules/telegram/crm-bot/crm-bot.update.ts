@@ -56,4 +56,9 @@ export class CrmBotUpdate {
     const message = await this.crmBotService.getServerUrl();
     await ctx.replyWithMarkdown(message);
   }
+
+  // @Action(MarkupCallbackButtonName.MarkAsVisited)
+  // async onChangeVisitStatusCommand(@Ctx() ctx: Context): Promise<void> {
+  //   await this.notificationBotService.updateVisitStatus(ctx);
+  // }
 }
