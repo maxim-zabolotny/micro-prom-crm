@@ -22,7 +22,18 @@ export class CrmBotUpdate {
 
   @Help()
   async onHelp(): Promise<string> {
-    return 'Пусто';
+    const commands = [
+      '/getAuthToken - Получить токен аутентификации',
+      '/getClientUrl - Получить URL клиента',
+      '/getServerUrl - Получить URL сервера',
+    ].join('\n');
+    const description = [
+      'URL клиента это ссылка на CRM сайт',
+      'Токен аутентификации используеться на стороне клиента',
+      'URL сервера также используеться на стороне клиента',
+    ].join('\n');
+
+    return `${commands}\n\n${description}`;
   }
 
   @Command('getAuthToken')
