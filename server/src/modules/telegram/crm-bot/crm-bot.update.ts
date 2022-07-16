@@ -1,9 +1,10 @@
-import { Ctx, Help, InjectBot, Start, Update } from 'nestjs-telegraf';
+import { Command, Ctx, Help, InjectBot, Start, Update } from 'nestjs-telegraf';
 import { Context, Telegraf } from 'telegraf';
 import { CrmBotService } from './crm-bot.service';
-import { AuthService } from '../../auth/auth.service';
 import { TelegrafExceptionFilter } from '../common/filters';
 import { UseFilters } from '@nestjs/common';
+import { CurrentTelegramUser } from '../common/decorators';
+import { TTelegramUser } from '../common/types';
 
 @Update()
 @UseFilters(TelegrafExceptionFilter)
@@ -12,7 +13,6 @@ export class CrmBotUpdate {
     @InjectBot()
     private readonly bot: Telegraf<Context>,
     private readonly crmBotService: CrmBotService,
-    private readonly authService: AuthService,
   ) {}
 
   @Start()
@@ -23,5 +23,14 @@ export class CrmBotUpdate {
   @Help()
   async onHelp(): Promise<string> {
     return 'Пусто';
+  }
+
+  @Command('getAuthToken')
+  async onAuthTokenCommand(
+    @CurrentTelegramUser() tgUser: TTelegramUser,
+    @Ctx() ctx: Context,
+  ): Promise<void> {
+    const message = await this.crmBotService.getAuthToken(tgUser.telegramId);
+    await ctx.replyWithMarkdown(message);
   }
 }
