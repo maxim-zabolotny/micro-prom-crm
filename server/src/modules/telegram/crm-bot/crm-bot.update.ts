@@ -23,9 +23,9 @@ export class CrmBotUpdate {
   @Help()
   async onHelp(): Promise<string> {
     const commands = [
-      '/getAuthToken - Получить токен аутентификации',
-      '/getClientUrl - Получить URL клиента',
-      '/getServerUrl - Получить URL сервера',
+      '/get_auth_token - Получить токен аутентификации',
+      '/get_client_url - Получить URL клиента',
+      '/get_server_url - Получить URL сервера',
     ].join('\n');
     const description = [
       'URL клиента это ссылка на CRM сайт',
@@ -36,7 +36,7 @@ export class CrmBotUpdate {
     return `${commands}\n\n${description}`;
   }
 
-  @Command('getAuthToken')
+  @Command('get_auth_token')
   async onGetAuthTokenCommand(
     @CurrentTelegramUser() tgUser: TTelegramUser,
     @Ctx() ctx: Context,
@@ -45,13 +45,13 @@ export class CrmBotUpdate {
     await ctx.replyWithMarkdown(message);
   }
 
-  @Command('getClientUrl')
+  @Command('get_client_url')
   async onGetClientUrlCommand(@Ctx() ctx: Context): Promise<void> {
     const message = this.crmBotService.getClientUrl();
     await ctx.replyWithMarkdown(message);
   }
 
-  @Command('getServerUrl')
+  @Command('get_server_url')
   async onGetServerUrlCommand(@Ctx() ctx: Context): Promise<void> {
     const message = await this.crmBotService.getServerUrl();
     await ctx.replyWithMarkdown(message);
