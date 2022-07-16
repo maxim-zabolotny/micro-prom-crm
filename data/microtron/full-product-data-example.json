@@ -1,0 +1,70 @@
+{
+  "raw": {
+    "id": 128237,
+    "name": "USB Flash Drive 16Gb Transcend 350, Black (TS16GJF350)",
+    "vendorCode": "TS16GJF350",
+    "categoryId": "000000056",
+    "currency": "USD",
+    "price": 5.3,
+    "quantity": 1,
+    "price_s": "",
+    "quantity_s": "",
+    "RRP": "",
+    "brand": "Transcend",
+    "warranty": 60,
+    "UKTZED": "8523511000",
+    "url": "https://www.microtron.ua/usb-flash-drive-16gb-transcend-350-black-ts16gjf350/p128237",
+    "description": "",
+    "images": [
+      "https://microtron.ua/media/5ccc253d4dd65608401a2d83/usb-flash-drive-16gb-transcend-350-black-15-7mbps-ts16gjf350-128237.jpg"
+    ],
+    "parse": {
+      "name": "USB Flash Drive 16Gb Transcend 350, Black (TS16GJF350)",
+      "description": "USB Flash Drive 16Gb Transcend 350, Black (TS16GJF350)",
+      "brand": "Transcend",
+      "availability": "В наявності",
+      "cost": {
+        "price": 180,
+        "currency": "UAH"
+      },
+      "specifications": {
+        "Інтерфейс": "USB 2.0",
+        "Колір": "Black",
+        "Об'єм накопичувача": "16Gb"
+      },
+      "new": true,
+      "available": true,
+      "url": "https://www.microtron.ua/usb-flash-drive-16gb-transcend-350-black-ts16gjf350/p128237"
+    }
+  },
+  "result": {
+    "id": 128237,
+    "name": "USB Flash Drive 16Gb Transcend 350, Black (TS16GJF350)",
+    "vendorCode": "TS16GJF350",
+    "categoryId": "000000056",
+    "currency": "USD",
+    "price": 5.3,
+    "quantity": 1,
+    "brand": "Transcend",
+    "warranty": 60,
+    "UKTZED": "8523511000",
+    "url": "https://www.microtron.ua/usb-flash-drive-16gb-transcend-350-black-ts16gjf350/p128237",
+    "images": [
+      "https://microtron.ua/media/5ccc253d4dd65608401a2d83/usb-flash-drive-16gb-transcend-350-black-15-7mbps-ts16gjf350-128237.jpg"
+    ],
+    "parse": {
+      "description": "USB Flash Drive 16Gb Transcend 350, Black (TS16GJF350)",
+      "cost": {
+        "price": 180,
+        "currency": "UAH"
+      },
+      "specifications": {
+        "Інтерфейс": "USB 2.0",
+        "Колір": "Black",
+        "Об'єм накопичувача": "16Gb"
+      },
+      "new": true,
+      "available": true
+    }
+  }
+}
