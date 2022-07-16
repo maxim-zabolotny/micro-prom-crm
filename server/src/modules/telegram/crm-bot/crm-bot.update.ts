@@ -26,11 +26,17 @@ export class CrmBotUpdate {
   }
 
   @Command('getAuthToken')
-  async onAuthTokenCommand(
+  async onGetAuthTokenCommand(
     @CurrentTelegramUser() tgUser: TTelegramUser,
     @Ctx() ctx: Context,
   ): Promise<void> {
     const message = await this.crmBotService.getAuthToken(tgUser.telegramId);
+    await ctx.replyWithMarkdown(message);
+  }
+
+  @Command('getClientUrl')
+  async onGetClientUrlCommand(@Ctx() ctx: Context): Promise<void> {
+    const message = this.crmBotService.getClientUrl();
     await ctx.replyWithMarkdown(message);
   }
 }

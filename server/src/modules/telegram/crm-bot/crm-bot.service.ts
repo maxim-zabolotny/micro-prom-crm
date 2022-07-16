@@ -6,12 +6,14 @@ import { TTelegramUser } from '../common/types';
 import { TelegrafException } from 'nestjs-telegraf';
 import { MarkdownHelper } from '../common/helpers';
 import { AuthService } from '../../auth/auth.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CrmBotService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
   private async getUserByTelegramId(
@@ -37,5 +39,14 @@ export class CrmBotService {
     const tokenText = MarkdownHelper.monospaced(token.accessToken);
 
     return `${tokenMsg}:\n${tokenText}`;
+  }
+
+  public getClientUrl() {
+    const url = this.configService.get('client.url');
+
+    const urlMsg = MarkdownHelper.bold('URL');
+    const urlText = MarkdownHelper.monospaced(url);
+
+    return `${urlMsg}: ${urlText}`;
   }
 }
