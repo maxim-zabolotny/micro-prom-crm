@@ -46,13 +46,14 @@ export class AppModule implements NestModule {
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
+    const isDev = this.configService.get('isDev');
     const whitelist = this.configService.get('cors.whiteList');
 
     consumer
       .apply(
         cors({
           origin: function (origin, callback) {
-            if (whitelist.includes(origin)) {
+            if (whitelist.includes(origin) || isDev) {
               callback(null, origin);
             } else {
               callback(new Error('Not allowed by CORS'));
