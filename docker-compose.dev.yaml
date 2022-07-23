@@ -1,7 +1,7 @@
 version: "3"
 services:
 
-  crm_web:
+  web:
     container_name: crm_web
     build:
       context: ./
@@ -13,9 +13,9 @@ services:
       PORT: 3000
       NODE_ENV: development
     depends_on:
-      - crm_api
+      - api
     links:
-      - crm_api:crm_api
+      - api:api
     volumes:
       - ./client:/home/app/crm_web
       - /client/node_modules
@@ -24,7 +24,7 @@ services:
     entrypoint: /bin/bash
     command: -s
 
-  crm_api:
+  api:
     container_name: crm_api
     build:
       context: ./
@@ -69,10 +69,11 @@ services:
 
   localtunnel:
     image: efrecon/localtunnel
+    container_name: crm_tunnel
     command:
-      --local-host crm_web --port 3000 --subdomain micropromcrm
+      --local-host web --port 3000 --subdomain micropromcrm
     links:
-      - crm_web
+      - web
     depends_on:
-      - crm_web
+      - web
     restart: "always"
