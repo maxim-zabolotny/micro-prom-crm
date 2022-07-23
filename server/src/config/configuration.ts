@@ -25,7 +25,7 @@ export default () => {
     localPort: process.env.CLIENT_LOCAL_PORT,
     url: '',
   };
-  client.url = `https://${client.domain}.loca.lt`;
+  client.url = `http://${client.domain}.loca.lt`;
 
   const jwtToken = {
     secret: process.env.TOKEN_SECRET,
