@@ -1,4 +1,5 @@
 /*external modules*/
+import * as qs from 'query-string';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 /*lib*/
 /*types*/
@@ -22,6 +23,7 @@ export class Request {
       headers: {
         ...Request.DEFAULT_HEADERS,
       },
+      paramsSerializer: (p) => qs.stringify(p),
     });
   }
 
@@ -121,7 +123,18 @@ export class Request {
 
   public static DEFAULT_PARAMS = {
     client: 'gtx',
-    dt: 't',
+    dt: [
+      't',
+      'at',
+      'bd',
+      'ex',
+      'ld',
+      'md',
+      // 'qca', // add superfluous spaces
+      'rw',
+      'rm',
+      'ss',
+    ],
   };
 
   public static DEFAULT_HEADERS = {
@@ -130,3 +143,44 @@ export class Request {
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
   };
 }
+
+// Google Translate:
+// https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&hl=en-US&dt=t&dt=bd&dj=1&source=input&tk=60183.60183&q=hello%20world
+/**
+ * client: gtx
+ * sl: auto
+ * tl: ru
+ * hl: en-US
+ * dt: t
+ * dt: bd
+ * dj: 1
+ * source: input
+ * tk: 60183.60183
+ * q: hello world
+ * */
+
+// Telegram translate:
+// "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + from + "&tl=" + to + "&dt=t&ie=UTF-8&oe=UTF-8&otf=1&ssel=0&tsel=0&kc=7&dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&q=" + text
+// "https://translate.googleapis.com/translate_a/single?client=gtx&sl=rus&tl=urk&dt=t&ie=UTF-8&oe=UTF-8&otf=1&ssel=0&tsel=0&kc=7&dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&q=hello"
+/**
+ * 'client':  gtx
+ * 'sl':  rus
+ * 'tl':  urk
+ * 'dt'[0]:  t
+ * 'dt'[1]:  at
+ * 'dt'[2]:  bd
+ * 'dt'[3]:  ex
+ * 'dt'[4]:  ld
+ * 'dt'[5]:  md
+ * 'dt'[6]:  qca
+ * 'dt'[7]:  rw
+ * 'dt'[8]:  rm
+ * 'dt'[9]:  ss
+ * 'ie':  UTF-8
+ * 'oe':  UTF-8
+ * 'otf':  1
+ * 'ssel':  0
+ * 'tsel':  0
+ * 'kc':  7
+ * 'q':  hello
+ * */
