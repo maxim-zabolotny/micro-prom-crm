@@ -37,7 +37,7 @@ export class Request {
 
   protected prepareRequestOptions(options: ITranslateRequestOptions): ITranslateRequestRawOptions {
     return {
-      q: this.encodeText(options.text),
+      q: options.text, //this.encodeText(options.text),
       sl: options.from,
       tl: options.to,
     };
@@ -59,8 +59,8 @@ export class Request {
     return {
       sourceLang,
       targetLang,
-      sourceText: this.decodeText(sourceText),
-      translatedText: this.decodeText(translatedText),
+      sourceText, // this.decodeText(sourceText),
+      translatedText, // this.decodeText(translatedText),
     };
   }
 
@@ -125,16 +125,20 @@ export class Request {
     client: 'gtx',
     dt: [
       't',
-      'at',
       'bd',
       'ex',
       'ld',
       'md',
-      // 'qca', // add superfluous spaces
       'rw',
-      'rm',
       'ss',
+      // 'at', // add additional information
+      // 'qca', // add superfluous spaces
+      // 'rm', // add transcription
     ],
+    hl: 'en-US',
+    ie: 'UTF-8',
+    oe: 'UTF-8',
+    // dj: 1, // change style of response
   };
 
   public static DEFAULT_HEADERS = {
