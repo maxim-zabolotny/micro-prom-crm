@@ -29,6 +29,9 @@ export declare class Request {
     static DEFAULT_PARAMS: {
         client: string;
         dt: string[];
+        hl: string;
+        ie: string;
+        oe: string;
     };
     static DEFAULT_HEADERS: {
         origin: string;
