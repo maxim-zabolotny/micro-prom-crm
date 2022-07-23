@@ -14,9 +14,12 @@ export class AuthService {
 
   constructor(private jwtService: JwtService) {}
 
-  public generateAuthToken(user: Pick<UserDocument, 'id'>) {
+  public generateAuthToken(user: Pick<UserDocument, 'id' | 'role'>) {
     // property name of sub need for hold our userId value to be consistent with JWT standards.
-    const payload = { sub: user.id };
+    const payload = {
+      sub: user.id,
+      role: user.role,
+    };
 
     return {
       accessToken: this.jwtService.sign(payload),
