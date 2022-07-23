@@ -14,6 +14,7 @@ import configuration from './config/configuration';
 import { LoggerMiddleware } from '@common/middlewares';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { SeedsModule } from './modules/seeds/seeds.module';
+import { TranslateModule } from './modules/translate/translate.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SeedsModule } from './modules/seeds/seeds.module';
       },
     }),
     MicrotronModule,
+    TranslateModule,
     TelegramModule,
     SeedsModule,
   ],
