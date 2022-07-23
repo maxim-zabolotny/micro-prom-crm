@@ -7,6 +7,8 @@ import * as Types from './core/types/api';
 /*errors*/
 /*other*/
 
+export { Types, Request, Endpoints };
+
 export default class ApertiumAPI {
   public static Request = Request;
   public static Endpoints = Endpoints;
