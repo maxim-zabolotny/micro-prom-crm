@@ -6,6 +6,8 @@ import * as Types from './core/types/api';
 /*errors*/
 /*other*/
 
+export { Types, Request };
+
 export default class GoogleTranslateAPI {
   public static Request = Request;
 
