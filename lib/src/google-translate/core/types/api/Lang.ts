@@ -1,5 +1,6 @@
 export enum Lang {
-    Auto = 'auto',
-    RU = 'ru',
-    UA = 'uk'
+  Auto = 'auto',
+  RU = 'ru',
+  UA = 'uk',
+  EN = 'en'
 }
