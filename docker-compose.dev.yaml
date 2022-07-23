@@ -50,6 +50,7 @@ services:
   database:
     image: mongo:5.0
     container_name: crm_database
+#    user: ${MY_UID}:${MY_GID}
     environment:
       MONGO_INITDB_ROOT_USERNAME: mongo
       MONGO_INITDB_ROOT_PASSWORD: password
@@ -58,6 +59,8 @@ services:
       - "27017:27017"
     volumes:
       - ./mongodb:/data/db
+    tty: true
+    restart: "always"
 
   redis:
     image: redis:5.0.3-alpine
