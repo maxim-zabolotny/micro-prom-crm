@@ -28,6 +28,8 @@
     "seeds:integrations": "CLI_PATH=./src/cli.ts npx nestjs-command create:integrations"
   },
   "dependencies": {
+    "@bull-board/api": "^4.0.1",
+    "@bull-board/express": "^4.0.1",
     "@nestjs/bull": "^0.6.0",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^2.1.0",
