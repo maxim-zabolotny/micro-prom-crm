@@ -2,12 +2,13 @@
 import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
+import { AudioConsumer, audioProcessorName } from './consumers';
 /*modules*/
 /*services*/
 /*controllers*/
 /*consumers*/
 
-const consumers = [];
+const consumers = [AudioConsumer];
 
 @Global()
 @Module({
@@ -27,6 +28,7 @@ const consumers = [];
       },
       inject: [ConfigService],
     }),
+    BullModule.registerQueue({ name: audioProcessorName }),
   ],
   providers: consumers,
   exports: [BullModule, ...consumers],
