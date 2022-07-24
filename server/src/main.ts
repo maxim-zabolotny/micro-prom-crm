@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   // INIT
@@ -19,7 +19,10 @@ async function bootstrap() {
   );
 
   // START
-  await app.listen(configService.get('port'));
+  await app.listen(configService.get('port'), () => {
+    const logger = new Logger('App');
+    logger.verbose(`Running on port: ${configService.get('port')}`);
+  });
 }
 
 bootstrap();
