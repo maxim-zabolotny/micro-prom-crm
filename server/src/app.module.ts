@@ -68,6 +68,7 @@ export class AppModule implements NestModule {
         }),
         LoggerMiddleware,
       )
+      .exclude({ path: '/admin/jobs/api/queues', method: RequestMethod.ALL })
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
