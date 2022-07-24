@@ -43,7 +43,7 @@ export class JobBoardService {
   }
 
   public async addAudioJob() {
-    const job = await this.audioQueue.add('test', {});
+    const job = await this.audioQueue.add({});
     return {
       id: job.id,
       name: job.name,
