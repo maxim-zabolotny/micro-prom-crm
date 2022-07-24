@@ -1,6 +1,7 @@
 /*external modules*/
 import {
   OnQueueActive,
+  OnQueueCompleted,
   OnQueueFailed,
   OnQueueProgress,
   Process,
@@ -42,6 +43,13 @@ export class AudioConsumer {
   onProgress(job: Job, progress: number) {
     this.logger.debug(
       `Processing job ${job.id} of type ${job.name}: progress - ${progress}`,
+    );
+  }
+
+  @OnQueueCompleted()
+  onComplete(job: Job, result: Record<string, unknown>) {
+    this.logger.debug(
+      `Job ${job.id} of type ${job.name}: completed with result: ${result}`,
     );
   }
 
