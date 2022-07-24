@@ -10,10 +10,7 @@ import {
 import { Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 
-export type TAudioProcessorData = {
-  ket: string;
-};
-
+export type TAudioProcessorData = Record<string, never>;
 export type TAudioProcessorQueue = Queue<TAudioProcessorData>;
 
 export const audioProcessorName = 'audio' as const;
@@ -35,28 +32,30 @@ export class AudioConsumer {
   @OnQueueActive()
   onActive(job: Job) {
     this.logger.debug(
-      `Processing job ${job.id} of type ${job.name} with data ${job.data}...`,
+      `Processing job ${job.id} of Queue ${job.queue.name} with data:`,
+      job.data,
     );
   }
 
   @OnQueueProgress()
   onProgress(job: Job, progress: number) {
     this.logger.debug(
-      `Processing job ${job.id} of type ${job.name}: progress - ${progress}`,
+      `Processing job ${job.id} of Queue ${job.queue.name}: progress - ${progress}`,
     );
   }
 
   @OnQueueCompleted()
   onComplete(job: Job, result: Record<string, unknown>) {
     this.logger.debug(
-      `Job ${job.id} of type ${job.name}: completed with result: ${result}`,
+      `Job ${job.id} of Queue ${job.queue.name}: completed with result:`,
+      result,
     );
   }
 
   @OnQueueFailed()
   onFail(job: Job, err: Error) {
     this.logger.debug(
-      `Job ${job.id} of type ${job.name} failed with error`,
+      `Job ${job.id} of Queue ${job.queue.name} failed with error`,
       err,
     );
   }
