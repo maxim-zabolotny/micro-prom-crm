@@ -1,8 +1,10 @@
 /*external modules*/
-import { Global, Module } from '@nestjs/common';
+import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
 import { AudioConsumer, audioProcessorName } from './consumers';
+import { JobBoardService } from './board/job-board.service';
+import { JobBoardController } from './board/job-board.controller';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -30,7 +32,16 @@ const consumers = [AudioConsumer];
     }),
     BullModule.registerQueue({ name: audioProcessorName }),
   ],
-  providers: consumers,
+  controllers: [JobBoardController],
+  providers: [...consumers, JobBoardService],
   exports: [BullModule, ...consumers],
 })
-export class JobModule {}
+export class JobModule implements NestModule {
+  constructor(private readonly jobBoardService: JobBoardService) {}
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(this.jobBoardService.getRouter())
+      .forRoutes(this.jobBoardService.getBasePath());
+  }
+}
