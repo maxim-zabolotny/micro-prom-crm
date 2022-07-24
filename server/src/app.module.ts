@@ -16,6 +16,7 @@ import { TelegramModule } from './modules/telegram/telegram.module';
 import { SeedsModule } from './modules/seeds/seeds.module';
 import { TranslateModule } from './modules/translate/translate.module';
 import { RedisModule } from './modules/redis/redis.module';
+import { JobModule } from './modules/job/job.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { RedisModule } from './modules/redis/redis.module';
     SeedsModule,
     TranslateModule,
     RedisModule,
+    JobModule,
     MicrotronModule,
     TelegramModule,
   ],
