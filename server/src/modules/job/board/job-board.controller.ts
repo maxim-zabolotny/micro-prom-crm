@@ -1,4 +1,4 @@
-import { Controller, UseInterceptors } from '@nestjs/common';
+import { Controller, HttpCode, Post, UseInterceptors } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
 import { JobBoardService } from './job-board.service';
 
@@ -6,4 +6,10 @@ import { JobBoardService } from './job-board.service';
 @UseInterceptors(LoggingInterceptor)
 export class JobBoardController {
   constructor(private readonly jobBoardService: JobBoardService) {}
+
+  @Post('/test-audio')
+  @HttpCode(201)
+  addAudioJob() {
+    return this.jobBoardService.addAudioJob();
+  }
 }

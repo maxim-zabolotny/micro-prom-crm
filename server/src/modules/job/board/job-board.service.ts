@@ -41,4 +41,13 @@ export class JobBoardService {
   public getRouter() {
     return this.serverAdapter.getRouter();
   }
+
+  public async addAudioJob() {
+    const job = await this.audioQueue.add('test', {});
+    return {
+      id: job.id,
+      name: job.name,
+      data: job.data,
+    };
+  }
 }
