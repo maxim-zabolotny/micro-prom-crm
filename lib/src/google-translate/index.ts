@@ -9,7 +9,7 @@ import * as Types from './core/types/api';
 export { Types, Request };
 
 export default class GoogleTranslateAPI {
-  public static Request = Request;
+  public static Request = Request.Request;
 
   public static Types = Types;
 }
