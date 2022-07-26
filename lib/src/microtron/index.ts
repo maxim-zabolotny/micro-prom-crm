@@ -1,7 +1,7 @@
 /*lib*/
-import { Course } from './core/course';
-import { Category } from './core/category';
-import { Product } from './core/product';
+import * as Course from './core/course';
+import * as Category from './core/category';
+import * as Product from './core/product';
 import { Request } from './core/request';
 /*types*/
 import * as Types from './core/types/api';
@@ -24,9 +24,9 @@ export {
 };
 
 export default class MicrotronAPI {
-  public static Course = Course;
-  public static Category = Category;
-  public static Product = Product;
+  public static Course = Course.Course;
+  public static Category = Category.Category;
+  public static Product = Product.Product;
 
   public static Request = Request;
 

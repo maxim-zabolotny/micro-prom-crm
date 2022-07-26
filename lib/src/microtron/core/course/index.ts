@@ -9,6 +9,11 @@ import { IResponseRaw } from '../request/IResponse';
 export type TEntity = ICourse;
 export type TRawEntity = ICourseRaw;
 
+export {
+  ICourse,
+  ICourseRaw,
+};
+
 export class Course extends Request<TEntity, TRawEntity> {
   protected parseResult(data: IResponseRaw<TRawEntity>) {
     const { data: responseData, ...responseFields } = super.parseData(data);

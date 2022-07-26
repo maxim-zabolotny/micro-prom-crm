@@ -5,7 +5,7 @@ import { Request } from '../request';
 /*types*/
 import { Currency, Lang } from '../types/api';
 import {
-  IProduct, IProductFull, IProductRaw, IProductFullRaw,
+  IProduct, IProductFull, IProductFullRaw, IProductRaw,
 } from './IProduct';
 import { IProductRequestOptions } from './IOptions';
 import { IResponseRaw } from '../request/IResponse';
@@ -15,6 +15,14 @@ export type TEntity = IProduct | IProductFull;
 export type TRawEntity = IProductRaw | IProductFullRaw;
 
 export type TGetProductsOptions = Omit<IProductRequestOptions, 'full'>;
+
+export {
+  IProduct,
+  IProductRaw,
+  IProductFull,
+  IProductFullRaw,
+  IProductRequestOptions,
+};
 
 export class Product extends Request<TEntity[], TRawEntity[]> {
   protected parseResult(data: IResponseRaw<TRawEntity[]>) {

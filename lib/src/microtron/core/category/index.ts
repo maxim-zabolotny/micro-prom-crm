@@ -14,6 +14,12 @@ import { makeTree } from '../utils';
 export type TEntity = ICategory;
 export type TRawEntity = ICategoryRaw;
 
+export {
+  ICategory,
+  ICategoryRaw,
+  ICategoriesTree,
+};
+
 export class Category extends Request<TEntity[], TRawEntity[]> {
   protected parseResult(data: IResponseRaw<TRawEntity[]>) {
     const { data: responseData, ...responseFields } = super.parseData(data);
