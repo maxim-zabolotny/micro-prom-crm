@@ -1,5 +1,5 @@
 /*lib*/
-import { Request } from './core/request';
+import * as Request from './core/request';
 /*types*/
 import * as Types from './core/types/api';
 /*utils*/

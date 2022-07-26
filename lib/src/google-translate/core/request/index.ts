@@ -7,8 +7,11 @@ import { Lang } from '../types/api';
 import { IResult } from './IResult';
 import { TTranslateResponse } from './IResponse';
 import { ITranslateRequestOptions, ITranslateRequestRawOptions } from './IRequest';
-
 /*other*/
+
+export {
+  IResult,
+};
 
 export class Request {
   protected config: AxiosRequestConfig;
