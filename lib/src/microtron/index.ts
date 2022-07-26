@@ -13,6 +13,16 @@ import { ParserV2 } from './core/parserV2';
 import { MicroError } from './core/error';
 /*other*/
 
+export {
+  Course,
+  Category,
+  Product,
+  Types,
+  MicroError,
+  Parser,
+  ParserV2,
+};
+
 export default class MicrotronAPI {
   public static Course = Course;
   public static Category = Category;
