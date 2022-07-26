@@ -1,12 +1,7 @@
 import * as _ from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import MicrotronAPI from '@lib/microtron';
-import { Category } from '@lib/microtron/core/category';
-import {
-  ICategory,
-  ICategoriesTree,
-} from '@lib/microtron/core/category/ICategorie';
+import MicrotronAPI, { Category } from '@lib/microtron';
 import {
   Constant,
   ConstantDocument,
@@ -17,10 +12,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { Data } from '../../../data';
 
+type ICategoriesTree = Category.ICategoriesTree;
+type ICategory = Category.ICategory;
+
 @Injectable()
 export class CategoriesService {
   private readonly categories: ICategory[] = [];
-  private readonly categoriesAPI: Category;
+  private readonly categoriesAPI: Category.Category;
 
   constructor(
     private configService: ConfigService,
