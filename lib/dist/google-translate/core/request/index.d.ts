@@ -3,6 +3,7 @@ import { Lang } from '../types/api';
 import { IResult } from './IResult';
 import { TTranslateResponse } from './IResponse';
 import { ITranslateRequestOptions, ITranslateRequestRawOptions } from './IRequest';
+export { IResult, };
 export declare class Request {
     protected config: AxiosRequestConfig;
     protected axios: AxiosInstance;

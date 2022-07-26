@@ -1,7 +1,9 @@
-import { AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Lang } from '../types/api';
+import { ITranslateResponse } from './IResponse';
 import { IDetectLanguageRequest, ITranslateRequest, TRequestData } from './IRequest';
 import { Endpoints } from './Endpoints';
+export { TRequestData, ITranslateResponse, };
 export declare class Request {
     protected config: AxiosRequestConfig;
     protected axios: AxiosInstance;
