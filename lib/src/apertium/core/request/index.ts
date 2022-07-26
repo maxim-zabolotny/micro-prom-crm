@@ -1,6 +1,6 @@
 /*external modules*/
 import maxBy from 'lodash/maxBy';
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 /*lib*/
 /*types*/
@@ -9,6 +9,11 @@ import { ITranslateResponse } from './IResponse';
 import { IDetectLanguageRequest, ITranslateRequest, TRequestData } from './IRequest';
 import { Endpoints } from './Endpoints';
 /*other*/
+
+export {
+  TRequestData,
+  ITranslateResponse,
+};
 
 export class Request {
   protected config: AxiosRequestConfig;
