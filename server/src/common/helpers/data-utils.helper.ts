@@ -11,4 +11,27 @@ export class DataUtilsHelper {
 
     return { added, removed, intersection };
   }
+
+  splitStringArrByLength(arr: string[], maxLength: number): string[][] {
+    const result: string[][] = [];
+
+    let currentArr = [];
+    let currentLength = 0;
+    _.forEach(arr, (item) => {
+      const nextLength = currentLength + item.length;
+      if (nextLength > maxLength) {
+        result.push(currentArr);
+
+        currentLength = item.length;
+        currentArr = [item];
+
+        return;
+      }
+
+      currentLength += item.length;
+      currentArr.push(item);
+    });
+
+    return result;
+  }
 }
