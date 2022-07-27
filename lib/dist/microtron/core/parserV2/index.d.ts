@@ -1,8 +1,9 @@
 import * as cheerio from 'cheerio';
 import { ProductAvailabilityV2 } from '../types/api';
-import { IResult, IResultBody } from './IResult';
+import { ICost, IResult, IResultBody, TProductSpecifications } from './IResult';
 import { ISettings } from './ISettings';
 export declare type TCheerioEl = cheerio.Cheerio<cheerio.Element>;
+export { IResult, IResultBody, ICost, TProductSpecifications, };
 export declare class ParserV2 {
     readonly htmlPage: string;
     readonly $root: cheerio.CheerioAPI;
