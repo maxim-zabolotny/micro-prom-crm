@@ -58,7 +58,7 @@ export class ProductsController {
 
   @Get('/parse')
   @HttpCode(200)
-  parse(
+  getParse(
     @Query('url')
     url: string,
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
