@@ -5,6 +5,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Constant, ConstantSchema } from '@schemas/constant';
 import { CategoriesController } from './categories/categories.controller';
 import { CategoriesService } from './categories/categories.service';
+import { ProductsController } from './products/products.controller';
+import { ProductsService } from './products/products.service';
+import { DataUtilsHelper } from '@common/helpers';
 
 @Module({
   imports: [
@@ -15,7 +18,12 @@ import { CategoriesService } from './categories/categories.service';
       },
     ]),
   ],
-  controllers: [MicrotronController, CategoriesController],
-  providers: [MicrotronService, CategoriesService],
+  controllers: [MicrotronController, CategoriesController, ProductsController],
+  providers: [
+    MicrotronService,
+    DataUtilsHelper,
+    CategoriesService,
+    ProductsService,
+  ],
 })
 export class MicrotronModule {}
