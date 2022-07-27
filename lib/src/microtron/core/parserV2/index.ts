@@ -12,6 +12,13 @@ import { ISettings } from './ISettings';
 
 export type TCheerioEl = cheerio.Cheerio<cheerio.Element>;
 
+export {
+  IResult,
+  IResultBody,
+  ICost,
+  TProductSpecifications,
+};
+
 export class ParserV2 {
   public readonly htmlPage: string;
   public readonly $root: cheerio.CheerioAPI;

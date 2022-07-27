@@ -21,6 +21,17 @@ import {
 
 export type TCheerioEl = cheerio.Cheerio<cheerio.Element>;
 
+export {
+  IResult,
+  IResultBody,
+  TProductDetails,
+  TProductSpecifications,
+  IResultHead,
+  IResultHeadBase,
+  IResultHeadOG,
+  IResultHeadProduct,
+};
+
 export class Parser {
   public readonly htmlPage: string;
   public readonly $root: cheerio.CheerioAPI;
