@@ -11,8 +11,8 @@ import GoogleTranslateAPI, {
 
 @Injectable()
 export class TranslateService {
-  private readonly apertiumAPI: Apertium;
-  private readonly googleTranslateAPI: GoogleTranslate;
+  private readonly apertiumAPI: Apertium.Request;
+  private readonly googleTranslateAPI: GoogleTranslate.Request;
 
   constructor(private configService: ConfigService) {
     this.apertiumAPI = new ApertiumAPI.Request();
