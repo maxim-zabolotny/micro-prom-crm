@@ -7,7 +7,8 @@ export class DataUtilsHelper {
   getDiff<T>(newArr: T[], oldArr: T[]) {
     const added = _.difference(newArr, oldArr);
     const removed = _.difference(oldArr, newArr);
+    const intersection = _.intersection(newArr, oldArr);
 
-    return { added, removed };
+    return { added, removed, intersection };
   }
 }
