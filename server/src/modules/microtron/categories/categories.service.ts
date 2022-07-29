@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import MicrotronAPI, { Category } from '@lib/microtron';
+import MicrotronAPI, { Category, Types } from '@lib/microtron';
 import {
   Constant,
   ConstantDocument,
@@ -11,6 +11,8 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { Data } from '../../../data';
+import { TranslateService } from '../../translate/translate.service';
+import { DataUtilsHelper } from '@common/helpers';
 
 type ICategoriesTree = Category.ICategoriesTree;
 type ICategory = Category.ICategory;
@@ -19,11 +21,15 @@ type ICategory = Category.ICategory;
 export class CategoriesService {
   private readonly logger = new Logger(this.constructor.name);
 
-  private readonly categoriesCache: ICategory[] = [];
   private readonly categoriesAPI: Category.Category;
+
+  private readonly uaCategoriesCache: ICategory[] = [];
+  private readonly ruCategoriesCache: ICategory[] = [];
 
   constructor(
     private configService: ConfigService,
+    private translateService: TranslateService,
+    private dataUtilHelper: DataUtilsHelper,
     @InjectModel(Constant.name) private constantModel: Model<ConstantDocument>,
   ) {
     this.categoriesAPI = new MicrotronAPI.Category({
@@ -31,13 +37,16 @@ export class CategoriesService {
     });
   }
 
-  private async retrieveFromAPI(force: boolean) {
-    if (force || _.isEmpty(this.categoriesCache)) {
-      const categories = await this.categoriesAPI.getCategories();
-      this.categoriesCache.push(...categories);
+  private async retrieveFromAPI(force: boolean, lang: Types.Lang) {
+    const cache =
+      lang === Types.Lang.UA ? this.uaCategoriesCache : this.ruCategoriesCache;
+
+    if (force || _.isEmpty(cache)) {
+      const categories = await this.categoriesAPI.getCategories(lang);
+      cache.push(...categories);
     }
 
-    return this.categoriesCache;
+    return cache;
   }
 
   private async retrieveFromDB(): Promise<ConstantDocument | null> {
@@ -57,7 +66,7 @@ export class CategoriesService {
     tree: boolean,
   ): Promise<Array<ICategory | ICategoriesTree>> {
     this.logger.debug('Load categories from API', { force });
-    const categories = await this.retrieveFromAPI(force);
+    const categories = await this.retrieveFromAPI(force, Types.Lang.UA);
 
     if (tree) {
       this.logger.debug('Build and return categories tree ');
@@ -71,6 +80,7 @@ export class CategoriesService {
     tree: boolean,
   ): Promise<Array<ICategory | ICategoriesTree>> {
     this.logger.debug('Load categories from DB');
+
     const categoriesData = await this.retrieveFromDB();
     if (categoriesData) {
       const data = JSON.parse(categoriesData.toObject().value);
