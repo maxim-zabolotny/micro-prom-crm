@@ -117,19 +117,8 @@ export class CategoriesService {
   public async save(
     categoriesData: SaveCategoriesDto,
   ): Promise<{ success: boolean }> {
-    let categories!: ICategoryInConstant[];
-    if (categoriesData.isTree) {
-      this.logger.debug('Receive categories in tree view. Convert to array');
-      categories = MicrotronAPI.Utils.fromTree(
-        categoriesData.categories as ICategoryTreeInConstant[],
-        'id',
-        'parentId',
-      ) as unknown as ICategoryInConstant[];
-    } else {
-      this.logger.debug('Receive categories in array view');
-      categories =
-        categoriesData.categories as unknown as ICategoryInConstant[];
-    }
+    this.logger.debug('Receive categories in array view');
+    const categories = categoriesData.categories;
 
     this.logger.debug('Write categories data in file');
     await Data.SelectedCategories.write(categories);
