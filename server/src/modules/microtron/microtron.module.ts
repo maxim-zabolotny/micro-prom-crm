@@ -20,8 +20,8 @@ import { DataUtilsHelper } from '@common/helpers';
   ],
   controllers: [MicrotronController, CategoriesController, ProductsController],
   providers: [
-    MicrotronService,
     DataUtilsHelper,
+    MicrotronService,
     CategoriesService,
     ProductsService,
   ],

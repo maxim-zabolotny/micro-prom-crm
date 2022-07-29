@@ -47,4 +47,12 @@ export class CategoriesController {
   save(@Body() categoriesData: SaveCategoriesDto) {
     return this.categoriesService.save(categoriesData);
   }
+
+  @Get('/saved-ru-translate')
+  @HttpCode(200)
+  getSavedRUTranslate(
+    @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
+  ) {
+    return this.categoriesService.savedRUTranslate(tree);
+  }
 }
