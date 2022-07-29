@@ -1,8 +1,8 @@
 import { IsArray, IsBoolean, IsNotEmpty } from 'class-validator';
 import {
-  ICategoriesTree,
-  ICategory,
-} from '@lib/microtron/core/category/ICategorie';
+  ICategoryInConstant,
+  ICategoryTreeInConstant,
+} from '@common/interfaces/category';
 
 export class SaveCategoriesDto {
   @IsBoolean()
@@ -10,5 +10,5 @@ export class SaveCategoriesDto {
   isTree: boolean;
 
   @IsArray()
-  categories: Array<ICategory | ICategoriesTree>;
+  categories: Array<ICategoryInConstant | ICategoryTreeInConstant>;
 }

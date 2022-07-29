@@ -53,6 +53,6 @@ export class CategoriesController {
   getSavedRUTranslate(
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
-    return this.categoriesService.savedRUTranslate(tree);
+    return this.categoriesService.getSavedRUTranslate(tree);
   }
 }

@@ -12,6 +12,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { Data } from '../../../data';
 import { DataUtilsHelper } from '@common/helpers';
+import {
+  ICategoryInConstant,
+  ICategoryTreeInConstant,
+} from '@common/interfaces/category';
 
 type ICategoriesTree = Category.ICategoriesTree;
 type ICategory = Category.ICategory;
@@ -35,7 +39,10 @@ export class CategoriesService {
     });
   }
 
-  private async retrieveFromAPI(force: boolean, lang: Types.Lang) {
+  private async retrieveFromAPI(
+    force: boolean,
+    lang: Types.Lang,
+  ): Promise<ICategory[]> {
     const cache =
       lang === Types.Lang.UA ? this.uaCategoriesCache : this.ruCategoriesCache;
 
@@ -83,16 +90,20 @@ export class CategoriesService {
 
   public async getSaved(
     tree: boolean,
-  ): Promise<Array<ICategory | ICategoriesTree>> {
+  ): Promise<Array<ICategoryInConstant | ICategoryTreeInConstant>> {
     this.logger.debug('Load categories from DB');
 
     const categoriesData = await this.retrieveFromDB();
     if (categoriesData) {
-      const data = JSON.parse(categoriesData.toObject().value);
+      const data: ICategoryInConstant[] = JSON.parse(
+        categoriesData.toObject().value,
+      );
 
       if (tree) {
         this.logger.debug('Build and return categories tree ');
-        return MicrotronAPI.Category.buildCategoriesTree(data);
+        return MicrotronAPI.Category.buildCategoriesTree(
+          data,
+        ) as ICategoryTreeInConstant[];
       }
 
       this.logger.debug('Return categories from DB');
@@ -106,17 +117,18 @@ export class CategoriesService {
   public async save(
     categoriesData: SaveCategoriesDto,
   ): Promise<{ success: boolean }> {
-    let categories!: ICategory[];
+    let categories!: ICategoryInConstant[];
     if (categoriesData.isTree) {
       this.logger.debug('Receive categories in tree view. Convert to array');
       categories = MicrotronAPI.Utils.fromTree(
-        categoriesData.categories as ICategoriesTree[],
+        categoriesData.categories as ICategoryTreeInConstant[],
         'id',
         'parentId',
-      ) as unknown as ICategory[];
+      ) as unknown as ICategoryInConstant[];
     } else {
       this.logger.debug('Receive categories in array view');
-      categories = categoriesData.categories as unknown as ICategory[];
+      categories =
+        categoriesData.categories as unknown as ICategoryInConstant[];
     }
 
     this.logger.debug('Write categories data in file');
@@ -148,7 +160,7 @@ export class CategoriesService {
     };
   }
 
-  public async savedRUTranslate(
+  public async getSavedRUTranslate(
     tree: boolean,
   ): Promise<Array<ICategory | ICategoriesTree>> {
     this.logger.debug('Load categories from DB');
