@@ -1,14 +1,11 @@
-import { IsArray, IsBoolean, IsNotEmpty } from 'class-validator';
-import {
-  ICategoryInConstant,
-  ICategoryTreeInConstant,
-} from '@common/interfaces/category';
+import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CategoryDto } from './category.dto';
 
 export class SaveCategoriesDto {
-  @IsBoolean()
-  @IsNotEmpty()
-  isTree: boolean;
-
   @IsArray()
-  categories: Array<ICategoryInConstant | ICategoryTreeInConstant>;
+  @Type(() => CategoryDto)
+  @ValidateNested({ each: true })
+  @IsNotEmpty()
+  categories: Array<CategoryDto>;
 }
