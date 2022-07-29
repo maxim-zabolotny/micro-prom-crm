@@ -16,6 +16,7 @@ import {
   ICategoryInConstant,
   ICategoryTreeInConstant,
 } from '@common/interfaces/category';
+import { SetMarkupDto } from './dto/set-markup.dto';
 
 type ICategoriesTree = Category.ICategoriesTree;
 type ICategory = Category.ICategory;
@@ -147,6 +148,42 @@ export class CategoriesService {
     return {
       success: true,
     };
+  }
+
+  public async setMarkup(
+    markupCategoryData: SetMarkupDto,
+  ): Promise<ICategoryInConstant> {
+    this.logger.debug('Load categories from DB');
+    const savedCategories = await this.retrieveFromDB();
+    if (!savedCategories) {
+      throw new HttpException(
+        'No saved categories in DB',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const dbCategories: ICategoryInConstant[] = JSON.parse(
+      savedCategories.toObject().value,
+    );
+
+    const category = _.find(
+      dbCategories,
+      (category) => category.id === markupCategoryData.id,
+    );
+    if (!category) {
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    }
+
+    category.markup = markupCategoryData.markup;
+
+    this.logger.debug('Save categories data to record in DB');
+    savedCategories.value = JSON.stringify(dbCategories);
+    await savedCategories.save();
+
+    this.logger.debug('Write categories data in file');
+    await Data.SelectedCategories.write(dbCategories);
+
+    return category;
   }
 
   public async getSavedRUTranslate(

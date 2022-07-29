@@ -16,6 +16,7 @@ import { MicrotronExceptionFilter } from '@common/filters';
 import { Auth, TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
 import { UserRole } from '@schemas/user';
+import { SetMarkupDto } from './dto/set-markup.dto';
 
 @Controller('/microtron/categories')
 @UseFilters(MicrotronExceptionFilter)
@@ -46,6 +47,13 @@ export class CategoriesController {
   @Auth(UserRole.Provider, UserRole.Admin)
   save(@Body() categoriesData: SaveCategoriesDto) {
     return this.categoriesService.save(categoriesData);
+  }
+
+  @Put('/set-markup')
+  @HttpCode(201)
+  @Auth(UserRole.Provider, UserRole.Admin)
+  setMarkup(@Body() markupCategoryData: SetMarkupDto) {
+    return this.categoriesService.setMarkup(markupCategoryData);
   }
 
   @Get('/saved-ru-translate')
