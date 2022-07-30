@@ -32,6 +32,8 @@ export class DataUtilsHelper {
       currentArr.push(item);
     });
 
+    if (currentArr.length > 0) result.push(currentArr);
+
     return result;
   }
 }
