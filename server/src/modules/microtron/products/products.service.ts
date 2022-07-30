@@ -127,7 +127,7 @@ export class ProductsService {
     return result;
   }
 
-  private async translateSentence(
+  public async translateSentence(
     type: string,
     text: string,
     from: GoogleTranslateTypes.Lang,
