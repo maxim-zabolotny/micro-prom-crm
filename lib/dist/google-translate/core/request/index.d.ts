@@ -39,6 +39,7 @@ export declare class Request {
         referer: string;
         'user-agent': string;
     };
-    static MAX_SENTENCE: number;
+    static MAX_SENTENCES: number;
+    static MAX_SENTENCES_LENGTH: number;
     static MAX_LENGTH: number;
 }
