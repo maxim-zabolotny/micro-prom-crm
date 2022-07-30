@@ -7,7 +7,8 @@ import { CategoriesController } from './categories/categories.controller';
 import { CategoriesService } from './categories/categories.service';
 import { ProductsController } from './products/products.controller';
 import { ProductsService } from './products/products.service';
-import { DataUtilsHelper } from '@common/helpers';
+import { DataUtilsHelper, TimeHelper } from '@common/helpers';
+import { TranslateModule } from '../translate/translate.module';
 
 @Module({
   imports: [
@@ -17,13 +18,16 @@ import { DataUtilsHelper } from '@common/helpers';
         schema: ConstantSchema,
       },
     ]),
+    TranslateModule,
   ],
   controllers: [MicrotronController, CategoriesController, ProductsController],
   providers: [
     DataUtilsHelper,
+    TimeHelper,
     MicrotronService,
     CategoriesService,
     ProductsService,
   ],
+  exports: [CategoriesService, ProductsService],
 })
 export class MicrotronModule {}
