@@ -1,8 +1,15 @@
 import * as _ from 'lodash';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DataUtilsHelper } from '@common/helpers';
+import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import MicrotronAPI, { ParserV2, Product, Types } from '@lib/microtron';
+import { TranslateProductDto } from './dto/translate-product.dto';
+import { TranslateService } from '../../translate/translate.service';
+import {
+  Request as GoogleTranslate,
+  Types as GoogleTranslateTypes,
+} from '@lib/google-translate';
+import { ITranslatedProduct } from '@common/interfaces/product';
 
 type IProductFull = Product.IProductFull;
 type IProductRequestOptions = Product.IProductRequestOptions;
@@ -26,6 +33,8 @@ export class ProductsService {
   constructor(
     private configService: ConfigService,
     private dataUtilHelper: DataUtilsHelper,
+    private timeHelper: TimeHelper,
+    private translateService: TranslateService,
   ) {
     this.productsAPI = new MicrotronAPI.Product({
       token: configService.get('tokens.microtron'),
@@ -118,6 +127,109 @@ export class ProductsService {
     return result;
   }
 
+  private async translateSentence(
+    type: string,
+    text: string,
+    from: GoogleTranslateTypes.Lang,
+    to: GoogleTranslateTypes.Lang,
+  ): Promise<string | null> {
+    const maxLength = GoogleTranslate.Request.MAX_LENGTH;
+    const skipProcess = text.length > maxLength;
+
+    this.logger.debug(`Product "${type}" translating...`, {
+      type,
+      skipProcess,
+      size: text.length,
+      maxSize: maxLength,
+    });
+
+    if (skipProcess) return null;
+
+    const { translatedText, sourceText } =
+      await this.translateService.translateViaGoogle(text, from, to);
+    this.logger.debug(`Translated product "${type}" result:`, {
+      type,
+      sourceText,
+      translatedText,
+    });
+
+    this.logger.debug('Sleep 100ms');
+    await this.timeHelper.sleep(100);
+
+    return translatedText;
+  }
+
+  public async translateRecords(
+    record: Record<string, string>,
+    from: GoogleTranslateTypes.Lang,
+    to: GoogleTranslateTypes.Lang,
+  ): Promise<Record<string, string>> {
+    const additionalSize = `":"`.length;
+
+    const preparedTextArr = this.dataUtilHelper.splitStringArrByLength(
+      Object.entries(record).map(([key, value]) => `"${key}: ${value}"`),
+      GoogleTranslate.Request.MAX_SENTENCES_LENGTH - additionalSize,
+    );
+
+    this.logger.debug(`Product "specifications" translating...`, {
+      record,
+      specCount: Object.keys(record).length,
+      partedArraysCount: preparedTextArr.length,
+    });
+
+    const result = [];
+
+    let currentArrIndex = 0;
+    while (currentArrIndex < preparedTextArr.length) {
+      const partNumber = currentArrIndex + 1;
+      const text = preparedTextArr[currentArrIndex].join('.');
+
+      this.logger.debug(`Prepared part:`, {
+        partNumber,
+        data: preparedTextArr[currentArrIndex],
+      });
+
+      const { translatedText, sourceText } =
+        await this.translateService.translateViaGoogle(text, from, to);
+      this.logger.debug(`Translated product "specifications" part result:`, {
+        partNumber,
+        sourceText,
+        translatedText,
+      });
+
+      const parsedArr = translatedText
+        .replaceAll('". "', '"."')
+        .split('"."')
+        .map((el) =>
+          el
+            .replaceAll('\\', '')
+            .replaceAll('"', '')
+            .split(':')
+            .map((v) => v.trim()),
+        );
+
+      this.logger.debug(`Parsed translated part:`, {
+        partNumber,
+        data: parsedArr,
+      });
+
+      result.push(...parsedArr);
+      currentArrIndex++;
+
+      if (currentArrIndex < preparedTextArr.length) {
+        this.logger.debug('Sleep 250ms');
+        await this.timeHelper.sleep(250);
+      }
+    }
+
+    const translatedRecord = Object.fromEntries(result);
+    this.logger.debug(`Translate product "specifications" result:`, {
+      record: translatedRecord,
+    });
+
+    return translatedRecord;
+  }
+
   public async getProductsByAPI(
     categoryIds: string[],
     force: boolean,
@@ -188,5 +300,45 @@ export class ProductsService {
 
     this.logger.debug('Parse product:', { url });
     return this.parseProduct(url);
+  }
+
+  public async translate(
+    productData: TranslateProductDto,
+    from: GoogleTranslateTypes.Lang,
+    to: GoogleTranslateTypes.Lang,
+  ): Promise<ITranslatedProduct> {
+    this.logger.log('Received data for translate:', {
+      from,
+      to,
+      data: productData,
+    });
+
+    const result: ITranslatedProduct = {
+      name: null,
+      description: null,
+      specifications: {},
+    };
+
+    result.name = await this.translateSentence(
+      'name',
+      productData.name,
+      from,
+      to,
+    );
+
+    result.description = await this.translateSentence(
+      'description',
+      productData.description,
+      from,
+      to,
+    );
+
+    result.specifications = await this.translateRecords(
+      productData.specifications,
+      from,
+      to,
+    );
+
+    return result;
   }
 }
