@@ -150,7 +150,8 @@ export class Request {
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
   };
 
-  public static MAX_SENTENCE = 7;
+  public static MAX_SENTENCES = 8;
+  public static MAX_SENTENCES_LENGTH = 120;
   public static MAX_LENGTH = 170;
 }
 
