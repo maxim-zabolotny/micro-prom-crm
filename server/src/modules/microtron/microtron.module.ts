@@ -9,6 +9,8 @@ import { ProductsController } from './products/products.controller';
 import { ProductsService } from './products/products.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TranslateModule } from '../translate/translate.module';
+import { CoursesController } from './courses/courses.controller';
+import { CoursesService } from './courses/courses.service';
 
 @Module({
   imports: [
@@ -20,14 +22,20 @@ import { TranslateModule } from '../translate/translate.module';
     ]),
     TranslateModule,
   ],
-  controllers: [MicrotronController, CategoriesController, ProductsController],
+  controllers: [
+    MicrotronController,
+    CategoriesController,
+    ProductsController,
+    CoursesController,
+  ],
   providers: [
     DataUtilsHelper,
     TimeHelper,
     MicrotronService,
     CategoriesService,
     ProductsService,
+    CoursesService,
   ],
-  exports: [CategoriesService, ProductsService],
+  exports: [CategoriesService, ProductsService, CoursesService],
 })
 export class MicrotronModule {}
