@@ -72,6 +72,17 @@ export class ProductsController {
     return this.productsService.parse(url, force);
   }
 
+  @Get('/parse-ru')
+  @HttpCode(200)
+  getParseRU(
+    @Query('url')
+    url: string,
+    @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
+    force: boolean,
+  ) {
+    return this.productsService.parseRU(url, force);
+  }
+
   @Post('/translate')
   @HttpCode(201)
   getTranslate(

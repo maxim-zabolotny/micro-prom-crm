@@ -302,6 +302,25 @@ export class ProductsService {
     return this.parseProduct(url);
   }
 
+  public async parseRU(url: string, force: boolean): Promise<IParseResult> {
+    this.logger.debug('RU Parse product:', { url });
+
+    const productIdIndex = url.lastIndexOf('/p');
+
+    const productId = url.slice(productIdIndex + 1); // with p*
+    const urlWithoutProductId = url.slice(0, productIdIndex);
+
+    if (urlWithoutProductId.endsWith('_ru')) {
+      this.logger.debug('Product url already RU version:', { url });
+      return this.parse(url, force);
+    }
+
+    const newUrl = `${urlWithoutProductId}_ru/${productId}`;
+    this.logger.debug('Transform product url to RU version:', { url, newUrl });
+
+    return this.parse(newUrl, force);
+  }
+
   public async translate(
     productData: TranslateProductDto,
     from: GoogleTranslateTypes.Lang,
