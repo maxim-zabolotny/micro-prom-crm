@@ -6,5 +6,5 @@ export interface ICategoryInConstant extends Category.ICategory {
 
 export interface ICategoryTreeInConstant
   extends Omit<ICategoryInConstant, 'parentId'> {
-  children: ICategoryInConstant[];
+  children: ICategoryTreeInConstant[];
 }
