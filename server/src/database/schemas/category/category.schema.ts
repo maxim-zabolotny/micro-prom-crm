@@ -9,7 +9,7 @@ export type TCategoryTranslate = Pick<Category, 'name'>;
 @Schema({ timestamps: true, collection: 'categories' })
 export class Category {
   @Prop({ type: String, isRequired: true })
-  name: number;
+  name: string;
 
   @Prop({ type: Number, isRequired: true })
   markup: number;
@@ -35,10 +35,10 @@ export class Category {
   promTableLine?: number;
 
   @Prop({ type: String, isRequired: true })
-  microtronId: number;
+  microtronId: string;
 
-  @Prop({ type: String, isRequired: true })
-  parentMicrotronId: number;
+  @Prop({ type: String })
+  parentMicrotronId?: string;
 
   @Prop({ type: Number, isRequired: true })
   promId: number;
