@@ -28,7 +28,7 @@ export class CoursesService {
   public async getCoursesByAPI(force: boolean): Promise<ICourse> {
     const cacheIsEmpty = _.isEmpty(this.coursesCache);
 
-    this.logger.debug('Load categories from API', {
+    this.logger.debug('Load courses from API', {
       force,
       cacheIsEmpty,
     });
