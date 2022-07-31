@@ -17,6 +17,7 @@ import { SeedsModule } from './modules/seeds/seeds.module';
 import { TranslateModule } from './modules/translate/translate.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { JobModule } from './modules/job/job.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { JobModule } from './modules/job/job.module';
     JobModule,
     MicrotronModule,
     TelegramModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
