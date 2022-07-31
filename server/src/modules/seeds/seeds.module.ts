@@ -9,6 +9,10 @@ import { User, UserSchema } from '@schemas/user';
 import { Constant, ConstantSchema } from '@schemas/constant';
 import { IntegrationSeed } from '../../database/seeds/integration.seed';
 import { Integration, IntegrationSchema } from '@schemas/integration';
+import { ReloadConstantCategoriesCommand } from '../../database/commands/reload-constant-categories.command';
+
+const seeds = [UserSeed, ConstantSeed, IntegrationSeed];
+const commands = [ReloadConstantCategoriesCommand];
 
 @Module({
   imports: [
@@ -33,6 +37,6 @@ import { Integration, IntegrationSchema } from '@schemas/integration';
       },
     ]),
   ],
-  providers: [UserSeed, ConstantSeed, IntegrationSeed],
+  providers: [...seeds, ...commands],
 })
 export class SeedsModule {}
