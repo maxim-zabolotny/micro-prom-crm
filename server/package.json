@@ -25,7 +25,9 @@
     "seeds": "npm run seeds:users && npm run seeds:constants && npm run seeds:integrations",
     "seeds:users": "CLI_PATH=./src/cli.ts npx nestjs-command create:users",
     "seeds:constants": "CLI_PATH=./src/cli.ts npx nestjs-command create:constants",
-    "seeds:integrations": "CLI_PATH=./src/cli.ts npx nestjs-command create:integrations"
+    "seeds:integrations": "CLI_PATH=./src/cli.ts npx nestjs-command create:integrations",
+    "commands": "npm run command:reload-categories",
+    "command:reload-categories": "CLI_PATH=./src/cli.ts npx nestjs-command reload:categories-constant"
   },
   "dependencies": {
     "@bull-board/api": "^4.0.1",
