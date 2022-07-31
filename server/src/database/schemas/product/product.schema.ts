@@ -6,7 +6,7 @@ export type ProductDocument = Product & Document;
 
 @Schema({ timestamps: true, collection: 'products' })
 export class Product {
-  @Prop({ type: Types.ObjectId, ref: 'integration', isRequired: true })
+  @Prop({ type: Types.ObjectId, ref: 'integration', required: true })
   integration: Integration;
 }
 

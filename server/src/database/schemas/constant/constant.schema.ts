@@ -9,12 +9,12 @@ export class Constant {
   @Prop({
     type: String,
     unique: true,
-    isRequired: true,
+    required: true,
     enum: [...Object.values(ConstantEntities)],
   })
   name: ConstantEntities;
 
-  @Prop({ type: String, isRequired: true })
+  @Prop({ type: String, required: true })
   value: string;
 }
 

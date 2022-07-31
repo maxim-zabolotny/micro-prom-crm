@@ -6,13 +6,13 @@ export type UserDocument = User & Document;
 
 @Schema({ timestamps: true, collection: 'users' })
 export class User {
-  @Prop({ type: Number, isRequired: true })
+  @Prop({ type: Number, required: true })
   telegramId: number;
 
-  @Prop({ type: Number, isRequired: true })
+  @Prop({ type: Number, required: true })
   chatId: number;
 
-  @Prop({ type: String, isRequired: true })
+  @Prop({ type: String, required: true })
   name: string;
 
   @Prop({ type: String })
@@ -21,7 +21,7 @@ export class User {
   @Prop({
     type: String,
     unique: true,
-    isRequired: true,
+    required: true,
     enum: [...Object.values(UserRole)],
   })
   role: UserRole;

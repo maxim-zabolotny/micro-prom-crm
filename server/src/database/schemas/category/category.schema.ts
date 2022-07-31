@@ -8,45 +8,45 @@ export type TCategoryTranslate = Pick<Category, 'name'>;
 
 @Schema({ timestamps: true, collection: 'categories' })
 export class Category {
-  @Prop({ type: String, isRequired: true })
+  @Prop({ type: String, required: true })
   name: string;
 
-  @Prop({ type: Number, isRequired: true })
+  @Prop({ type: Number, required: true })
   markup: number;
 
-  @Prop({ type: Number, isRequired: true })
+  @Prop({ type: Number, required: true })
   course: number;
 
   @Prop({
     type: raw({
-      name: { type: String, isRequired: true },
+      name: { type: String, required: true },
     }),
-    isRequired: true,
+    required: true,
   })
   translate: TCategoryTranslate;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'categories' })
   parent?: Category;
 
-  @Prop({ type: Boolean, isRequired: true, default: false })
+  @Prop({ type: Boolean, required: true, default: false })
   sync: boolean;
 
   @Prop({ type: Number })
   promTableLine?: number;
 
-  @Prop({ type: String, isRequired: true })
+  @Prop({ type: String, required: true })
   microtronId: string;
 
   @Prop({ type: String })
   parentMicrotronId?: string;
 
-  @Prop({ type: Number, isRequired: true })
+  @Prop({ type: Number, required: true })
   promId: number;
 
   @Prop({ type: Number })
   parentPromId?: number;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'integration', isRequired: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'integration', required: true })
   integration: Integration;
 }
 

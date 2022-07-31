@@ -9,7 +9,7 @@ export class Integration {
   @Prop({
     type: String,
     unique: true,
-    isRequired: true,
+    required: true,
     enum: [...Object.values(IntegrationCompany)],
   })
   company: IntegrationCompany;
