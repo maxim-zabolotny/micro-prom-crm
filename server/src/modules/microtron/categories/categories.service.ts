@@ -104,7 +104,7 @@ export class CategoriesService {
         this.logger.debug('Build and return categories tree ');
         return MicrotronAPI.Category.buildCategoriesTree(
           data,
-        ) as ICategoryTreeInConstant[];
+        ) as unknown as ICategoryTreeInConstant[];
       }
 
       this.logger.debug('Return categories from DB');
