@@ -19,6 +19,7 @@ export class Category {
 
   @Prop({
     type: raw({
+      _id: false,
       name: { type: String, required: true },
     }),
     required: true,
