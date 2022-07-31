@@ -204,11 +204,11 @@ export class CategoriesService {
     );
     const dbCategoryIds = _.map(dbCategories, 'id');
 
-    this.logger.debug('Load categories from API');
+    this.logger.debug('Load RU categories from API');
     const apiCategories = await this.retrieveFromAPI(false, Types.Lang.RU);
 
     this.logger.debug(
-      'Build intercept loaded categories from API with saved in DB categories',
+      'Build intercept loaded RU categories from API with saved in DB categories',
     );
     const apiCategoriesIntercept = _.filter(apiCategories, (category) =>
       dbCategoryIds.includes(category.id),
