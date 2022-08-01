@@ -4,7 +4,11 @@ import { AdminService } from './admin.service';
 import { SyncLocalController } from './sync-local/sync-local.controller';
 import { SyncLocalService } from './sync-local/sync-local.service';
 import { MicrotronModule } from '../microtron/microtron.module';
-import { DataGenerateHelper, DataUtilsHelper } from '@common/helpers';
+import {
+  DataGenerateHelper,
+  DataUtilsHelper,
+  TimeHelper,
+} from '@common/helpers';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Constant, ConstantSchema } from '@schemas/constant';
 import { Category, CategorySchema } from '@schemas/category';
@@ -36,6 +40,7 @@ import { Integration, IntegrationSchema } from '@schemas/integration';
   providers: [
     DataUtilsHelper,
     DataGenerateHelper,
+    TimeHelper,
     AdminService,
     SyncLocalService,
   ],
