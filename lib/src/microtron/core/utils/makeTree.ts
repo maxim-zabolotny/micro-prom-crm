@@ -1,15 +1,15 @@
 /*external modules*/
 import _ from 'lodash';
+
 /*other*/
 
-export function makeTree<
-  TEntity extends object,
+export function makeTree<TEntity extends object,
   TKey extends keyof TEntity,
   TTree extends Array<Omit<TEntity, TKey> & { children: TEntity[] }>,
->(
+  >(
   nodes: TEntity[],
   key: TKey,
-  id: number,
+  id: number | string,
 ): TTree {
   return _.chain(nodes)
     .filter(((node) => (node[key] as unknown as number) === id))
