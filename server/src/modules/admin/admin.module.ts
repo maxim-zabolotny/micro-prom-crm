@@ -13,6 +13,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Constant, ConstantSchema } from '@schemas/constant';
 import { Category, CategorySchema } from '@schemas/category';
 import { Integration, IntegrationSchema } from '@schemas/integration';
+import { SyncPromController } from './sync-prom/sync-prom.controller';
+import { SyncPromService } from './sync-prom/sync-prom.service';
 
 @Module({
   imports: [
@@ -36,13 +38,14 @@ import { Integration, IntegrationSchema } from '@schemas/integration';
       },
     ]),
   ],
-  controllers: [AdminController, SyncLocalController],
+  controllers: [AdminController, SyncLocalController, SyncPromController],
   providers: [
     DataUtilsHelper,
     DataGenerateHelper,
     TimeHelper,
     AdminService,
     SyncLocalService,
+    SyncPromService,
   ],
 })
 export class AdminModule {}
