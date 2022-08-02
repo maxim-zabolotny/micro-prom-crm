@@ -18,6 +18,7 @@ import { TranslateModule } from './modules/translate/translate.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { JobModule } from './modules/job/job.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { SpreadsheetModule } from './modules/spreadsheet/spreadsheet.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AdminModule } from './modules/admin/admin.module';
     SeedsModule,
     TranslateModule,
     RedisModule,
+    SpreadsheetModule,
     JobModule,
     MicrotronModule,
     TelegramModule,
