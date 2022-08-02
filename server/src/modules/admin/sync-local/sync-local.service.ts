@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Constant, ConstantDocument } from '@schemas/constant';
-import { Model, ObjectId } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   DataGenerateHelper,
@@ -13,7 +13,7 @@ import { Category, CategoryDocument } from '@schemas/category';
 import { CoursesService } from '../../microtron/courses/courses.service';
 import { CategoriesService } from '../../microtron/categories/categories.service';
 import { ICategoryInConstant } from '@common/interfaces/category';
-import MicrotronAPI, { Course } from '@lib/microtron';
+import MicrotronAPI from '@lib/microtron';
 import {
   Integration,
   IntegrationCompany,
@@ -31,9 +31,11 @@ export interface ITranslatedCategoryTreeInConstant
 
 export type TAddCategory = ITranslatedCategoryTreeInConstant & {
   course: number;
-  integrationId: ObjectId;
+  integrationId: Types.ObjectId;
   parent?: CategoryDocument;
 };
+
+export type TUpdateCategory = Partial<Pick<TAddCategory, 'course' | 'markup'>>;
 
 @Injectable()
 export class SyncLocalService {
@@ -52,6 +54,7 @@ export class SyncLocalService {
     private integrationModel: Model<IntegrationDocument>,
   ) {}
 
+  // TODO: Move to categories CRM
   public async addCategory(categoryData: TAddCategory) {
     this.logger.debug('Process category:', {
       id: categoryData.id,
@@ -98,11 +101,11 @@ export class SyncLocalService {
   }
 
   public async updateCategory(
-    category: ITranslatedCategoryInConstant,
-    course: Course.ICourse,
+    categoryId: Types.ObjectId,
+    data: TUpdateCategory,
   ) {}
 
-  public async deleteCategory(categoryId: ICategoryInConstant['id']) {}
+  public async deleteCategory(categoryId: Types.ObjectId) {}
 
   public async loadAllCategories() {
     this.logger.debug('Load Microtron Integration from DB');
