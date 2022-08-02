@@ -20,6 +20,11 @@ export default () => {
     botName: process.env.TELEGRAM_BOT_NAME,
   };
 
+  const google = {
+    serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    privateKey: process.env.GOOGLE_PRIVATE_KEY,
+  };
+
   const client = {
     domain: process.env.CLIENT_TUNNEL_DOMAIN,
     localPort: process.env.CLIENT_LOCAL_PORT,
@@ -55,6 +60,7 @@ export default () => {
     redis,
     mongo,
     telegram,
+    google,
     jwtToken,
     tokens,
   };
