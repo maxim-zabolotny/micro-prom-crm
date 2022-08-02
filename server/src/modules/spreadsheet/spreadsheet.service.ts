@@ -20,8 +20,8 @@ import { AppConstants } from '../../app.constants';
 export class SpreadsheetService implements OnModuleInit {
   private readonly logger = new Logger(this.constructor.name);
 
-  private doc!: GoogleSpreadsheet;
-  private readonly docCredentials!: ServiceAccountCredentials;
+  private doc: GoogleSpreadsheet;
+  private readonly docCredentials: ServiceAccountCredentials;
 
   constructor(private configService: ConfigService) {
     this.docCredentials = {
