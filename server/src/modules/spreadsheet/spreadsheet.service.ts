@@ -4,6 +4,7 @@ import {
   GoogleSpreadsheet,
   GoogleSpreadsheetRow,
   GoogleSpreadsheetWorksheet,
+  PaginationOptions,
   ServiceAccountCredentials,
 } from 'google-spreadsheet';
 import {
@@ -45,8 +46,9 @@ export class SpreadsheetService implements OnModuleInit {
   private async iterateByRows(
     sheet: GoogleSpreadsheetWorksheet,
     func: (rows: GoogleSpreadsheetRow[]) => boolean,
+    options?: PaginationOptions,
   ) {
-    const limit = 20;
+    const limit = options?.limit ?? 20;
     const countOfRows = sheet.rowCount;
 
     this.logger.debug('Iterate rows settings:', {
@@ -54,7 +56,7 @@ export class SpreadsheetService implements OnModuleInit {
       countOfRows,
     });
 
-    let offset = 0;
+    let offset = options?.offset ?? 0;
     while (offset <= countOfRows) {
       this.logger.debug('Request rows:', {
         limit,
@@ -107,6 +109,7 @@ export class SpreadsheetService implements OnModuleInit {
   public async findOneRowBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Record<string, string | number>,
+    options?: PaginationOptions,
   ) {
     this.logger.debug('Find rows by:', {
       data,
@@ -114,20 +117,24 @@ export class SpreadsheetService implements OnModuleInit {
 
     let result = null;
 
-    await this.iterateByRows(sheet, (rows) => {
-      const targetRow = _.find(rows, (row) => {
-        return _.every(data, (value, key) => {
-          return row[key] === String(value);
+    await this.iterateByRows(
+      sheet,
+      (rows) => {
+        const targetRow = _.find(rows, (row) => {
+          return _.every(data, (value, key) => {
+            return row[key] === String(value);
+          });
         });
-      });
-      if (targetRow) {
-        result = targetRow;
-        return false;
-      }
+        if (targetRow) {
+          result = targetRow;
+          return false;
+        }
 
-      this.logger.debug('Target row not found. Continue');
-      return true;
-    });
+        this.logger.debug('Target row not found. Continue');
+        return true;
+      },
+      options,
+    );
 
     return result;
   }
@@ -135,6 +142,7 @@ export class SpreadsheetService implements OnModuleInit {
   public async findRowsBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Array<Record<string, string | number>>,
+    options?: PaginationOptions,
   ) {
     this.logger.debug('Find rows by:', {
       data,
@@ -142,18 +150,22 @@ export class SpreadsheetService implements OnModuleInit {
 
     const result = [];
 
-    await this.iterateByRows(sheet, (rows) => {
-      const targetRows = _.filter(rows, (row) => {
-        return _.some(data, (condition) => {
-          return _.every(condition, (value, key) => {
-            return row[key] === String(value);
+    await this.iterateByRows(
+      sheet,
+      (rows) => {
+        const targetRows = _.filter(rows, (row) => {
+          return _.some(data, (condition) => {
+            return _.every(condition, (value, key) => {
+              return row[key] === String(value);
+            });
           });
         });
-      });
-      if (!_.isEmpty(targetRows)) result.push(...targetRows);
+        if (!_.isEmpty(targetRows)) result.push(...targetRows);
 
-      return true;
-    });
+        return true;
+      },
+      options,
+    );
 
     return result;
   }
@@ -161,8 +173,9 @@ export class SpreadsheetService implements OnModuleInit {
   public async removeOneRowBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Record<string, string | number>,
+    options?: PaginationOptions,
   ) {
-    const row = await this.findOneRowBy(sheet, data);
+    const row = await this.findOneRowBy(sheet, data, options);
     if (!row) {
       throw new HttpException(
         `Row doesn't exist in table`,
@@ -178,8 +191,9 @@ export class SpreadsheetService implements OnModuleInit {
   public async removeRowsBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Array<Record<string, string | number>>,
+    options?: PaginationOptions,
   ) {
-    const rows = await this.findRowsBy(sheet, data);
+    const rows = await this.findRowsBy(sheet, data, options);
     if (_.isEmpty(rows)) {
       throw new HttpException(
         `Rows don't exist in table`,
