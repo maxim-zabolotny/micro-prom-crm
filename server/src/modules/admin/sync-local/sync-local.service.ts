@@ -71,7 +71,7 @@ export class SyncLocalService {
       parent: categoryData.parent?._id,
       microtronId: categoryData.id,
       parentMicrotronId: categoryData.parent?.microtronId,
-      promId: this.dataGenerateHelper.randomNumber(0, 9, 8),
+      promId: this.dataGenerateHelper.randomNumber(1, 9, 8),
       parentPromId: categoryData.parent?.promId,
       integration: categoryData.integrationId,
     });
