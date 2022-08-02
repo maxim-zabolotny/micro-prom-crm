@@ -77,6 +77,33 @@ export class SpreadsheetService implements OnModuleInit {
     }
   }
 
+  public async getAllRows(sheet: GoogleSpreadsheetWorksheet, keys?: string[]) {
+    const result = [];
+
+    await this.iterateByRows(sheet, (rows) => {
+      if (!_.isEmpty(keys)) {
+        result.push(
+          ..._.map(rows, (row) =>
+            _.reduce(
+              keys,
+              (acc, key) => {
+                acc[key] = row[key];
+                return acc;
+              },
+              {},
+            ),
+          ),
+        );
+      } else {
+        result.push(...rows);
+      }
+
+      return true;
+    });
+
+    return result;
+  }
+
   public async findOneRowBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Record<string, string | number>,
