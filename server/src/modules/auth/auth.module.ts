@@ -1,6 +1,6 @@
 /*external modules*/
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 /*modules*/
 /*services*/
 import { AuthService } from './auth.service';
@@ -16,7 +16,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
-    ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => {
