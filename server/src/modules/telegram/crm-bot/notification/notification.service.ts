@@ -1,9 +1,9 @@
+import * as _ from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { InjectBot } from 'nestjs-telegraf';
 import { Context, Markup, Telegraf } from 'telegraf';
-import * as _ from 'lodash';
 import { ISendNotification } from '@common/interfaces/telegram';
-import { MarkdownHelper } from '../common/helpers';
+import { MarkdownHelper } from '../../common/helpers';
 
 @Injectable()
 export class NotificationBotService {

@@ -19,5 +19,6 @@ import { CrmBotModule } from './crm-bot/crm-bot.module';
       },
     }),
   ],
+  exports: [CrmBotModule],
 })
 export class TelegramModule {}
