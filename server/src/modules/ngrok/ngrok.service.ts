@@ -1,5 +1,5 @@
 /*external modules*/
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import * as path from 'path';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as _ from 'lodash';
@@ -12,7 +12,7 @@ import { ILog, IOptions, IPublicOptions } from '@common/interfaces/ngrok';
 /*@interfaces*/
 
 @Injectable()
-export class NgrokService {
+export class NgrokService implements OnModuleDestroy {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly defaultDirPath = path.join(__dirname, '../../../bin');
@@ -26,6 +26,10 @@ export class NgrokService {
   private processUrl: string | null = null;
 
   constructor(private configService: ConfigService) {}
+
+  async onModuleDestroy() {
+    await this.killProcess();
+  }
 
   private parseLog(message: string): ILog | null {
     if (message[0] === '{') {
