@@ -206,6 +206,13 @@ export class SpreadsheetService implements OnModuleInit {
     return rows;
   }
 
+  public getPaginationForRowIndex(rowIndex: number): PaginationOptions {
+    return {
+      offset: rowIndex - 2,
+      limit: 1,
+    };
+  }
+
   public getProductsSheet() {
     return this.doc.sheetsByIndex[0];
   }
