@@ -1,6 +1,6 @@
 import { Controller, HttpCode, Post, UseInterceptors } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
-import { JobBoardService } from './job-board.service';
+import { JobBoardService } from '../../job/board/job-board.service';
 
 @Controller('/admin/jobs')
 @UseInterceptors(LoggingInterceptor)
