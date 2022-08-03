@@ -22,7 +22,7 @@ type ICategoriesTree = Category.ICategoriesTree;
 type ICategory = Category.ICategory;
 
 @Injectable()
-export class CategoriesService {
+export class MicrotronCategoriesService {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly categoriesAPI: Category.Category;

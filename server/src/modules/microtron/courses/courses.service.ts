@@ -6,7 +6,7 @@ import MicrotronAPI, { Course } from '@lib/microtron';
 type ICourse = Course.ICourse;
 
 @Injectable()
-export class CoursesService {
+export class MicrotronCoursesService {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly coursesAPI: Course.Course;

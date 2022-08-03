@@ -21,7 +21,7 @@ export type TProductsCache = Map<string, IProductFull[]>;
 export type TProductsParseCache = Map<string, IParseResult>;
 
 @Injectable()
-export class ProductsService {
+export class MicrotronProductsService {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly productsAPI: Product.Product;

@@ -8,7 +8,7 @@ import {
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
-import { CoursesService } from './courses.service';
+import { MicrotronCoursesService } from './courses.service';
 import { MicrotronExceptionFilter } from '@common/filters';
 import { TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
@@ -16,8 +16,10 @@ import { LoggingInterceptor } from '@common/interceptors';
 @Controller('/microtron/courses')
 @UseFilters(MicrotronExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
-export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+export class MicrotronCoursesController {
+  constructor(
+    private readonly microtronCoursesService: MicrotronCoursesService,
+  ) {}
 
   @Get('/')
   @HttpCode(200)
@@ -26,6 +28,6 @@ export class CoursesController {
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
   ) {
-    return this.coursesService.getCoursesByAPI(force);
+    return this.microtronCoursesService.getCoursesByAPI(force);
   }
 }

@@ -12,7 +12,7 @@ import {
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
+import { MicrotronProductsService } from './products.service';
 import { MicrotronExceptionFilter } from '@common/filters';
 import { TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
@@ -22,8 +22,10 @@ import { Types as GoogleTranslateTypes } from '@lib/google-translate';
 @Controller('/microtron/products')
 @UseFilters(MicrotronExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
-export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+export class MicrotronProductsController {
+  constructor(
+    private readonly microtronProductsService: MicrotronProductsService,
+  ) {}
 
   @Get('/')
   @HttpCode(200)
@@ -34,7 +36,7 @@ export class ProductsController {
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
   ) {
-    return this.productsService.getProductsByAPI(categories, force);
+    return this.microtronProductsService.getProductsByAPI(categories, force);
   }
 
   @Get('/cached')
@@ -43,7 +45,7 @@ export class ProductsController {
     @Query('products', new ParseArrayPipe({ items: Number }))
     products: number[],
   ) {
-    return this.productsService.getCachedByIds(products);
+    return this.microtronProductsService.getCachedByIds(products);
   }
 
   @Get('/cached-by-categories')
@@ -52,13 +54,13 @@ export class ProductsController {
     @Query('categories', ParseArrayPipe)
     categories: string[],
   ) {
-    return this.productsService.getCachedByCategories(categories);
+    return this.microtronProductsService.getCachedByCategories(categories);
   }
 
   @Get('/all-cached')
   @HttpCode(200)
   getAllCached() {
-    return this.productsService.getAllCachedProducts();
+    return this.microtronProductsService.getAllCachedProducts();
   }
 
   @Get('/parse')
@@ -69,7 +71,7 @@ export class ProductsController {
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
   ) {
-    return this.productsService.parse(url, force);
+    return this.microtronProductsService.parse(url, force);
   }
 
   @Get('/parse-ru')
@@ -80,7 +82,7 @@ export class ProductsController {
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
   ) {
-    return this.productsService.parseRU(url, force);
+    return this.microtronProductsService.parseRU(url, force);
   }
 
   @Post('/translate')
@@ -92,6 +94,6 @@ export class ProductsController {
     @Query('to', new ParseEnumPipe(GoogleTranslateTypes.Lang))
     to: GoogleTranslateTypes.Lang,
   ) {
-    return this.productsService.translate(productData, from, to);
+    return this.microtronProductsService.translate(productData, from, to);
   }
 }

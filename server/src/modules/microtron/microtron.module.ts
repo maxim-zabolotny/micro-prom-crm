@@ -3,14 +3,14 @@ import { MicrotronController } from './microtron.controller';
 import { MicrotronService } from './microtron.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Constant, ConstantSchema } from '@schemas/constant';
-import { CategoriesController } from './categories/categories.controller';
-import { CategoriesService } from './categories/categories.service';
-import { ProductsController } from './products/products.controller';
-import { ProductsService } from './products/products.service';
+import { MicrotronCategoriesController } from './categories/categories.controller';
+import { MicrotronProductsController } from './products/products.controller';
+import { MicrotronCoursesController } from './courses/courses.controller';
+import { MicrotronCategoriesService } from './categories/categories.service';
+import { MicrotronProductsService } from './products/products.service';
+import { MicrotronCoursesService } from './courses/courses.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TranslateModule } from '../translate/translate.module';
-import { CoursesController } from './courses/courses.controller';
-import { CoursesService } from './courses/courses.service';
 
 @Module({
   imports: [
@@ -24,18 +24,22 @@ import { CoursesService } from './courses/courses.service';
   ],
   controllers: [
     MicrotronController,
-    CategoriesController,
-    ProductsController,
-    CoursesController,
+    MicrotronCategoriesController,
+    MicrotronProductsController,
+    MicrotronCoursesController,
   ],
   providers: [
     DataUtilsHelper,
     TimeHelper,
     MicrotronService,
-    CategoriesService,
-    ProductsService,
-    CoursesService,
+    MicrotronCategoriesService,
+    MicrotronProductsService,
+    MicrotronCoursesService,
   ],
-  exports: [CategoriesService, ProductsService, CoursesService],
+  exports: [
+    MicrotronCategoriesService,
+    MicrotronProductsService,
+    MicrotronCoursesService,
+  ],
 })
 export class MicrotronModule {}

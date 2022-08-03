@@ -10,7 +10,7 @@ import {
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
+import { MicrotronCategoriesService } from './categories.service';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { MicrotronExceptionFilter } from '@common/filters';
 import { Auth, TimeoutLimit } from '@common/decorators';
@@ -21,8 +21,10 @@ import { SetMarkupDto } from './dto/set-markup.dto';
 @Controller('/microtron/categories')
 @UseFilters(MicrotronExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
-export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+export class MicrotronCategoriesController {
+  constructor(
+    private readonly microtronCategoriesService: MicrotronCategoriesService,
+  ) {}
 
   @Get('/')
   @HttpCode(200)
@@ -31,7 +33,7 @@ export class CategoriesController {
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean,
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
-    return this.categoriesService.getByAPI(force, tree);
+    return this.microtronCategoriesService.getByAPI(force, tree);
   }
 
   @Get('/saved')
@@ -39,21 +41,21 @@ export class CategoriesController {
   getSaved(
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
-    return this.categoriesService.getSaved(tree);
+    return this.microtronCategoriesService.getSaved(tree);
   }
 
   @Put('/save')
   @HttpCode(201)
   @Auth(UserRole.Provider, UserRole.Admin)
   save(@Body() categoriesData: SaveCategoriesDto) {
-    return this.categoriesService.save(categoriesData);
+    return this.microtronCategoriesService.save(categoriesData);
   }
 
   @Put('/set-markup')
   @HttpCode(201)
   @Auth(UserRole.Provider, UserRole.Admin)
   setMarkup(@Body() markupCategoryData: SetMarkupDto) {
-    return this.categoriesService.setMarkup(markupCategoryData);
+    return this.microtronCategoriesService.setMarkup(markupCategoryData);
   }
 
   @Get('/saved-ru-translate')
@@ -61,6 +63,6 @@ export class CategoriesController {
   getSavedRUTranslate(
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
-    return this.categoriesService.getSavedRUTranslate(tree);
+    return this.microtronCategoriesService.getSavedRUTranslate(tree);
   }
 }
