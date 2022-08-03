@@ -20,6 +20,7 @@ import { JobModule } from './modules/job/job.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SpreadsheetModule } from './modules/spreadsheet/spreadsheet.module';
 import { CrmModule } from './modules/crm/crm.module';
+import { SyncModule } from './modules/sync/sync.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CrmModule } from './modules/crm/crm.module';
     JobModule,
     TelegramModule,
     MicrotronModule,
+    SyncModule,
     CrmModule,
     AdminModule,
   ],
