@@ -1,12 +1,15 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { CategoryDocument } from '@schemas/category';
 import { MicrotronCoursesService } from '../../microtron/courses/courses.service';
 import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
-import { ICategoryInConstant } from '@common/interfaces/category';
+import {
+  ICategoryInConstant,
+  ITranslatedCategoryInConstant,
+  ITranslatedCategoryTreeInConstant,
+} from '@common/interfaces/category';
 import MicrotronAPI from '@lib/microtron';
 import {
   Integration,
@@ -14,23 +17,6 @@ import {
   IntegrationDocument,
 } from '@schemas/integration';
 import { CrmCategoriesService } from '../../crm/categories/categories.service';
-
-export interface ITranslatedCategoryInConstant extends ICategoryInConstant {
-  ruName: string;
-}
-
-export interface ITranslatedCategoryTreeInConstant
-  extends Omit<ITranslatedCategoryInConstant, 'parentId'> {
-  children: ITranslatedCategoryTreeInConstant[];
-}
-
-export type TAddCategory = ITranslatedCategoryTreeInConstant & {
-  course: number;
-  integrationId: Types.ObjectId;
-  parent?: CategoryDocument;
-};
-
-export type TUpdateCategory = Partial<Pick<TAddCategory, 'course' | 'markup'>>;
 
 @Injectable()
 export class SyncLocalService {
