@@ -44,10 +44,10 @@ import { NgrokModule } from './modules/ngrok/ngrok.module';
       },
     }),
     SeedsModule,
-    RedisModule,
-    NgrokModule,
-    SpreadsheetModule,
-    JobModule,
+    RedisModule, // global
+    NgrokModule, // global
+    SpreadsheetModule, // global
+    JobModule, // global
     TranslateModule,
     TelegramModule,
     MicrotronModule,
