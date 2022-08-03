@@ -124,7 +124,10 @@ export class SyncPromService {
       count: bulkRows.length,
     });
 
-    const addedRows = await categoriesSheet.addRows(bulkRows);
+    const addedRows = await this.spreadsheetService.addRows(
+      categoriesSheet,
+      bulkRows,
+    );
     this.logger.debug('Added rows to Google Sheet:', {
       count: addedRows.length,
     });

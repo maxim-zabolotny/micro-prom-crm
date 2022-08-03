@@ -249,12 +249,30 @@ export class SpreadsheetService implements OnModuleInit {
       );
     }
 
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
     await row.delete();
 
     // LIMITS
     await this.increaseRequestCountsAndWait();
 
     return row;
+  }
+
+  public async addRows(
+    sheet: GoogleSpreadsheetWorksheet,
+    data: Array<Record<string, any>>,
+  ) {
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
+    const rows = await sheet.addRows(data);
+
+    // LIMITS
+    await this.increaseRequestCountsAndWait();
+
+    return rows;
   }
 
   public async removeRowsBy(
@@ -269,6 +287,9 @@ export class SpreadsheetService implements OnModuleInit {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
 
     const chunkedRows = _.chunk(rows, this.docLimits.requestLimitPerMinute / 2);
     for (const rows of chunkedRows) {
