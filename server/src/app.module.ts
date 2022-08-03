@@ -21,6 +21,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { SpreadsheetModule } from './modules/spreadsheet/spreadsheet.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { SyncModule } from './modules/sync/sync.module';
+import { NgrokModule } from './modules/ngrok/ngrok.module';
 
 @Module({
   imports: [
@@ -43,10 +44,11 @@ import { SyncModule } from './modules/sync/sync.module';
       },
     }),
     SeedsModule,
-    TranslateModule,
     RedisModule,
+    NgrokModule,
     SpreadsheetModule,
     JobModule,
+    TranslateModule,
     TelegramModule,
     MicrotronModule,
     SyncModule,

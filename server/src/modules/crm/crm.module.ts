@@ -18,6 +18,6 @@ import { DataGenerateHelper } from '@common/helpers';
   ],
   controllers: [CrmController, CrmCategoriesController],
   providers: [DataGenerateHelper, CrmService, CrmCategoriesService],
-  exports: [CrmCategoriesService],
+  exports: [CrmService, CrmCategoriesService],
 })
 export class CrmModule {}

@@ -26,7 +26,6 @@ import { Category, CategorySchema } from '@schemas/category';
       },
     ]),
   ],
-  controllers: [],
   providers: [DataUtilsHelper, SyncService, SyncLocalService, SyncPromService],
   exports: [SyncService, SyncLocalService, SyncPromService],
 })

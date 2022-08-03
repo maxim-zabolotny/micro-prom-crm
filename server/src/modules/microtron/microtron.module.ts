@@ -14,13 +14,13 @@ import { TranslateModule } from '../translate/translate.module';
 
 @Module({
   imports: [
+    TranslateModule,
     MongooseModule.forFeature([
       {
         name: Constant.name,
         schema: ConstantSchema,
       },
     ]),
-    TranslateModule,
   ],
   controllers: [
     MicrotronController,
