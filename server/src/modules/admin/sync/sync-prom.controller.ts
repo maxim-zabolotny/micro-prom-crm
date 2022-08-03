@@ -20,8 +20,8 @@ export class SyncPromController {
   @Get('/load-all-categories')
   @HttpCode(200)
   @Auth(UserRole.Admin)
-  async loadAllNewCategories() {
-    return this.syncPromService.loadAllNewCategories();
+  async loadAllCategories() {
+    return this.syncPromService.loadAllNewCategoriesToSheet();
   }
 
   @Get('/sync-all-categories')
@@ -31,6 +31,6 @@ export class SyncPromController {
     @Query('add', new DefaultValuePipe(true), ParseBoolPipe) add: boolean,
     @Query('remove', new DefaultValuePipe(true), ParseBoolPipe) remove: boolean,
   ) {
-    return this.syncPromService.syncAllCategories(add, remove);
+    return this.syncPromService.syncAllCategoriesWithSheet(add, remove);
   }
 }

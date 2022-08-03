@@ -132,7 +132,7 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async loadAllNewCategories() {
+  public async loadAllNewCategoriesToSheet() {
     const limit = 50;
     const result = {
       count: 0,
@@ -214,7 +214,7 @@ export class SyncPromService {
     };
   }
 
-  public async syncAllCategories(add = true, remove = true) {
+  public async syncAllCategoriesWithSheet(add = true, remove = true) {
     if (!add && !remove) {
       throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
     }
@@ -248,7 +248,7 @@ export class SyncPromService {
     }
 
     if (add) {
-      const { added, updated } = await this.loadAllNewCategories();
+      const { added, updated } = await this.loadAllNewCategoriesToSheet();
 
       // RESULT
       result.added = added;

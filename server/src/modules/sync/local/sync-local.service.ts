@@ -31,7 +31,7 @@ export class SyncLocalService {
     private integrationModel: Model<IntegrationDocument>,
   ) {}
 
-  public async loadAllCategories() {
+  public async loadAllCategoriesFromConstant() {
     this.logger.debug('Load Microtron Integration from DB');
 
     const microtronIntegration = await this.integrationModel
@@ -94,5 +94,24 @@ export class SyncLocalService {
     });
 
     return addedCategories;
+  }
+
+  public async syncAllCategoriesWithConstant(
+    add = true,
+    update = true,
+    remove = true,
+  ) {
+    if (!add && !update && !remove) {
+      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
+    }
+
+    this.logger.debug(
+      'Sync Local Categories in DB with Categories in Constant actions:',
+      {
+        add,
+        update,
+        remove,
+      },
+    );
   }
 }
