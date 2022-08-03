@@ -3,12 +3,17 @@ import { ConfigService } from '@nestjs/config';
 import { Category, CategoryDocument } from '@schemas/category';
 import * as _ from 'lodash';
 import { Model, Types } from 'mongoose';
-import {
-  TAddCategory,
-  TUpdateCategory,
-} from '../../admin/sync-local/sync-local.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { DataGenerateHelper } from '@common/helpers';
+import { ITranslatedCategoryTreeInConstant } from '@common/interfaces/category';
+
+export type TAddCategory = ITranslatedCategoryTreeInConstant & {
+  course: number;
+  integrationId: Types.ObjectId;
+  parent?: CategoryDocument;
+};
+
+export type TUpdateCategory = Partial<Pick<TAddCategory, 'course' | 'markup'>>;
 
 @Injectable()
 export class CrmCategoriesService {
