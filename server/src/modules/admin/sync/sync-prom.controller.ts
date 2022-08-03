@@ -8,9 +8,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
-import { SyncPromService } from './sync-prom.service';
 import { UserRole } from '@schemas/user';
 import { Auth } from '@common/decorators';
+import { SyncPromService } from '../../sync/prom/sync-prom.service';
 
 @Controller('/admin/sync/prom')
 @UseInterceptors(LoggingInterceptor)

@@ -1,8 +1,8 @@
 import { Controller, Get, HttpCode, UseInterceptors } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
-import { SyncLocalService } from './sync-local.service';
 import { Auth } from '@common/decorators';
 import { UserRole } from '@schemas/user';
+import { SyncLocalService } from '../../sync/local/sync-local.service';
 
 @Controller('/admin/sync/local')
 @UseInterceptors(LoggingInterceptor)
