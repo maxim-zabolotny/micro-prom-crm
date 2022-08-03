@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppConstants } from '../../app.constants';
+import { TimeHelper } from '@common/helpers';
 
 @Injectable()
 export class SpreadsheetService implements OnModuleInit {
@@ -23,8 +24,17 @@ export class SpreadsheetService implements OnModuleInit {
 
   private doc: GoogleSpreadsheet;
   private readonly docCredentials: ServiceAccountCredentials;
+  private readonly docLimits = {
+    requestLimitPerMinute: 300,
+    sleepTimeMS: 550,
+    countOfRequests: 0,
+    lastWaitTimestamp: Date.now(),
+  };
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private timeHelper: TimeHelper,
+  ) {
     this.docCredentials = {
       client_email: this.configService.get('google.serviceAccountEmail'),
       private_key: this.configService
@@ -43,6 +53,56 @@ export class SpreadsheetService implements OnModuleInit {
     await this.doc.loadInfo();
   }
 
+  private async checkRequestLimitsAndWait() {
+    const now = Date.now();
+    const halfOfMinute = 1000 * 30;
+    const requestLimitPerHalfOfMinute =
+      this.docLimits.requestLimitPerMinute / 2;
+    const timestampsDiff = now - this.docLimits.lastWaitTimestamp;
+
+    // Limit was used in less or a one half of minute. Need to sleep
+    if (
+      timestampsDiff <= halfOfMinute &&
+      this.docLimits.countOfRequests >= requestLimitPerHalfOfMinute
+    ) {
+      this.logger.debug(
+        `Request limit used. Sleep ${this.docLimits.sleepTimeMS}ms:`,
+        {
+          requestLimitPerHalfOfMinute,
+          countOfRequests: this.docLimits.countOfRequests,
+        },
+      );
+
+      await this.timeHelper.sleep(this.docLimits.sleepTimeMS);
+
+      this.docLimits.countOfRequests = 0;
+      this.docLimits.lastWaitTimestamp = Date.now();
+
+      return;
+    }
+
+    // Limit didn't be use in a one half of minute. Need update timestamp
+    if (
+      timestampsDiff >= halfOfMinute &&
+      this.docLimits.countOfRequests < requestLimitPerHalfOfMinute
+    ) {
+      this.logger.debug(`Request limit didn't be use. Update requests info:`, {
+        requestLimitPerHalfOfMinute,
+        countOfRequests: this.docLimits.countOfRequests,
+      });
+
+      this.docLimits.countOfRequests = 0;
+      this.docLimits.lastWaitTimestamp = Date.now();
+
+      return;
+    }
+  }
+
+  private async increaseRequestCountsAndWait(count = 1) {
+    this.docLimits.countOfRequests += count;
+    await this.checkRequestLimitsAndWait();
+  }
+
   private async iterateByRows(
     sheet: GoogleSpreadsheetWorksheet,
     func: (rows: GoogleSpreadsheetRow[]) => boolean,
@@ -56,6 +116,9 @@ export class SpreadsheetService implements OnModuleInit {
       countOfRows,
     });
 
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
     let offset = options?.offset ?? 0;
     while (offset <= countOfRows) {
       this.logger.debug('Request rows:', {
@@ -68,6 +131,9 @@ export class SpreadsheetService implements OnModuleInit {
         this.logger.debug('No more rows');
         break;
       }
+
+      // LIMITS
+      await this.increaseRequestCountsAndWait();
 
       const needContinue = func(rows);
       if (!needContinue) {
@@ -185,6 +251,9 @@ export class SpreadsheetService implements OnModuleInit {
 
     await row.delete();
 
+    // LIMITS
+    await this.increaseRequestCountsAndWait();
+
     return row;
   }
 
@@ -201,9 +270,23 @@ export class SpreadsheetService implements OnModuleInit {
       );
     }
 
-    await Promise.all(_.map(rows, (row) => row.delete()));
+    const chunkedRows = _.chunk(rows, this.docLimits.requestLimitPerMinute / 2);
+    for (const rows of chunkedRows) {
+      await Promise.all(_.map(rows, (row) => row.delete()));
+
+      // LIMITS
+      await this.increaseRequestCountsAndWait(rows.length);
+    }
 
     return rows;
+  }
+
+  public setRequestLimits(count: number) {
+    this.docLimits.requestLimitPerMinute = count;
+  }
+
+  public setDefaultRequestLimits() {
+    this.docLimits.requestLimitPerMinute = 300;
   }
 
   public getPaginationForRowIndex(rowIndex: number): PaginationOptions {
