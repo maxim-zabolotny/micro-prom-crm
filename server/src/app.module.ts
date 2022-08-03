@@ -19,6 +19,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { JobModule } from './modules/job/job.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SpreadsheetModule } from './modules/spreadsheet/spreadsheet.module';
+import { CrmModule } from './modules/crm/crm.module';
 
 @Module({
   imports: [
@@ -45,8 +46,9 @@ import { SpreadsheetModule } from './modules/spreadsheet/spreadsheet.module';
     RedisModule,
     SpreadsheetModule,
     JobModule,
-    MicrotronModule,
     TelegramModule,
+    MicrotronModule,
+    CrmModule,
     AdminModule,
   ],
   controllers: [AppController],
