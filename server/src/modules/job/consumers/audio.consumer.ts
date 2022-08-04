@@ -10,7 +10,7 @@ import {
 import { Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
 
-export type TAudioProcessorData = Record<string, never>;
+export type TAudioProcessorData = void;
 export type TAudioProcessorQueue = Queue<TAudioProcessorData>;
 
 export const audioProcessorName = 'audio' as const;
