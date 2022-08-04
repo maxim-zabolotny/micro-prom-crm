@@ -2,14 +2,19 @@
 import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
-import { AudioConsumer, audioProcessorName } from './consumers';
+import {
+  AudioConsumer,
+  audioProcessorName,
+  SyncAllCategoriesConsumer,
+  syncAllCategoriesName,
+} from './consumers';
 import { JobBoardService } from './board/job-board.service';
 /*modules*/
 /*services*/
 /*controllers*/
 /*consumers*/
 
-const consumers = [AudioConsumer];
+const consumers = [AudioConsumer, SyncAllCategoriesConsumer];
 
 @Global()
 @Module({
@@ -30,6 +35,7 @@ const consumers = [AudioConsumer];
       inject: [ConfigService],
     }),
     BullModule.registerQueue({ name: audioProcessorName }),
+    BullModule.registerQueue({ name: syncAllCategoriesName }),
   ],
   providers: [...consumers, JobBoardService],
   exports: [BullModule, JobBoardService, ...consumers],
