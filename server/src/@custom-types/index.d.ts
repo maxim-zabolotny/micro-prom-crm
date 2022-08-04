@@ -8,9 +8,8 @@
 
 declare module '@custom-types' {
   export namespace TFunction {
-    export type Args<T> = T extends (...args: infer U) => any ? U : never;
-    export type Arg0<T> = T extends (arg1: infer U) => any ? U : never;
-    export type ReplaceReturnType<T, TReturn> = (...args: Args<T>[]) => TReturn;
+    export type Args<T> = T extends (...args: infer U) => unknown ? U : never;
+    export type Arg0<T> = T extends (arg1: infer U) => unknown ? U : never;
   }
 
   export namespace TObject {
@@ -30,34 +29,33 @@ declare module '@custom-types' {
     export type MakeRequired<T, K extends keyof T> = Omit<T, K> &
       Required<Pick<T, K>>;
 
+    export type MakeNil<
+      T extends Record<string, unknown>,
+      TObjKeys extends keyof T,
+    > = {
+      [TKey in TObjKeys]?: T[TKey] | null;
+    };
     export type MakeNilAll<T extends Record<string, unknown>> = {
       [TKey in keyof T]?: T[TKey] | null;
     };
-    export type MakeNil<
-      T extends Record<string, unknown>,
-      TKeys extends keyof T,
-    > = {
-      [TKey in TKeys]?: T[TKey] | null;
-    };
 
-    export type Diff<TObject> = Record<
-      keyof TObject,
-      {
-        old: TObject;
-        new: TObject;
-      }
-    >;
+    export type TUnknownRec = Record<string, unknown>;
   }
 
   export namespace TArray {
-    export type TKeys<T> = Array<Exclude<keyof T, keyof Array<any>>>;
-    export type TValues<T> = Array<T[number]>;
+    export type TKeys<T extends Array<unknown>> = Array<
+      Exclude<keyof T, keyof Array<unknown>>
+    >;
+    export type TValues<T extends Array<unknown>> = Array<T[number]>;
 
     export type SingleType<TValue> = TValue extends Array<infer TSingle>
       ? TSingle
       : TValue;
 
     export type PossibleArray<TValue> = TValue | Array<TValue>;
+
+    export type Pair<T, K> = [T, K];
+    export type Pairs<T, K> = Pair<T, K>[];
   }
 
   export namespace TType {
