@@ -26,7 +26,7 @@ export class SpreadsheetService implements OnModuleInit {
   private readonly docCredentials: ServiceAccountCredentials;
   private readonly docLimits = {
     requestLimitPerMinute: 300,
-    sleepTimeMS: 550,
+    intervalForChecksRequestLimit: 60,
     countOfRequests: 0,
     lastWaitTimestamp: Date.now(),
   };
@@ -46,6 +46,11 @@ export class SpreadsheetService implements OnModuleInit {
   async onModuleInit() {
     this.doc = new GoogleSpreadsheet(AppConstants.Google.Sheet.ID);
 
+    // HACK FOR MAX DATA
+    const axiosDefaults = this.doc['axios']['defaults'];
+    axiosDefaults.maxContentLength = Infinity;
+    axiosDefaults.maxBodyLength = Infinity;
+
     this.logger.debug('Auth in Google Sheet');
     await this.doc.useServiceAccountAuth(this.docCredentials);
 
@@ -55,25 +60,31 @@ export class SpreadsheetService implements OnModuleInit {
 
   private async checkRequestLimitsAndWait() {
     const now = Date.now();
-    const halfOfMinute = 1000 * 30;
-    const requestLimitPerHalfOfMinute =
-      this.docLimits.requestLimitPerMinute / 2;
+    const oneMinute = 1000 * 60;
+
+    const { intervalForChecksRequestLimit, requestLimitPerMinute } =
+      this.docLimits;
+
+    const timeInterval = oneMinute / intervalForChecksRequestLimit;
+    const requestsCountForInterval =
+      requestLimitPerMinute / intervalForChecksRequestLimit;
     const timestampsDiff = now - this.docLimits.lastWaitTimestamp;
+    const timeToSleep =
+      1000 * (requestLimitPerMinute / this.docLimits.countOfRequests);
 
     // Limit was used in less or a one half of minute. Need to sleep
     if (
-      timestampsDiff <= halfOfMinute &&
-      this.docLimits.countOfRequests >= requestLimitPerHalfOfMinute
+      timestampsDiff <= timeInterval &&
+      this.docLimits.countOfRequests >= requestsCountForInterval
     ) {
-      this.logger.debug(
-        `Request limit used. Sleep ${this.docLimits.sleepTimeMS}ms:`,
-        {
-          requestLimitPerHalfOfMinute,
-          countOfRequests: this.docLimits.countOfRequests,
-        },
-      );
+      this.logger.log(`Request limit used. Sleep ${timeToSleep / 1000}s:`, {
+        timeInterval,
+        requestsCountForInterval,
+        timeToSleep: timeToSleep / 1000,
+        countOfRequests: this.docLimits.countOfRequests,
+      });
 
-      await this.timeHelper.sleep(this.docLimits.sleepTimeMS);
+      await this.timeHelper.sleep(timeToSleep);
 
       this.docLimits.countOfRequests = 0;
       this.docLimits.lastWaitTimestamp = Date.now();
@@ -83,11 +94,12 @@ export class SpreadsheetService implements OnModuleInit {
 
     // Limit didn't be use in a one half of minute. Need update timestamp
     if (
-      timestampsDiff >= halfOfMinute &&
-      this.docLimits.countOfRequests < requestLimitPerHalfOfMinute
+      timestampsDiff >= timeInterval &&
+      this.docLimits.countOfRequests < requestsCountForInterval
     ) {
-      this.logger.debug(`Request limit didn't be use. Update requests info:`, {
-        requestLimitPerHalfOfMinute,
+      this.logger.log(`Request limit didn't be use. Update requests info:`, {
+        timeInterval,
+        requestsCountForInterval,
         countOfRequests: this.docLimits.countOfRequests,
       });
 
