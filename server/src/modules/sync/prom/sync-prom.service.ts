@@ -32,11 +32,11 @@ export class SyncPromService {
     );
   }
 
-  public async getCountOfNewCategories() {
+  public async getCountOfNewCategoriesInDB() {
     return this.categoryModel.count({ sync: false });
   }
 
-  public async getDeletedCategories(
+  public async getDeletedCategoriesFromDB(
     idKey: string,
   ): Promise<IDeletedCategoryInfo[]> {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
@@ -105,7 +105,7 @@ export class SyncPromService {
     return removedCategoriesFromSheet;
   }
 
-  public async getNewCategories(offset: number, limit: number) {
+  public async getNewCategoriesInDB(offset: number, limit: number) {
     return this.categoryModel.find({ sync: false }).skip(offset).limit(limit);
   }
 
@@ -144,7 +144,7 @@ export class SyncPromService {
       success: true,
     };
 
-    const count = await this.getCountOfNewCategories();
+    const count = await this.getCountOfNewCategoriesInDB();
     this.logger.debug('Not synced Categories count in DB', { count });
     if (count === 0) {
       return result;
@@ -161,7 +161,7 @@ export class SyncPromService {
         offset,
       });
 
-      const categories = await this.getNewCategories(offset, limit);
+      const categories = await this.getNewCategoriesInDB(offset, limit);
       this.logger.debug('Loaded not synced Categories:', {
         count: categories.length,
       });
@@ -236,7 +236,7 @@ export class SyncPromService {
     if (remove) {
       // SELECT
       const idKey = 'Идентификатор_группы';
-      const deletedCategories = await this.getDeletedCategories(idKey);
+      const deletedCategories = await this.getDeletedCategoriesFromDB(idKey);
 
       // REMOVE
       if (!_.isEmpty(deletedCategories)) {
@@ -247,6 +247,10 @@ export class SyncPromService {
 
         // RESULT
         result.removed = removedCategoriesFromSheet.length;
+      } else {
+        this.logger.debug(
+          'Not found deleted categories between DB and Google Sheet',
+        );
       }
     }
 
