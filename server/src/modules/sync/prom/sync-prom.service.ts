@@ -135,6 +135,45 @@ export class SyncPromService {
     return addedRows;
   }
 
+  public async syncCategoriesWithSheet(categories: Category[]) {
+    // ADD TO SHEET
+    const addedRows = await this.addCategoriesToSheet(categories);
+
+    // UPDATE IN DB
+    this.logger.debug('Update selected Categories in DB:', {
+      ids: _.map(categories, '_id'),
+      count: categories.length,
+    });
+
+    const updatedCategories = await Promise.all(
+      _.map(addedRows, async (row) => {
+        const categoryId = new Types.ObjectId(row['Идентификатор_группы']);
+        const updatedCategory = await this.categoryModel.findOneAndUpdate(
+          {
+            _id: categoryId,
+          },
+          {
+            $set: {
+              sync: true,
+              promTableLine: row.rowIndex,
+            },
+          },
+        );
+
+        return updatedCategory;
+      }),
+    );
+    this.logger.debug('Updated Categories in DB:', {
+      ids: _.map(updatedCategories, '_id'),
+      count: updatedCategories.length,
+    });
+
+    return {
+      addedRows,
+      updatedCategories,
+    };
+  }
+
   public async loadAllNewCategoriesToSheet() {
     const limit = 50;
     const result = {
@@ -167,42 +206,12 @@ export class SyncPromService {
       });
 
       // ADD TO SHEET
-      const addedRows = await this.addCategoriesToSheet(categories);
+      const { addedRows, updatedCategories } =
+        await this.syncCategoriesWithSheet(categories);
 
       // RESULT
       result.added += addedRows.length;
-
-      // UPDATE
-      this.logger.debug('Update selected Categories in DB:', {
-        ids: _.map(categories, '_id'),
-        count: categories.length,
-      });
-
-      const updatedCategoryIds = await Promise.all(
-        _.map(addedRows, async (row) => {
-          const categoryId = new Types.ObjectId(row['Идентификатор_группы']);
-          const updatedCategory = await this.categoryModel.findOneAndUpdate(
-            {
-              _id: categoryId,
-            },
-            {
-              $set: {
-                sync: true,
-                promTableLine: row.rowIndex,
-              },
-            },
-          );
-
-          return updatedCategory._id;
-        }),
-      );
-      this.logger.debug('Updated Categories in DB:', {
-        ids: updatedCategoryIds,
-        count: updatedCategoryIds.length,
-      });
-
-      // RESULT
-      result.updated += updatedCategoryIds.length;
+      result.updated += updatedCategories.length;
 
       offset += limit;
     }
