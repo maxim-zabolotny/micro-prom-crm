@@ -14,6 +14,9 @@ export class Category {
   @Prop({ type: Number, required: true })
   markup: number;
 
+  @Prop({ type: Number, required: true })
+  course: number;
+
   @Prop({
     type: raw({
       _id: false,
