@@ -22,6 +22,10 @@ export class MicrotronCoursesService {
     const courses = await this.coursesAPI.getCourse();
     this.coursesCache = courses;
 
+    this.logger.debug('Loaded courses from Microtron:', {
+      courses,
+    });
+
     return courses;
   }
 
@@ -36,6 +40,10 @@ export class MicrotronCoursesService {
     if (force || cacheIsEmpty) {
       return this.retrieveCoursesFromAPI();
     }
+
+    this.logger.debug('Took Microtron courses from cache:', {
+      courses: this.coursesCache,
+    });
 
     return this.coursesCache;
   }
