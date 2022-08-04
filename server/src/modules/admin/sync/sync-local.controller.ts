@@ -5,14 +5,17 @@ import {
   HttpCode,
   ParseBoolPipe,
   Query,
+  UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
 import { Auth } from '@common/decorators';
 import { UserRole } from '@schemas/user';
 import { SyncLocalService } from '../../sync/local/sync-local.service';
+import { MongoExceptionFilter } from '@common/filters';
 
 @Controller('/admin/sync/local')
+@UseFilters(MongoExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
 export class SyncLocalController {
   constructor(private readonly syncLocalService: SyncLocalService) {}

@@ -5,14 +5,17 @@ import {
   HttpCode,
   ParseBoolPipe,
   Query,
+  UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
 import { UserRole } from '@schemas/user';
 import { Auth } from '@common/decorators';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
+import { MongoExceptionFilter } from '@common/filters';
 
 @Controller('/admin/sync/prom')
+@UseFilters(MongoExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
 export class SyncPromController {
   constructor(private readonly syncPromService: SyncPromService) {}
