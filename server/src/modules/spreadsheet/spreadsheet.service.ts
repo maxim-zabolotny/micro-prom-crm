@@ -106,7 +106,7 @@ export class SpreadsheetService implements OnModuleInit {
   private async iterateByRows(
     sheet: GoogleSpreadsheetWorksheet,
     func: (rows: GoogleSpreadsheetRow[]) => boolean,
-    options?: PaginationOptions,
+    options?: Partial<PaginationOptions>,
   ) {
     const limit = options?.limit ?? 20;
     const countOfRows = sheet.rowCount;
@@ -145,43 +145,34 @@ export class SpreadsheetService implements OnModuleInit {
     }
   }
 
-  public async getAllRows(sheet: GoogleSpreadsheetWorksheet, keys?: string[]) {
-    const result = [];
+  public async getAllRows(sheet: GoogleSpreadsheetWorksheet) {
+    this.logger.debug('Get all rows');
+
+    const result: GoogleSpreadsheetRow[] = [];
 
     await this.iterateByRows(sheet, (rows) => {
-      if (!_.isEmpty(keys)) {
-        result.push(
-          ..._.map(rows, (row) =>
-            _.reduce(
-              keys,
-              (acc, key) => {
-                acc[key] = row[key];
-                return acc;
-              },
-              {},
-            ),
-          ),
-        );
-      } else {
-        result.push(...rows);
-      }
-
+      result.push(...rows);
       return true;
     });
 
-    return result;
+    this.logger.debug('Received all rows:', {
+      count: result.length,
+    });
+
+    return _.orderBy(result, (row) => row.rowIndex, ['desc']);
   }
 
   public async findOneRowBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Record<string, string | number>,
-    options?: PaginationOptions,
+    options?: Partial<PaginationOptions>,
   ) {
-    this.logger.debug('Find rows by:', {
+    this.logger.debug('Find row by:', {
       data,
+      options,
     });
 
-    let result = null;
+    let result: GoogleSpreadsheetRow | null = null;
 
     await this.iterateByRows(
       sheet,
@@ -202,19 +193,25 @@ export class SpreadsheetService implements OnModuleInit {
       options,
     );
 
+    this.logger.debug('Found row:', {
+      data,
+      found: Boolean(result),
+    });
+
     return result;
   }
 
   public async findRowsBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Array<Record<string, string | number>>,
-    options?: PaginationOptions,
+    options?: Partial<PaginationOptions>,
   ) {
     this.logger.debug('Find rows by:', {
       data,
+      options,
     });
 
-    const result = [];
+    const result: GoogleSpreadsheetRow[] = [];
 
     await this.iterateByRows(
       sheet,
@@ -233,14 +230,47 @@ export class SpreadsheetService implements OnModuleInit {
       options,
     );
 
-    return result;
+    this.logger.debug('Found rows:', {
+      data,
+      count: result.length,
+    });
+
+    return _.orderBy(result, (row) => row.rowIndex, ['desc']);
+  }
+
+  public async addRows(
+    sheet: GoogleSpreadsheetWorksheet,
+    data: Array<Record<string, any>>,
+  ) {
+    this.logger.debug('Add rows:', {
+      count: data.length,
+    });
+
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
+    const rows = await sheet.addRows(data);
+
+    this.logger.debug('Added rows:', {
+      count: rows.length,
+    });
+
+    // LIMITS
+    await this.increaseRequestCountsAndWait();
+
+    return rows;
   }
 
   public async removeOneRowBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Record<string, string | number>,
-    options?: PaginationOptions,
+    options?: Partial<PaginationOptions>,
   ) {
+    this.logger.debug('Remove row by:', {
+      data,
+      options,
+    });
+
     const row = await this.findOneRowBy(sheet, data, options);
     if (!row) {
       throw new HttpException(
@@ -254,32 +284,26 @@ export class SpreadsheetService implements OnModuleInit {
 
     await row.delete();
 
+    this.logger.debug('Removed row:', {
+      rowIndex: row.rowIndex,
+    });
+
     // LIMITS
     await this.increaseRequestCountsAndWait();
 
     return row;
   }
 
-  public async addRows(
-    sheet: GoogleSpreadsheetWorksheet,
-    data: Array<Record<string, any>>,
-  ) {
-    // LIMITS
-    await this.checkRequestLimitsAndWait();
-
-    const rows = await sheet.addRows(data);
-
-    // LIMITS
-    await this.increaseRequestCountsAndWait();
-
-    return rows;
-  }
-
   public async removeRowsBy(
     sheet: GoogleSpreadsheetWorksheet,
     data: Array<Record<string, string | number>>,
-    options?: PaginationOptions,
+    options?: Partial<PaginationOptions>,
   ) {
+    this.logger.debug('Remove rows by:', {
+      data,
+      options,
+    });
+
     const rows = await this.findRowsBy(sheet, data, options);
     if (_.isEmpty(rows)) {
       throw new HttpException(
@@ -291,15 +315,58 @@ export class SpreadsheetService implements OnModuleInit {
     // LIMITS
     await this.checkRequestLimitsAndWait();
 
-    const chunkedRows = _.chunk(rows, this.docLimits.requestLimitPerMinute / 2);
-    for (const rows of chunkedRows) {
-      await Promise.all(_.map(rows, (row) => row.delete()));
+    for (const row of rows) {
+      await row.delete();
+
+      this.logger.debug('Removed row:', {
+        rowIndex: row.rowIndex,
+      });
 
       // LIMITS
-      await this.increaseRequestCountsAndWait(rows.length);
+      await this.increaseRequestCountsAndWait();
     }
 
+    this.logger.debug('Removed rows:', {
+      rowIndexes: _.map(rows, (row) => row.rowIndex),
+      count: rows.length,
+    });
+
     return rows;
+  }
+
+  public async removeRows(
+    sheet: GoogleSpreadsheetWorksheet,
+    rows: GoogleSpreadsheetRow[],
+  ) {
+    this.logger.debug('Remove rows:', {
+      rowIndexes: _.map(rows, (row) => row.rowIndex),
+      count: rows.length,
+    });
+
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
+    const removedRows: GoogleSpreadsheetRow[] = [];
+
+    const orderedRows = _.orderBy(rows, (row) => row.rowIndex, ['desc']);
+    for (const row of orderedRows) {
+      await row.delete();
+      removedRows.push(row);
+
+      this.logger.debug('Removed row:', {
+        rowIndex: row.rowIndex,
+      });
+
+      // LIMITS
+      await this.increaseRequestCountsAndWait();
+    }
+
+    this.logger.debug('Removed rows:', {
+      rowIndexes: _.map(removedRows, (row) => row.rowIndex),
+      count: removedRows.length,
+    });
+
+    return removedRows;
   }
 
   public setRequestLimits(count: number) {
