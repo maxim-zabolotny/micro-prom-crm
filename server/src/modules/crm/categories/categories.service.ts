@@ -13,7 +13,9 @@ export type TAddCategory = ITranslatedCategoryTreeInConstant & {
   parent?: CategoryDocument;
 };
 
-export type TUpdateCategory = Partial<Pick<TAddCategory, 'course' | 'markup'>>;
+export type TUpdateCategory = Partial<
+  Pick<Category, 'course' | 'markup' | 'promTableLine' | 'sync'>
+>;
 
 @Injectable()
 export class CrmCategoriesService {
@@ -25,8 +27,12 @@ export class CrmCategoriesService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
+  public async getAllCategoriesFromDB() {
+    return this.categoryModel.find();
+  }
+
   public async addCategoryToDB(categoryData: TAddCategory) {
-    this.logger.debug('Process category:', {
+    this.logger.debug('Process add Category:', {
       id: categoryData.id,
       name: categoryData.name,
     });
@@ -47,33 +53,78 @@ export class CrmCategoriesService {
     });
     await category.save();
 
-    const children: Category[] = [];
+    const children: CategoryDocument[] = [];
     if (!_.isEmpty(categoryData.children)) {
-      this.logger.debug('Process category children');
+      this.logger.debug('Process add Category children');
 
       children.push(
-        ...(await Promise.all(
-          _.map(categoryData.children, (categoryChildren) => {
-            return this.addCategoryToDB({
-              ...categoryChildren,
-              ..._.pick(categoryData, ['course', 'integrationId']),
-              parent: category,
-            });
-          }),
-        )),
+        ..._.flattenDeep(
+          await Promise.all(
+            _.map(categoryData.children, (categoryChildren) => {
+              return this.addCategoryToDB({
+                ...categoryChildren,
+                ..._.pick(categoryData, ['course', 'integrationId']),
+                parent: category,
+              });
+            }),
+          ),
+        ),
       );
     }
 
-    return {
-      ...(category.toJSON() as Category),
-      children,
-    };
+    return _.flattenDeep([category, children]);
   }
 
   public async updateCategoryInDB(
     categoryId: Types.ObjectId,
     data: TUpdateCategory,
-  ) {}
+  ) {
+    this.logger.debug('Process update Category:', {
+      categoryId,
+      data,
+    });
 
-  public async deleteCategoryFromDB(categoryId: Types.ObjectId) {}
+    const updatedCategory = await this.categoryModel.findOneAndUpdate(
+      {
+        _id: categoryId,
+      },
+      {
+        $set: data,
+      },
+    );
+
+    return updatedCategory;
+  }
+
+  public async deleteCategoryFromDB(categoryId: Types.ObjectId) {
+    this.logger.debug('Process delete Category:', {
+      categoryId,
+    });
+
+    const deleteResult = await this.categoryModel.deleteOne({
+      _id: categoryId,
+    });
+
+    return {
+      ...deleteResult,
+      categoryId,
+    };
+  }
+
+  public async deleteCategoriesFromDB(categoryIds: Types.ObjectId[]) {
+    this.logger.debug('Process delete Categories:', {
+      categoryIds,
+    });
+
+    const deleteResult = await this.categoryModel.deleteMany({
+      _id: {
+        $in: categoryIds,
+      },
+    });
+
+    return {
+      ...deleteResult,
+      categoryIds,
+    };
+  }
 }
