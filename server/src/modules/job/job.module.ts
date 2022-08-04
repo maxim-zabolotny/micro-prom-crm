@@ -5,20 +5,22 @@ import { ConfigService } from '@nestjs/config';
 import {
   AudioConsumer,
   audioProcessorName,
-  SyncAllCategoriesConsumer,
-  syncAllCategoriesName,
+  LoadAllCategoriesConsumer,
+  loadAllCategoriesName,
 } from './consumers';
 import { JobBoardService } from './board/job-board.service';
+import { SyncModule } from '../sync/sync.module';
 /*modules*/
 /*services*/
 /*controllers*/
 /*consumers*/
 
-const consumers = [AudioConsumer, SyncAllCategoriesConsumer];
+const consumers = [AudioConsumer, LoadAllCategoriesConsumer];
 
 @Global()
 @Module({
   imports: [
+    SyncModule,
     BullModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
         return {
@@ -35,7 +37,7 @@ const consumers = [AudioConsumer, SyncAllCategoriesConsumer];
       inject: [ConfigService],
     }),
     BullModule.registerQueue({ name: audioProcessorName }),
-    BullModule.registerQueue({ name: syncAllCategoriesName }),
+    BullModule.registerQueue({ name: loadAllCategoriesName }),
   ],
   providers: [...consumers, JobBoardService],
   exports: [BullModule, JobBoardService, ...consumers],

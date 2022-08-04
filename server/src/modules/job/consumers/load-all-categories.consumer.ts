@@ -3,31 +3,46 @@ import {
   OnQueueActive,
   OnQueueCompleted,
   OnQueueFailed,
-  OnQueueProgress,
   Process,
   Processor,
 } from '@nestjs/bull';
 import { Job, Queue } from 'bull';
 import { Logger } from '@nestjs/common';
+import { SyncLocalService } from '../../sync/local/sync-local.service';
+import { SyncPromService } from '../../sync/prom/sync-prom.service';
 
-export type TSyncAllCategoriesProcessorData = Record<string, never>;
-export type TSyncAllCategoriesProcessorQueue =
-  Queue<TSyncAllCategoriesProcessorData>;
+export type TLoadAllCategoriesProcessorData = void;
+export type TLoadAllCategoriesProcessorQueue =
+  Queue<TLoadAllCategoriesProcessorData>;
 
-export const syncAllCategoriesName = 'audio' as const;
+export const loadAllCategoriesName = 'load-all-categories' as const;
 
-@Processor(syncAllCategoriesName)
-export class SyncAllCategoriesConsumer {
+@Processor(loadAllCategoriesName)
+export class LoadAllCategoriesConsumer {
   private readonly logger = new Logger(this.constructor.name);
 
+  constructor(
+    private readonly syncLocalService: SyncLocalService,
+    private readonly syncPromService: SyncPromService,
+  ) {}
+
   @Process()
-  async syncAllCategories(job: Job<TSyncAllCategoriesProcessorData>) {
-    let progress = 0;
-    for (let i = 0; i < 10; i++) {
-      progress += 10;
-      await job.progress(progress);
-    }
-    return {};
+  async loadAllCategories() {
+    this.logger.log('Start loading categories to DB');
+    const loadedCategories =
+      await this.syncLocalService.loadAllCategoriesToDB();
+
+    this.logger.log('Start loading categories to Google Sheet');
+    const { addedRowsCount, updatedCategories, newCategoriesCount, success } =
+      await this.syncPromService.loadAllNewCategoriesToSheet();
+
+    return {
+      newCategoriesCount,
+      addedRowsCount,
+      updatedCategoriesCount: updatedCategories.length,
+      loadedCategoriesCount: loadedCategories.length,
+      isLoadedToSheetOK: success,
+    };
   }
 
   @OnQueueActive()
@@ -35,13 +50,6 @@ export class SyncAllCategoriesConsumer {
     this.logger.debug(
       `Processing job ${job.id} of Queue ${job.queue.name} with data:`,
       job.data,
-    );
-  }
-
-  @OnQueueProgress()
-  onProgress(job: Job, progress: number) {
-    this.logger.debug(
-      `Processing job ${job.id} of Queue ${job.queue.name}: progress - ${progress}`,
     );
   }
 
