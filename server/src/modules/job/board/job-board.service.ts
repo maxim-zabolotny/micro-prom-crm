@@ -4,7 +4,12 @@ import { InjectQueue } from '@nestjs/bull';
 import { ExpressAdapter } from '@bull-board/express';
 import { createBullBoard } from '@bull-board/api';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
-import { audioProcessorName, TAudioProcessorQueue } from '../consumers';
+import {
+  audioProcessorName,
+  loadAllCategoriesName,
+  TAudioProcessorQueue,
+  TLoadAllCategoriesProcessorQueue,
+} from '../consumers';
 
 @Injectable()
 export class JobBoardService {
@@ -18,6 +23,8 @@ export class JobBoardService {
     private configService: ConfigService,
     @InjectQueue(audioProcessorName)
     private audioQueue: TAudioProcessorQueue,
+    @InjectQueue(loadAllCategoriesName)
+    private loadAllCategoriesQueue: TLoadAllCategoriesProcessorQueue,
   ) {
     this.serverAdapter.setBasePath(this.basePath);
     this.serverAdapter.setErrorHandler((err) => {
@@ -29,7 +36,10 @@ export class JobBoardService {
     });
 
     this.bullBoard = createBullBoard({
-      queues: [new BullAdapter(this.audioQueue)],
+      queues: [
+        new BullAdapter(this.audioQueue),
+        new BullAdapter(this.loadAllCategoriesQueue),
+      ],
       serverAdapter: this.serverAdapter,
     });
   }
@@ -44,6 +54,15 @@ export class JobBoardService {
 
   public async addAudioJob() {
     const job = await this.audioQueue.add();
+    return {
+      id: job.id,
+      name: job.name,
+      data: job.data,
+    };
+  }
+
+  public async addLoadAllCategories() {
+    const job = await this.loadAllCategoriesQueue.add();
     return {
       id: job.id,
       name: job.name,

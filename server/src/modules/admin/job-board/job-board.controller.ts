@@ -12,4 +12,10 @@ export class JobBoardController {
   addAudioJob() {
     return this.jobBoardService.addAudioJob();
   }
+
+  @Post('/test-load-all-categories')
+  @HttpCode(201)
+  addLoadAllCategoriesJob() {
+    return this.jobBoardService.addLoadAllCategories();
+  }
 }
