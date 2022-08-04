@@ -7,11 +7,8 @@ import { Category, CategoryDocument } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
 import { SpreadsheetService } from '../../spreadsheet/spreadsheet.service';
 import { DataUtilsHelper } from '@common/helpers';
-
-export interface IDeletedCategoryInfo {
-  id: string;
-  rowIndex: number;
-}
+import { CrmCategoriesService } from '../../crm/categories/categories.service';
+import { GoogleSpreadsheetRow } from 'google-spreadsheet';
 
 @Injectable()
 export class SyncPromService {
@@ -20,6 +17,7 @@ export class SyncPromService {
   constructor(
     private configService: ConfigService,
     private spreadsheetService: SpreadsheetService,
+    private crmCategoriesService: CrmCategoriesService,
     private dataUtilsHelper: DataUtilsHelper,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
@@ -36,17 +34,16 @@ export class SyncPromService {
     return this.categoryModel.count({ sync: false });
   }
 
-  public async getDeletedCategoriesFromDB(
-    idKey: string,
-  ): Promise<IDeletedCategoryInfo[]> {
+  public async getNewCategoriesInDB(offset: number, limit: number) {
+    return this.categoryModel.find({ sync: false }).skip(offset).limit(limit);
+  }
+
+  public async getDeletedCategoriesFromDB(idKey: string) {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
     this.logger.debug('Load Category ids from Google Sheet');
-    const allRows = await this.spreadsheetService.getAllRows(categoriesSheet, [
-      idKey,
-      'rowIndex',
-    ]);
-    const categoryIdsInSheet = _.map(allRows, idKey);
+    const allRows = await this.spreadsheetService.getAllRows(categoriesSheet);
+    const categoryIdsInSheet = _.map(allRows, (row) => row[idKey]);
 
     this.logger.debug(
       'Load Category ids from DB by Category ids from Google Sheet',
@@ -70,43 +67,7 @@ export class SyncPromService {
       removedIds,
     });
 
-    return _.chain(allRows)
-      .filter((row) => _.includes(removedIds, row[idKey]))
-      .map((row) => ({ id: row[idKey], rowIndex: Number(row.rowIndex) }))
-      .value();
-  }
-
-  public async deleteCategoriesFromSheet(
-    categories: IDeletedCategoryInfo[],
-    idKey: string,
-  ) {
-    const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
-
-    this.logger.debug('Remove Categories from Google Sheet');
-
-    const removedCategoriesFromSheet = await Promise.all(
-      _.map(categories, (category) => {
-        return this.spreadsheetService.removeOneRowBy(
-          categoriesSheet,
-          {
-            [idKey]: category.id,
-          },
-          this.spreadsheetService.getPaginationForRowIndex(category.rowIndex),
-        );
-      }),
-    );
-    this.logger.debug('Removed Categories from Google Sheet:', {
-      categories: _.map(removedCategoriesFromSheet, (category) => ({
-        id: category['Идентификатор_группы'],
-        name: category['Название_группы'],
-      })),
-    });
-
-    return removedCategoriesFromSheet;
-  }
-
-  public async getNewCategoriesInDB(offset: number, limit: number) {
-    return this.categoryModel.find({ sync: false }).skip(offset).limit(limit);
+    return _.filter(allRows, (row) => _.includes(removedIds, row[idKey]));
   }
 
   public async addCategoriesToSheet(categories: Category[]) {
@@ -140,27 +101,20 @@ export class SyncPromService {
     const addedRows = await this.addCategoriesToSheet(categories);
 
     // UPDATE IN DB
-    this.logger.debug('Update selected Categories in DB:', {
+    this.logger.debug('Update Categories in DB:', {
       ids: _.map(categories, '_id'),
       count: categories.length,
     });
 
     const updatedCategories = await Promise.all(
       _.map(addedRows, async (row) => {
-        const categoryId = new Types.ObjectId(row['Идентификатор_группы']);
-        const updatedCategory = await this.categoryModel.findOneAndUpdate(
+        return this.crmCategoriesService.updateCategoryInDB(
+          new Types.ObjectId(row['Идентификатор_группы']),
           {
-            _id: categoryId,
-          },
-          {
-            $set: {
-              sync: true,
-              promTableLine: row.rowIndex,
-            },
+            sync: true,
+            promTableLine: row.rowIndex,
           },
         );
-
-        return updatedCategory;
       }),
     );
     this.logger.debug('Updated Categories in DB:', {
@@ -174,12 +128,34 @@ export class SyncPromService {
     };
   }
 
+  public async deleteCategoriesFromSheet(categories: GoogleSpreadsheetRow[]) {
+    const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
+
+    this.logger.debug('Remove Categories from Google Sheet', {
+      count: categories.length,
+    });
+
+    const removedCategoriesFromSheet = await this.spreadsheetService.removeRows(
+      categoriesSheet,
+      categories,
+    );
+    this.logger.debug('Removed Categories from Google Sheet:', {
+      categories: _.map(removedCategoriesFromSheet, (category) => ({
+        id: category['Идентификатор_группы'],
+        name: category['Название_группы'],
+      })),
+      count: removedCategoriesFromSheet.length,
+    });
+
+    return removedCategoriesFromSheet;
+  }
+
   public async loadAllNewCategoriesToSheet() {
     const limit = 50;
     const result = {
-      count: 0,
-      added: 0,
-      updated: 0,
+      newCategoriesCount: 0,
+      addedRows: 0,
+      updatedCategories: 0,
       success: true,
     };
 
@@ -190,7 +166,7 @@ export class SyncPromService {
     }
 
     // RESULT
-    result.count = count;
+    result.newCategoriesCount = count;
 
     let offset = 0;
     while (offset <= count) {
@@ -210,14 +186,18 @@ export class SyncPromService {
         await this.syncCategoriesWithSheet(categories);
 
       // RESULT
-      result.added += addedRows.length;
-      result.updated += updatedCategories.length;
+      result.addedRows += addedRows.length;
+      result.updatedCategories += updatedCategories.length;
 
       offset += limit;
     }
 
     const success = _.isEqual(
-      _.uniq([result.count, result.added, result.updated]).length,
+      _.uniq([
+        result.newCategoriesCount,
+        result.addedRows,
+        result.updatedCategories,
+      ]).length,
       1,
     );
     return {
@@ -237,9 +217,9 @@ export class SyncPromService {
     });
 
     const result = {
-      removed: 0,
-      added: 0,
-      updated: 0,
+      addedRows: 0,
+      updatedCategories: 0,
+      removedRows: 0,
     };
 
     if (remove) {
@@ -251,24 +231,24 @@ export class SyncPromService {
       if (!_.isEmpty(deletedCategories)) {
         const removedCategoriesFromSheet = await this.deleteCategoriesFromSheet(
           deletedCategories,
-          idKey,
         );
 
         // RESULT
-        result.removed = removedCategoriesFromSheet.length;
+        result.removedRows = removedCategoriesFromSheet.length;
       } else {
         this.logger.debug(
-          'Not found deleted categories between DB and Google Sheet',
+          'Not found deleted Categories between DB and Google Sheet',
         );
       }
     }
 
     if (add) {
-      const { added, updated } = await this.loadAllNewCategoriesToSheet();
+      const { addedRows, updatedCategories } =
+        await this.loadAllNewCategoriesToSheet();
 
       // RESULT
-      result.added = added;
-      result.updated = updated;
+      result.addedRows = addedRows;
+      result.updatedCategories = updatedCategories;
     }
 
     return result;
