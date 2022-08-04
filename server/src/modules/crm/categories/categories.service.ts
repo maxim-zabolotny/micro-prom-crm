@@ -31,6 +31,14 @@ export class CrmCategoriesService {
     return this.categoryModel.find();
   }
 
+  public async getCountOfNotSyncedCategoriesInDB() {
+    return this.categoryModel.count({ sync: false });
+  }
+
+  public async getAllNotSyncedCategoriesFromDB() {
+    return this.categoryModel.find({ sync: false });
+  }
+
   public async addCategoryToDB(categoryData: TAddCategory) {
     this.logger.debug('Process add Category:', {
       id: categoryData.id,

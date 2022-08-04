@@ -6,8 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Integration, IntegrationSchema } from '@schemas/integration';
 import { SyncPromService } from './prom/sync-prom.service';
 import { SyncLocalService } from './local/sync-local.service';
-import { DataUtilsHelper } from '@common/helpers';
 import { Category, CategorySchema } from '@schemas/category';
+import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 
 @Module({
   imports: [
@@ -26,7 +26,13 @@ import { Category, CategorySchema } from '@schemas/category';
       },
     ]),
   ],
-  providers: [DataUtilsHelper, SyncService, SyncLocalService, SyncPromService],
+  providers: [
+    TimeHelper,
+    DataUtilsHelper,
+    SyncService,
+    SyncLocalService,
+    SyncPromService,
+  ],
   exports: [SyncService, SyncLocalService, SyncPromService],
 })
 export class SyncModule {}

@@ -6,9 +6,22 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Category, CategoryDocument } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
 import { SpreadsheetService } from '../../spreadsheet/spreadsheet.service';
-import { DataUtilsHelper } from '@common/helpers';
+import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { CrmCategoriesService } from '../../crm/categories/categories.service';
 import { GoogleSpreadsheetRow } from 'google-spreadsheet';
+
+export interface ILoadCategoriesToSheetResult {
+  newCategoriesCount: number;
+  addedRowsCount: number;
+  updatedCategories: CategoryDocument[];
+  success: boolean;
+}
+
+export interface ISyncCategoriesResult {
+  addedRowsCount: number;
+  removedRowsCount: number;
+  updatedCategories: CategoryDocument[];
+}
 
 @Injectable()
 export class SyncPromService {
@@ -19,6 +32,7 @@ export class SyncPromService {
     private spreadsheetService: SpreadsheetService,
     private crmCategoriesService: CrmCategoriesService,
     private dataUtilsHelper: DataUtilsHelper,
+    private timeHelper: TimeHelper,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
@@ -28,14 +42,6 @@ export class SyncPromService {
         return [keyInTable, _.get(entity, keyInEntity)];
       }),
     );
-  }
-
-  public async getCountOfNewCategoriesInDB() {
-    return this.categoryModel.count({ sync: false });
-  }
-
-  public async getNewCategoriesInDB(offset: number, limit: number) {
-    return this.categoryModel.find({ sync: false }).skip(offset).limit(limit);
   }
 
   public async getDeletedCategoriesFromDB(idKey: string) {
@@ -151,15 +157,15 @@ export class SyncPromService {
   }
 
   public async loadAllNewCategoriesToSheet() {
-    const limit = 50;
-    const result = {
+    const result: ILoadCategoriesToSheetResult = {
       newCategoriesCount: 0,
-      addedRows: 0,
-      updatedCategories: 0,
-      success: true,
+      addedRowsCount: 0,
+      updatedCategories: [],
+      success: false,
     };
 
-    const count = await this.getCountOfNewCategoriesInDB();
+    const count =
+      await this.crmCategoriesService.getCountOfNotSyncedCategoriesInDB();
     this.logger.debug('Not synced Categories count in DB', { count });
     if (count === 0) {
       return result;
@@ -168,35 +174,28 @@ export class SyncPromService {
     // RESULT
     result.newCategoriesCount = count;
 
-    let offset = 0;
-    while (offset <= count) {
-      // LOAD
-      this.logger.debug('Load not synced Categories from DB:', {
-        limit,
-        offset,
-      });
+    this.logger.debug('Load not synced Categories from DB');
 
-      const categories = await this.getNewCategoriesInDB(offset, limit);
-      this.logger.debug('Loaded not synced Categories:', {
-        count: categories.length,
-      });
+    const categories =
+      await this.crmCategoriesService.getAllNotSyncedCategoriesFromDB();
+    this.logger.debug('Loaded not synced Categories:', {
+      count: categories.length,
+    });
 
-      // ADD TO SHEET
-      const { addedRows, updatedCategories } =
-        await this.syncCategoriesWithSheet(categories);
+    // ADD TO SHEET
+    const { addedRows, updatedCategories } = await this.syncCategoriesWithSheet(
+      categories,
+    );
 
-      // RESULT
-      result.addedRows += addedRows.length;
-      result.updatedCategories += updatedCategories.length;
-
-      offset += limit;
-    }
+    // RESULT
+    result.addedRowsCount = addedRows.length;
+    result.updatedCategories = updatedCategories;
 
     const success = _.isEqual(
       _.uniq([
         result.newCategoriesCount,
-        result.addedRows,
-        result.updatedCategories,
+        result.addedRowsCount,
+        result.updatedCategories.length,
       ]).length,
       1,
     );
@@ -216,10 +215,10 @@ export class SyncPromService {
       remove,
     });
 
-    const result = {
-      addedRows: 0,
-      updatedCategories: 0,
-      removedRows: 0,
+    const result: ISyncCategoriesResult = {
+      addedRowsCount: 0,
+      removedRowsCount: 0,
+      updatedCategories: [],
     };
 
     if (remove) {
@@ -234,7 +233,7 @@ export class SyncPromService {
         );
 
         // RESULT
-        result.removedRows = removedCategoriesFromSheet.length;
+        result.removedRowsCount = removedCategoriesFromSheet.length;
       } else {
         this.logger.debug(
           'Not found deleted Categories between DB and Google Sheet',
@@ -243,11 +242,11 @@ export class SyncPromService {
     }
 
     if (add) {
-      const { addedRows, updatedCategories } =
+      const { addedRowsCount, updatedCategories } =
         await this.loadAllNewCategoriesToSheet();
 
       // RESULT
-      result.addedRows = addedRows;
+      result.addedRowsCount = addedRowsCount;
       result.updatedCategories = updatedCategories;
     }
 
