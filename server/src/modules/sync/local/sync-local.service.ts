@@ -21,7 +21,7 @@ import {
   TAddCategory,
 } from '../../crm/categories/categories.service';
 import { CategoryDocument } from '@schemas/category';
-import { DataUtilsHelper } from '@common/helpers';
+import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TArray } from '@custom-types';
 
 export type TCompareCategoriesKeys = Extract<
@@ -40,7 +40,7 @@ export interface IChangeCategoriesActions {
   categoriesToRemove: CategoryDocument[];
 }
 
-export interface IChangedCategoriesResult {
+export interface ISyncCategoriesResult {
   added: CategoryDocument[];
   updated: CategoryDocument[];
   removed: Types.ObjectId[];
@@ -60,6 +60,7 @@ export class SyncLocalService {
     private microtronCategoriesService: MicrotronCategoriesService,
     private crmCategoriesService: CrmCategoriesService,
     private dataUtilsHelper: DataUtilsHelper,
+    private timeHelper: TimeHelper,
     @InjectModel(Integration.name)
     private integrationModel: Model<IntegrationDocument>,
   ) {}
@@ -127,20 +128,25 @@ export class SyncLocalService {
       count: categories.length,
     });
 
-    const addedCategories = await Promise.all(
-      _.map(categoriesTree, (categoryData) => {
-        return this.crmCategoriesService.addCategoryToDB({
-          ...categoryData,
+    const addedCategories: CategoryDocument[] = [];
+    for (const categoryTree of categoriesTree) {
+      const addedCategoryWithChildren =
+        await this.crmCategoriesService.addCategoryToDB({
+          ...categoryTree,
           course,
           integrationId,
         });
-      }),
-    );
+      addedCategories.push(...addedCategoryWithChildren);
+
+      this.logger.debug('Sleep 500ms before continue loading Categories to DB');
+      await this.timeHelper.sleep(500);
+    }
+
     this.logger.debug('Loaded Categories to DB:', {
       count: addedCategories.length,
     });
 
-    return _.flattenDeep(addedCategories);
+    return addedCategories;
   }
 
   public async updateCategoriesInDB(
@@ -320,7 +326,7 @@ export class SyncLocalService {
       },
     );
 
-    const result: IChangedCategoriesResult = {
+    const result: ISyncCategoriesResult = {
       added: [],
       updated: [],
       removed: [],
@@ -330,8 +336,6 @@ export class SyncLocalService {
       await this.getChangeCategoriesActions(add, update, remove);
 
     if (!_.isEmpty(categoriesToAdd)) {
-      this.logger.debug('Load Microtron Integration from DB');
-
       const microtronIntegration = await this.getMicrotronIntegration();
       const course = await this.microtronCoursesService.getCoursesByAPI(false);
 
