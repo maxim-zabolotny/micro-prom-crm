@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { MicrotronCoursesService } from '../../microtron/courses/courses.service';
 import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
@@ -43,7 +43,7 @@ export interface IChangeCategoriesActions {
 export interface ISyncCategoriesResult {
   added: CategoryDocument[];
   updated: CategoryDocument[];
-  removed: Types.ObjectId[];
+  removed: CategoryDocument[];
 }
 
 @Injectable()
@@ -117,6 +117,7 @@ export class SyncLocalService {
   ) {
     const { course, integrationId } = data;
 
+    // TODO:  remove tree
     this.logger.debug('Build Categories tree view');
     const categoriesTree = MicrotronAPI.Utils.makeTree(
       categories,
@@ -178,16 +179,19 @@ export class SyncLocalService {
       count: categories.length,
     });
 
-    const { categoryIds, deletedCount } =
-      await this.crmCategoriesService.deleteCategoriesFromDB(
-        _.map(categories, '_id'),
-      );
+    const deletedCategories: CategoryDocument[] = [];
+    for (const category of categories) {
+      const deletedCategory =
+        await this.crmCategoriesService.deleteCategoryFromDB(category._id);
+      deletedCategories.push(deletedCategory);
+    }
+
     this.logger.debug('Removed Categories from DB:', {
-      ids: categoryIds,
-      count: deletedCount,
+      ids: _.map(deletedCategories, '_id'),
+      count: deletedCategories.length,
     });
 
-    return categoryIds;
+    return deletedCategories;
   }
 
   public async getChangeCategoriesActions(

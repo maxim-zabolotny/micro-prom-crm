@@ -109,30 +109,42 @@ export class CrmCategoriesService {
       categoryId,
     });
 
-    const deleteResult = await this.categoryModel.deleteOne({
+    const removedCategory = await this.categoryModel.findOneAndDelete({
       _id: categoryId,
     });
 
-    return {
-      ...deleteResult,
-      categoryId,
-    };
-  }
+    if (removedCategory.promTableLine) {
+      const categoriesWithHigherTableLine = await this.categoryModel
+        .find({
+          promTableLine: {
+            $gt: removedCategory.promTableLine,
+          },
+        })
+        .select({
+          _id: 1,
+          promTableLine: 1,
+        });
 
-  public async deleteCategoriesFromDB(categoryIds: Types.ObjectId[]) {
-    this.logger.debug('Process delete Categories:', {
-      categoryIds,
-    });
+      this.logger.debug('Process update Categories with higher table line:', {
+        categories: categoriesWithHigherTableLine,
+      });
 
-    const deleteResult = await this.categoryModel.deleteMany({
-      _id: {
-        $in: categoryIds,
-      },
-    });
+      await Promise.all(
+        _.map(categoriesWithHigherTableLine, async (category) => {
+          await this.categoryModel.updateOne(
+            {
+              _id: category._id,
+            },
+            {
+              $set: {
+                promTableLine: category.promTableLine - 1,
+              },
+            },
+          );
+        }),
+      );
+    }
 
-    return {
-      ...deleteResult,
-      categoryIds,
-    };
+    return removedCategory;
   }
 }
