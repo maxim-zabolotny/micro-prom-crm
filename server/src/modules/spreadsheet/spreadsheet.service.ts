@@ -157,15 +157,22 @@ export class SpreadsheetService implements OnModuleInit {
     }
   }
 
-  public async getAllRows(sheet: GoogleSpreadsheetWorksheet) {
+  public async getAllRows(
+    sheet: GoogleSpreadsheetWorksheet,
+    options?: Partial<PaginationOptions>,
+  ) {
     this.logger.debug('Get all rows');
 
     const result: GoogleSpreadsheetRow[] = [];
 
-    await this.iterateByRows(sheet, (rows) => {
-      result.push(...rows);
-      return true;
-    });
+    await this.iterateByRows(
+      sheet,
+      (rows) => {
+        result.push(...rows);
+        return true;
+      },
+      options,
+    );
 
     this.logger.debug('Received all rows:', {
       count: result.length,

@@ -48,7 +48,9 @@ export class SyncPromService {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
     this.logger.debug('Load Category ids from Google Sheet');
-    const allRows = await this.spreadsheetService.getAllRows(categoriesSheet);
+    const allRows = await this.spreadsheetService.getAllRows(categoriesSheet, {
+      limit: 300,
+    });
     const categoryIdsInSheet = _.map(allRows, (row) => row[idKey]);
 
     this.logger.debug(
