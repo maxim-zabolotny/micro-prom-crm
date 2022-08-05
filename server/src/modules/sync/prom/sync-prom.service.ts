@@ -62,7 +62,8 @@ export class SyncPromService {
       })
       .select({
         _id: 1,
-      });
+      })
+      .exec();
     const categoryIdsInDB = _.map(categories, (category) =>
       category._id.toString(),
     );

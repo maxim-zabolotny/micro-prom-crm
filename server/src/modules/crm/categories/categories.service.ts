@@ -27,15 +27,15 @@ export class CrmCategoriesService {
   ) {}
 
   public async getAllCategoriesFromDB() {
-    return this.categoryModel.find();
+    return this.categoryModel.find().exec();
   }
 
   public async getCountOfNotSyncedCategoriesInDB() {
-    return this.categoryModel.count({ sync: false });
+    return this.categoryModel.count({ sync: false }).exec();
   }
 
   public async getAllNotSyncedCategoriesFromDB() {
-    return this.categoryModel.find({ sync: false });
+    return this.categoryModel.find({ sync: false }).exec();
   }
 
   public async getCategoriesByIdsFromDB(categoryIds: Types.ObjectId[]) {
@@ -128,14 +128,16 @@ export class CrmCategoriesService {
       data,
     });
 
-    const updatedCategory = await this.categoryModel.findOneAndUpdate(
-      {
-        _id: categoryId,
-      },
-      {
-        $set: data,
-      },
-    );
+    const updatedCategory = await this.categoryModel
+      .findOneAndUpdate(
+        {
+          _id: categoryId,
+        },
+        {
+          $set: data,
+        },
+      )
+      .exec();
 
     return updatedCategory;
   }
@@ -145,9 +147,11 @@ export class CrmCategoriesService {
       categoryId,
     });
 
-    const removedCategory = await this.categoryModel.findOneAndDelete({
-      _id: categoryId,
-    });
+    const removedCategory = await this.categoryModel
+      .findOneAndDelete({
+        _id: categoryId,
+      })
+      .exec();
 
     if (removedCategory.promTableLine) {
       const categoriesWithHigherTableLine = await this.categoryModel
@@ -159,7 +163,8 @@ export class CrmCategoriesService {
         .select({
           _id: 1,
           promTableLine: 1,
-        });
+        })
+        .exec();
 
       this.logger.debug('Process update Categories with higher table line:', {
         categories: categoriesWithHigherTableLine,
@@ -167,16 +172,18 @@ export class CrmCategoriesService {
 
       await Promise.all(
         _.map(categoriesWithHigherTableLine, async (category) => {
-          await this.categoryModel.updateOne(
-            {
-              _id: category._id,
-            },
-            {
-              $set: {
-                promTableLine: category.promTableLine - 1,
+          await this.categoryModel
+            .updateOne(
+              {
+                _id: category._id,
               },
-            },
-          );
+              {
+                $set: {
+                  promTableLine: category.promTableLine - 1,
+                },
+              },
+            )
+            .exec();
         }),
       );
     }
