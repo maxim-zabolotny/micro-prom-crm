@@ -6,6 +6,7 @@ import { CrmCategoriesService } from './categories/categories.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Category, CategorySchema } from '@schemas/category';
 import { DataGenerateHelper } from '@common/helpers';
+import { Product, ProductSchema } from '@schemas/product';
 
 @Module({
   imports: [
@@ -13,6 +14,12 @@ import { DataGenerateHelper } from '@common/helpers';
       {
         name: Category.name,
         schema: CategorySchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: Product.name,
+        schema: ProductSchema,
       },
     ]),
   ],
