@@ -43,4 +43,11 @@ export class SyncPromController {
   async loadAllProducts() {
     return {};
   }
+
+  @Get('/load-products-by-category')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async loadProductsByCategory(@Query('categoryId') categoryId: string) {
+    return {};
+  }
 }
