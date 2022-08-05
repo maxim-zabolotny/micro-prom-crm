@@ -21,8 +21,8 @@
       "@lib/*": [
         "./lib/*"
       ],
-      "@custom-types/*": [
-        "src/@custom-types/*"
+      "@custom-types": [
+        "src/@custom-types/index.d.ts"
       ],
       "@schemas/*": [
         "src/database/schemas/*"
