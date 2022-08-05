@@ -14,7 +14,7 @@ export type TAddCategory = ITranslatedCategoryTreeInConstant & {
 };
 
 export type TUpdateCategory = Partial<
-  Pick<Category, 'course' | 'markup' | 'promTableLine' | 'sync'>
+  Pick<Category, 'course' | 'markup' | 'promTableLine' | 'sync' | 'syncAt'>
 >;
 
 @Injectable()

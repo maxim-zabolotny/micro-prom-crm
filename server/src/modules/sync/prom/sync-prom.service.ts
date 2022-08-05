@@ -118,6 +118,7 @@ export class SyncPromService {
           new Types.ObjectId(row['Идентификатор_группы']),
           {
             sync: true,
+            syncAt: new Date(),
             promTableLine: row.rowIndex,
           },
         );

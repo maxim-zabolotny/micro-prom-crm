@@ -26,14 +26,17 @@ export class Category {
   })
   translate: TCategoryTranslate;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'categories' })
-  parent?: Category;
-
   @Prop({ type: Boolean, required: true, default: false })
   sync: boolean;
 
+  @Prop({ type: Date })
+  syncAt?: Date;
+
   @Prop({ type: Number })
   promTableLine?: number;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'categories' })
+  parent?: Category;
 
   @Prop({ type: String, required: true, unique: true })
   microtronId: string;
