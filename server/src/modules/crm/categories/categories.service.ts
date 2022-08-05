@@ -5,12 +5,11 @@ import * as _ from 'lodash';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { DataGenerateHelper } from '@common/helpers';
-import { ITranslatedCategoryTreeInConstant } from '@common/interfaces/category';
+import { ITranslatedCategoryInConstant } from '@common/interfaces/category';
 
-export type TAddCategory = ITranslatedCategoryTreeInConstant & {
+export type TAddCategory = ITranslatedCategoryInConstant & {
   course: number;
   integrationId: Types.ObjectId;
-  parent?: CategoryDocument;
 };
 
 export type TUpdateCategory = Partial<
@@ -39,11 +38,49 @@ export class CrmCategoriesService {
     return this.categoryModel.find({ sync: false });
   }
 
+  public async getCategoriesByIdsFromDB(categoryIds: Types.ObjectId[]) {
+    if (_.isEmpty(categoryIds)) return [];
+
+    return this.categoryModel
+      .find({
+        _id: {
+          $in: categoryIds,
+        },
+      })
+      .exec();
+  }
+
   public async addCategoryToDB(categoryData: TAddCategory) {
+    const parentMicrotronId =
+      categoryData.parentId !== '0' ? categoryData.parentId : undefined;
+
     this.logger.debug('Process add Category:', {
       id: categoryData.id,
       name: categoryData.name,
+      parentMicrotronId: parentMicrotronId,
     });
+
+    let parent: CategoryDocument | null = null;
+    if (parentMicrotronId) {
+      this.logger.debug('Process find parent Category:', {
+        microtronId: categoryData.parentId,
+      });
+
+      const result = await this.categoryModel
+        .findOne({
+          microtronId: parentMicrotronId,
+        })
+        .exec();
+      if (result) {
+        this.logger.debug('Found parent Category:', {
+          id: result._id,
+          name: result.name,
+          microtronId: result.microtronId,
+        });
+
+        parent = result;
+      }
+    }
 
     const category = new this.categoryModel({
       name: categoryData.name,
@@ -52,35 +89,34 @@ export class CrmCategoriesService {
       translate: {
         name: categoryData.ruName,
       },
-      parent: categoryData.parent?._id,
+      parent: parent?._id,
       microtronId: categoryData.id,
-      parentMicrotronId: categoryData.parent?.microtronId,
+      parentMicrotronId: parentMicrotronId,
       promId: this.dataGenerateHelper.randomNumber(1, 9, 8),
-      parentPromId: categoryData.parent?.promId,
+      parentPromId: parent?.promId,
       integration: categoryData.integrationId,
     });
     await category.save();
 
-    const children: CategoryDocument[] = [];
-    if (!_.isEmpty(categoryData.children)) {
-      this.logger.debug('Process add Category children');
+    const { matchedCount, modifiedCount } = await this.categoryModel
+      .updateMany(
+        {
+          parentMicrotronId: category.microtronId,
+        },
+        {
+          $set: {
+            parent: category._id,
+            parentPromId: category.promId,
+          },
+        },
+      )
+      .exec();
+    this.logger.debug('Update Category children result:', {
+      matchedCount,
+      modifiedCount,
+    });
 
-      children.push(
-        ..._.flattenDeep(
-          await Promise.all(
-            _.map(categoryData.children, (categoryChildren) => {
-              return this.addCategoryToDB({
-                ...categoryChildren,
-                ..._.pick(categoryData, ['course', 'integrationId']),
-                parent: category,
-              });
-            }),
-          ),
-        ),
-      );
-    }
-
-    return _.flattenDeep([category, children]);
+    return category;
   }
 
   public async updateCategoryInDB(

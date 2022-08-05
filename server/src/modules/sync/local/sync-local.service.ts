@@ -1,16 +1,14 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { MicrotronCoursesService } from '../../microtron/courses/courses.service';
 import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
 import {
   ICategoryInConstant,
   ITranslatedCategoryInConstant,
-  ITranslatedCategoryTreeInConstant,
 } from '@common/interfaces/category';
-import MicrotronAPI from '@lib/microtron';
 import {
   Integration,
   IntegrationCompany,
@@ -117,37 +115,25 @@ export class SyncLocalService {
   ) {
     const { course, integrationId } = data;
 
-    // TODO:  remove tree
-    this.logger.debug('Build Categories tree view');
-    const categoriesTree = MicrotronAPI.Utils.makeTree(
-      categories,
-      'parentId',
-      '0',
-    ) as unknown as ITranslatedCategoryTreeInConstant[];
-
     this.logger.debug('Start loading Categories to DB', {
       count: categories.length,
     });
 
-    const addedCategories: CategoryDocument[] = [];
-    for (const categoryTree of categoriesTree) {
-      const addedCategoryWithChildren =
-        await this.crmCategoriesService.addCategoryToDB({
-          ...categoryTree,
-          course,
-          integrationId,
-        });
-      addedCategories.push(...addedCategoryWithChildren);
-
-      this.logger.debug('Sleep 500ms before continue loading Categories to DB');
-      await this.timeHelper.sleep(500);
+    const addedCategoryIds: Types.ObjectId[] = [];
+    for (const category of categories) {
+      const addedCategory = await this.crmCategoriesService.addCategoryToDB({
+        ...category,
+        course,
+        integrationId,
+      });
+      addedCategoryIds.push(addedCategory._id);
     }
 
     this.logger.debug('Loaded Categories to DB:', {
-      count: addedCategories.length,
+      count: addedCategoryIds.length,
     });
 
-    return addedCategories;
+    return this.crmCategoriesService.getCategoriesByIdsFromDB(addedCategoryIds);
   }
 
   public async updateCategoriesInDB(
