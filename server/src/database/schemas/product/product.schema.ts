@@ -27,7 +27,7 @@ export class Product {
   @Prop({ type: String, required: true })
   brand: string;
 
-  @Prop({ type: raw({ type: Map, of: String }), required: true })
+  @Prop({ type: raw({ type: Map, of: String, required: true }) })
   specifications: string;
 
   @Prop({ type: Number, required: true })
