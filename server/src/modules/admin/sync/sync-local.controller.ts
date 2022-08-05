@@ -41,4 +41,11 @@ export class SyncLocalController {
       remove,
     );
   }
+
+  @Get('/load-all-products')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async loadAllProducts() {
+    return {};
+  }
 }

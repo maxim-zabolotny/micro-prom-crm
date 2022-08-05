@@ -36,4 +36,11 @@ export class SyncPromController {
   ) {
     return this.syncPromService.syncAllCategoriesWithSheet(add, remove);
   }
+
+  @Get('/load-all-products')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async loadAllProducts() {
+    return {};
+  }
 }
