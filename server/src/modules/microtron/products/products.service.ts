@@ -12,6 +12,8 @@ import {
   Types as GoogleTranslateTypes,
 } from '@lib/google-translate';
 import { ITranslatedProduct } from '@common/interfaces/product';
+import { MicrotronCategoriesService } from '../categories/categories.service';
+import { ICategoryInConstant } from '@common/interfaces/category';
 
 type IProductFull = Product.IProductFull;
 type IProductRequestOptions = Product.IProductRequestOptions;
@@ -32,20 +34,19 @@ export class MicrotronProductsService {
   private productsCache: TProductsCache = new Map();
   private productsParseCache: TProductsParseCache = new Map();
 
-  public readonly productsCacheFilePath = path.join(
-    __dirname,
-    '../../../data/cache/products-cache.json',
-  );
-  public readonly productsParseCacheFilePath = path.join(
-    __dirname,
-    '../../../data/cache/products-parse-cache.json',
-  );
+  public readonly productsCacheFilePath = path
+    .join(__dirname, '../../../data/cache/products-cache.json')
+    .replace('dist', 'src');
+  public readonly productsParseCacheFilePath = path
+    .join(__dirname, '../../../data/cache/products-parse-cache.json')
+    .replace('dist', 'src');
 
   constructor(
     private configService: ConfigService,
+    private microtronCategoriesService: MicrotronCategoriesService,
+    private translateService: TranslateService,
     private dataUtilHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
-    private translateService: TranslateService,
   ) {
     this.productsAPI = new MicrotronAPI.Product({
       token: configService.get('tokens.microtron'),
@@ -54,8 +55,6 @@ export class MicrotronProductsService {
       local: true,
       lang: Types.Lang.UA,
     };
-
-    // TODO: get all products by all categories and run parsing
   }
 
   private retrieveProductsFromCache(
@@ -333,6 +332,19 @@ export class MicrotronProductsService {
       ...newProducts,
       ...cachedProducts,
     };
+  }
+
+  public async getProductsByAllSavedCategories(force: boolean) {
+    const categories = (await this.microtronCategoriesService.getSaved(
+      false,
+    )) as ICategoryInConstant[];
+
+    const categoryIds = _.map(categories, 'id');
+    this.logger.debug('Count of saved categories in DB:', {
+      count: categoryIds.length,
+    });
+
+    return this.getProductsByAPI(categoryIds, force);
   }
 
   public getAllCachedProducts(): TLoadProductsResult {

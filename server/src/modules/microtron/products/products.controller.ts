@@ -39,6 +39,15 @@ export class MicrotronProductsController {
     return this.microtronProductsService.getProductsByAPI(categories, force);
   }
 
+  @Get('/products-by-all-saved-categories')
+  @HttpCode(200)
+  async getAllBySavedCategories(
+    @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
+    force: boolean,
+  ) {
+    return this.microtronProductsService.getProductsByAllSavedCategories(force);
+  }
+
   @Get('/cached')
   @HttpCode(200)
   getCached(
