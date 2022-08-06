@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as path from 'path';
 import { promises as fs } from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -30,6 +31,15 @@ export class MicrotronProductsService {
 
   private productsCache: TProductsCache = new Map();
   private productsParseCache: TProductsParseCache = new Map();
+
+  public readonly productsCacheFilePath = path.join(
+    __dirname,
+    '../../../data/cache/products-cache.json',
+  );
+  public readonly productsParseCacheFilePath = path.join(
+    __dirname,
+    '../../../data/cache/products-parse-cache.json',
+  );
 
   constructor(
     private configService: ConfigService,
@@ -130,6 +140,22 @@ export class MicrotronProductsService {
     return result;
   }
 
+  private async saveCacheToFile(
+    filePath: string,
+    cacheMap: Map<string, unknown>,
+  ) {
+    this.logger.debug('Save cache to file', {
+      filePath,
+    });
+
+    const data = JSON.stringify(
+      Object.fromEntries(cacheMap.entries()),
+      null,
+      2,
+    );
+    await fs.writeFile(filePath, data, { encoding: 'utf-8' });
+  }
+
   private async loadFileWithCache(filePath: string) {
     try {
       this.logger.debug('Check access to file path with cache', {
@@ -147,13 +173,25 @@ export class MicrotronProductsService {
     }
   }
 
+  public async saveProductsCache(
+    filePath: string = this.productsCacheFilePath,
+  ) {
+    await this.saveCacheToFile(filePath, this.productsCache);
+  }
+
   public async loadProductsCacheFromFile(filePath: string) {
     const cache = await this.loadFileWithCache(filePath);
 
     this.logger.debug('Load products cache to service', {
       count: Object.values(cache).length,
     });
-    this.productsParseCache = new Map(Object.entries(cache));
+    this.productsCache = new Map(Object.entries(cache));
+  }
+
+  public async saveProductsParseCache(
+    filePath: string = this.productsParseCacheFilePath,
+  ) {
+    await this.saveCacheToFile(filePath, this.productsParseCache);
   }
 
   public async loadProductsParseCacheFromFile(filePath: string) {
