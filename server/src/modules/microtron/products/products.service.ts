@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import { promises as fs } from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
@@ -27,8 +28,8 @@ export class MicrotronProductsService {
   private readonly productsAPI: Product.Product;
   private readonly productsAPIDefaultOptions: IProductRequestOptions;
 
-  private readonly productsCache: TProductsCache = new Map();
-  private readonly productsParseCache: TProductsParseCache = new Map();
+  private productsCache: TProductsCache = new Map();
+  private productsParseCache: TProductsParseCache = new Map();
 
   constructor(
     private configService: ConfigService,
@@ -43,6 +44,8 @@ export class MicrotronProductsService {
       local: true,
       lang: Types.Lang.UA,
     };
+
+    // TODO: get all products by all categories and run parsing
   }
 
   private retrieveProductsFromCache(
@@ -125,6 +128,41 @@ export class MicrotronProductsService {
     this.productsParseCache.set(url, result);
 
     return result;
+  }
+
+  private async loadFileWithCache(filePath: string) {
+    try {
+      this.logger.debug('Check access to file path with cache', {
+        filePath,
+      });
+      await fs.access(filePath);
+
+      this.logger.debug('Read file with cache', { filePath });
+      const fileRawData = await fs.readFile(filePath, { encoding: 'utf-8' });
+
+      return JSON.parse(fileRawData);
+    } catch (err) {
+      this.logger.error('Error in load file cache', err);
+      throw err;
+    }
+  }
+
+  public async loadProductsCacheFromFile(filePath: string) {
+    const cache = await this.loadFileWithCache(filePath);
+
+    this.logger.debug('Load products cache to service', {
+      count: Object.values(cache).length,
+    });
+    this.productsParseCache = new Map(Object.entries(cache));
+  }
+
+  public async loadProductsParseCacheFromFile(filePath: string) {
+    const cache = await this.loadFileWithCache(filePath);
+
+    this.logger.debug('Load products parse cache to service', {
+      count: Object.values(cache).length,
+    });
+    this.productsParseCache = new Map(Object.entries(cache));
   }
 
   public async translateSentence(
