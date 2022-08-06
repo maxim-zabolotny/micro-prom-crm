@@ -27,14 +27,17 @@ export class Product {
   @Prop({ type: String, required: true })
   brand: string;
 
-  @Prop({ type: raw({ type: Map, of: String, required: true }) })
-  specifications: string;
-
-  @Prop({ type: Number, required: true })
-  originalPrice: number;
+  @Prop({ type: Map, of: String, required: true })
+  specifications: Map<string, string>;
 
   @Prop({ type: Number, required: true })
   sitePrice: number;
+
+  @Prop({ type: Number, required: true })
+  siteMarkup: number;
+
+  @Prop({ type: Number, required: true })
+  originalPrice: number;
 
   @Prop({ type: Number, required: true })
   ourPrice: number;
@@ -45,10 +48,10 @@ export class Product {
   @Prop({ type: Number, required: true })
   warranty: number;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   vendorCode: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   UKTZED: string;
 
   @Prop({ type: String, required: true })
