@@ -50,6 +50,10 @@ export class CrmCategoriesService {
       .exec();
   }
 
+  public async getCategoryByMicrotronId(microtronId: string) {
+    return this.categoryModel.findOne({ microtronId }).exec();
+  }
+
   public async addCategoryToDB(categoryData: TAddCategory) {
     const parentMicrotronId =
       categoryData.parentId !== '0' ? categoryData.parentId : undefined;
