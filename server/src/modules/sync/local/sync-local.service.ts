@@ -23,9 +23,9 @@ import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TArray } from '@custom-types';
 import { MicrotronProductsService } from '../../microtron/products/products.service';
 import {
-  CrmProductService,
+  CrmProductsService,
   TAddProduct,
-} from '../../crm/product/product.service';
+} from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 
 export type TCompareCategoriesKeys = Extract<
@@ -64,7 +64,7 @@ export class SyncLocalService {
     private microtronCategoriesService: MicrotronCategoriesService,
     private microtronProductsService: MicrotronProductsService,
     private crmCategoriesService: CrmCategoriesService,
-    private crmProductsService: CrmProductService,
+    private crmProductsService: CrmProductsService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
     @InjectModel(Integration.name)

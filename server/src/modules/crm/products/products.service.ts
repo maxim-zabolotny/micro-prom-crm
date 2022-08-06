@@ -13,7 +13,7 @@ export type TAddProduct = IProductFullInfo & {
 };
 
 @Injectable()
-export class CrmProductService {
+export class CrmProductsService {
   private readonly logger = new Logger(this.constructor.name);
 
   constructor(
