@@ -46,13 +46,13 @@ export class SyncLocalController {
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async loadAllProducts() {
-    return {};
+    return this.syncLocalService.loadAllProductsToDB();
   }
 
   @Get('/load-products-by-category')
   @HttpCode(200)
   @Auth(UserRole.Admin)
-  async loadProductsByCategory(@Query('categoryId') categoryId: string) {
-    return {};
+  async loadProductsByCategory(@Query('microtronId') microtronId: string) {
+    return this.syncLocalService.loadAllProductsByCategoryToDB(microtronId);
   }
 }
