@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Category, CategorySchema } from '@schemas/category';
 import { DataGenerateHelper } from '@common/helpers';
 import { Product, ProductSchema } from '@schemas/product';
+import { CrmProductService } from './product/product.service';
 
 @Module({
   imports: [
@@ -24,7 +25,12 @@ import { Product, ProductSchema } from '@schemas/product';
     ]),
   ],
   controllers: [CrmController, CrmCategoriesController],
-  providers: [DataGenerateHelper, CrmService, CrmCategoriesService],
-  exports: [CrmService, CrmCategoriesService],
+  providers: [
+    DataGenerateHelper,
+    CrmService,
+    CrmCategoriesService,
+    CrmProductService,
+  ],
+  exports: [CrmService, CrmCategoriesService, CrmProductService],
 })
 export class CrmModule {}
