@@ -6,7 +6,12 @@ const {default: MicrotronAPI} = require('../lib/microtron');
 const AUTH_TOKEN = '';
 
 const SELECTED_CATEGORIES_FILE_PATH = path.join(__dirname, '../src/data/selected-categories.json');
-const RESULT_FILE_PATH = path.join(__dirname, './result.json');
+
+const GROUPED_PRODUCTS_FILE_PATH = path.join(__dirname, './grouped-products.json');
+const PARSED_PRODUCTS_FILE_PATH = path.join(__dirname, './parsed-products.json');
+
+const CHUNK = 200;
+const SLEEP = 1000 * 60;
 
 async function parseAllProductsByCategories() {
   console.debug('Load saved categories');
@@ -48,8 +53,70 @@ async function parseAllProductsByCategories() {
       all: allCategoryIds,
     });
 
-    console.debug('Saving products');
-    await fs.writeFile(RESULT_FILE_PATH, JSON.stringify(groupedProducts, null, 2), {encoding: 'utf-8'});
+    console.debug('Saving grouped products');
+    await fs.writeFile(GROUPED_PRODUCTS_FILE_PATH, JSON.stringify(groupedProducts, null, 2), {encoding: 'utf-8'});
+
+    console.debug('Loaded products result:', {
+      count: products.length
+    });
+
+    console.debug('Parse products...');
+    const orderedProducts = _.orderBy(products, product => product.id, ['ASC']);
+    const chunks = _.chunk(orderedProducts, CHUNK);
+
+    const parsedProducts = [];
+
+    try {
+      let chunkIndex = 0;
+      for (chunk of chunks) {
+        console.debug('Parse chunk:', {
+          number: chunkIndex + 1,
+          size: chunk.length
+        });
+
+        const parsedChunkProducts = _.flattenDeep(
+          await Promise.all(
+            _.map(chunk, async product => {
+              const UAUrl = product.url;
+
+              const productIdIndex = UAUrl.lastIndexOf('/p');
+              const productId = UAUrl.slice(productIdIndex + 1); // with p*
+              const urlWithoutProductId = UAUrl.slice(0, productIdIndex);
+              const RUUrl = `${urlWithoutProductId}_ru/${productId}`;
+
+              const uaParse = (await MicrotronAPI.ParserV2.load(UAUrl)).parse();
+              const ruParse = (await MicrotronAPI.ParserV2.load(RUUrl)).parse();
+
+              return [uaParse, ruParse];
+            })
+          )
+        );
+
+        parsedProducts.push(...parsedChunkProducts);
+
+        console.debug('Chunk parsed:', {
+          number: chunkIndex + 1,
+          productsCount: parsedChunkProducts.length,
+        });
+
+        chunkIndex++;
+        if (chunkIndex < chunks.length) {
+          console.debug(`Sleep ${SLEEP / 1000}s`, {timeMS: SLEEP});
+          await new Promise(r => setTimeout(r, SLEEP));
+        }
+      }
+    } finally {
+      console.debug('Parsed products result:', {
+        count: parsedProducts.length
+      });
+
+      const parsedProductsObject = Object.fromEntries(
+        _.map(parsedProducts, parsedProduct => [parsedProduct.url, parsedProduct])
+      );
+
+      console.debug('Saving parsed products');
+      await fs.writeFile(PARSED_PRODUCTS_FILE_PATH, JSON.stringify(parsedProductsObject, null, 2), {encoding: 'utf-8'});
+    }
   } catch (err) {
     if (err instanceof MicrotronAPI.MicroError) {
       if (err.errors === 'Нет товаров для вывода') {
@@ -64,13 +131,22 @@ async function parseAllProductsByCategories() {
           ]),
         );
 
+        console.error('Parsed products result:', {
+          message: err.errors
+        });
+
         const result = {};
         _.forEach(categoryIds, (categoryId) => {
           result[categoryId] = [];
         });
 
-        console.debug('Saving products');
-        await fs.writeFile(RESULT_FILE_PATH, JSON.stringify(result, null, 2), {encoding: 'utf-8'});
+        const products = _.flattenDeep(Object.values(result));
+
+        console.debug('Saving grouped products');
+        await fs.writeFile(GROUPED_PRODUCTS_FILE_PATH, JSON.stringify(result, null, 2), {encoding: 'utf-8'});
+
+        console.debug('Saving parsed products');
+        await fs.writeFile(PARSED_PRODUCTS_FILE_PATH, JSON.stringify(products, null, 2), {encoding: 'utf-8'});
 
         return;
       }
