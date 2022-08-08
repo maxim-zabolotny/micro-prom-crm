@@ -78,8 +78,8 @@ export class Product {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'categories', required: true })
   category: Category;
 
-  @Prop({ type: String, required: true, unique: true })
-  microtronId: string;
+  @Prop({ type: Number, required: true, unique: true })
+  microtronId: number;
 
   @Prop({ type: Number, required: true, unique: true })
   promId: number;
