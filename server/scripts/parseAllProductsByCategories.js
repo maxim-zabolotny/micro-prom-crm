@@ -13,6 +13,10 @@ const PARSED_PRODUCTS_FILE_PATH = path.join(__dirname, './parsed-products.json')
 const CHUNK = 200;
 const SLEEP = 1000 * 60;
 
+const isValidProduct = _.conforms({
+  url: (url) => !_.isEmpty(url),
+})
+
 async function parseAllProductsByCategories() {
   console.debug('Load saved categories');
   const savedCategories = JSON.parse(await fs.readFile(SELECTED_CATEGORIES_FILE_PATH, {encoding: 'utf-8'}));
@@ -45,6 +49,10 @@ async function parseAllProductsByCategories() {
       if (!productCategoryIds.includes(categoryId)) {
         groupedProducts[categoryId] = [];
       }
+
+      if (!_.isEmpty(groupedProducts[categoryId])) {
+        groupedProducts[categoryId] = _.filter(groupedProducts[categoryId], isValidProduct)
+      }
     });
 
     console.debug('Loaded categories result:', {
@@ -56,12 +64,18 @@ async function parseAllProductsByCategories() {
     console.debug('Saving grouped products');
     await fs.writeFile(GROUPED_PRODUCTS_FILE_PATH, JSON.stringify(groupedProducts, null, 2), {encoding: 'utf-8'});
 
+    const orderedProducts = _.chain(products)
+      .filter(product => isValidProduct(product))
+      .orderBy(product => product.id, ['ASC'])
+      .value();
+
     console.debug('Loaded products result:', {
-      count: products.length
+      countRaw: products.length,
+      countFiltered: orderedProducts.length,
+      countInvalid: products.length - orderedProducts.length
     });
 
     console.debug('Parse products...');
-    const orderedProducts = _.orderBy(products, product => product.id, ['ASC']);
     const chunks = _.chunk(orderedProducts, CHUNK);
 
     const parsedProducts = [];
