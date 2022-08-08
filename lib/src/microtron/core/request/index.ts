@@ -8,7 +8,7 @@ import { MicroError } from '../error';
 /*types*/
 import { TObject } from '../types';
 import {
-  IResponse, IResponseRaw, IResponseErrorRaw, IResponseError,
+  IResponse, IResponseError, IResponseErrorRaw, IResponseRaw,
 } from './IResponse';
 /*other*/
 
@@ -89,6 +89,8 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
       method: Request.METHOD,
       url: path,
       data: body,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
     });
   }
 
@@ -103,11 +105,10 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
     return 'data' in response;
   }
 
-  protected static async requestWrapper<
-    TInstance,
+  protected static async requestWrapper<TInstance,
     TRawInstance,
     TEntity extends { name: string, readonly PATH: string },
-  >(
+    >(
     entity: TEntity,
     instance: Request<TInstance, TRawInstance>,
     data: TUnknownRec = {},
