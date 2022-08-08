@@ -31,6 +31,10 @@ export class MicrotronProductsService {
   private readonly productsAPI: Product.Product;
   private readonly productsAPIDefaultOptions: IProductRequestOptions;
 
+  private readonly isValidProduct = _.conforms<Pick<IProductFull, 'url'>>({
+    url: (url: string) => !_.isEmpty(url),
+  });
+
   private productsCache: TProductsCache = new Map();
   private productsParseCache: TProductsParseCache = new Map();
 
@@ -55,6 +59,23 @@ export class MicrotronProductsService {
       local: true,
       lang: Types.Lang.UA,
     };
+  }
+
+  private excludeInvalidProducts(products: IProductFull[]) {
+    this.logger.debug('Passed Products for filtering:', {
+      count: products.length,
+    });
+
+    const validProducts = _.filter(
+      products,
+      this.isValidProduct,
+    ) as IProductFull[];
+    this.logger.debug('Filter Products result:', {
+      valid: validProducts.length,
+      invalid: products.length - validProducts.length,
+    });
+
+    return validProducts;
   }
 
   private retrieveProductsFromCache(
@@ -92,6 +113,12 @@ export class MicrotronProductsService {
           groupedProducts[categoryId] = [];
         }
 
+        if (!_.isEmpty(groupedProducts[categoryId])) {
+          groupedProducts[categoryId] = this.excludeInvalidProducts(
+            groupedProducts[categoryId],
+          );
+        }
+
         this.productsCache.set(categoryId, groupedProducts[categoryId]);
       });
 
@@ -99,6 +126,17 @@ export class MicrotronProductsService {
         passed: categoryIds,
         loaded: productCategoryIds,
         all: allCategoryIds,
+      });
+
+      const resultProductsCount = _.reduce(
+        allCategoryIds,
+        (acc, categoryId) => acc + groupedProducts[categoryId].length,
+        0,
+      );
+      this.logger.debug('Loaded products result:', {
+        countRaw: products.length,
+        countFiltered: resultProductsCount,
+        countInvalid: products.length - resultProductsCount,
       });
 
       return groupedProducts;
