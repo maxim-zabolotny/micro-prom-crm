@@ -98,107 +98,111 @@ async function parseAllProductsByCategories() {
 
     try {
       let chunkIndex = 0;
-      for (chunk of chunks) {
+      for (const chunk of chunks) {
+        const chunkNumber = chunkIndex + 1;
+
         console.debug('Parse chunk:', {
-          number: chunkIndex + 1,
+          number: chunkNumber,
           size: chunk.length
         });
 
-        const parsedChunkProducts = _.flattenDeep(
-          await Promise.all(
-            chunk.map(async product => {
-              const UAUrl = product.url;
+        const parsedChunkProducts = _.compact(
+          _.flattenDeep(
+            await Promise.all(
+              chunk.map(async product => {
+                const UAUrl = product.url;
 
-              const productIdIndex = UAUrl.lastIndexOf('/p');
-              const productId = UAUrl.slice(productIdIndex + 1); // with p*
-              const urlWithoutProductId = UAUrl.slice(0, productIdIndex);
-              const RUUrl = `${urlWithoutProductId}_ru/${productId}`;
+                const productIdIndex = UAUrl.lastIndexOf('/p');
+                const productId = UAUrl.slice(productIdIndex + 1); // with p*
+                const urlWithoutProductId = UAUrl.slice(0, productIdIndex);
+                const RUUrl = `${urlWithoutProductId}_ru/${productId}`;
 
-              try {
-                const uaParse = (await MicrotronAPI.ParserV2.load(UAUrl)).parse();
-                const ruParse = (await MicrotronAPI.ParserV2.load(RUUrl)).parse();
+                try {
+                  const uaParse = (await MicrotronAPI.ParserV2.load(UAUrl)).parse();
+                  const ruParse = (await MicrotronAPI.ParserV2.load(RUUrl)).parse();
 
-                return [
-                  {
-                    url: UAUrl,
-                    parse: uaParse
-                  },
-                  {
-                    url: RUUrl,
-                    parse: ruParse
-                  },
-                ];
-              } catch (err) {
-                const response = err?.response;
-                if (response) {
-                  switch (response.status) {
-                    case 404: {
-                      console.info('URL not found. Return [null, null]:', {
-                        productId: product.id,
-                        url: err?.config?.url,
-                        response: {
-                          status: response.status,
-                          text: response.statusText
-                        }
-                      });
+                  return [
+                    {
+                      url: UAUrl,
+                      parse: uaParse
+                    },
+                    {
+                      url: RUUrl,
+                      parse: ruParse
+                    },
+                  ];
+                } catch (err) {
+                  const response = err?.response;
+                  if (response) {
+                    switch (response.status) {
+                      case 404: {
+                        console.info('URL not found. Return [null, null]:', {
+                          productId: product.id,
+                          url: err?.config?.url,
+                          response: {
+                            status: response.status,
+                            text: response.statusText
+                          }
+                        });
 
-                      return [
-                        {
-                          url: UAUrl,
-                          parse: null
-                        },
-                        {
-                          url: RUUrl,
-                          parse: null
-                        },
-                      ];
-                    }
-                    case 502: {
-                      console.info('Request limit exceeded:', {
-                        productId: product.id,
-                        url: err?.config?.url,
-                        response: {
-                          status: response.status,
-                          text: response.statusText
-                        }
-                      });
+                        return [
+                          {
+                            url: UAUrl,
+                            parse: null
+                          },
+                          {
+                            url: RUUrl,
+                            parse: null
+                          },
+                        ];
+                      }
+                      case 502: {
+                        console.info('Request limit exceeded:', {
+                          productId: product.id,
+                          url: err?.config?.url,
+                          response: {
+                            status: response.status,
+                            text: response.statusText
+                          }
+                        });
 
-                      console.debug('Push product to chunk and and sleep...', {
-                        productId: product.id,
-                        productUrl: product.url,
-                      });
-                      chunk.push(product);
-                      await sleep(1000 * 30);
+                        console.debug('Push product to current chunk array and sleep...', {
+                          productId: product.id,
+                          productUrl: product.url,
+                        });
+                        chunk.push(product);
+                        await sleep(1000 * 30);
 
-                      return;
-                    }
-                    default: {
-                      throw err;
+                        return;
+                      }
+                      default: {
+                        throw err;
+                      }
                     }
                   }
-                }
 
-                throw err;
-              }
-            })
+                  throw err;
+                }
+              })
+            )
           )
         );
 
         parsedProducts.push(...parsedChunkProducts);
 
         console.debug('Chunk parsed:', {
-          number: chunkIndex + 1,
+          number: chunkNumber,
           productsUrlsCount: parsedChunkProducts.length,
           allProductsCount: orderedProducts.length,
-          leftProducts: orderedProducts.length - (chunkIndex + 1) * CHUNK
+          leftProducts: orderedProducts.length - chunkNumber * CHUNK
         });
 
         chunkIndex++;
         if (chunkIndex < chunks.length) {
-          if (chunkIndex * CHUNK >= LIMIT) {
+          if (chunkNumber * CHUNK >= LIMIT) {
             console.info('Limit exceeded. Break:', {
               limit: LIMIT,
-              processed: chunkIndex * CHUNK
+              processed: chunkNumber * CHUNK
             });
             break;
           }
