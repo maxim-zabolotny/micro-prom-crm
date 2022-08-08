@@ -22,14 +22,24 @@ type IParseResult = ParserV2.IResult;
 
 export type TLoadProductsResult = Record<string, IProductFull[]>;
 export type TProductsCache = Map<string, IProductFull[]>;
-export type TProductsParseCache = Map<string, IParseResult>;
+export type TProductsParseCache = Map<string, IParseResult | null>;
+
+export type TParseProductsConfig = {
+  chunk: number;
+  limit: number;
+  sleep: number;
+  getAwaySleep: number;
+};
 
 @Injectable()
 export class MicrotronProductsService {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly productsAPI: Product.Product;
-  private readonly productsAPIDefaultOptions: IProductRequestOptions;
+  private readonly productsAPIDefaultOptions: IProductRequestOptions = {
+    local: true,
+    lang: Types.Lang.UA,
+  };
 
   private readonly isValidProduct = _.conforms<Pick<IProductFull, 'url'>>({
     url: (url: string) => !_.isEmpty(url),
@@ -37,6 +47,13 @@ export class MicrotronProductsService {
 
   private productsCache: TProductsCache = new Map();
   private productsParseCache: TProductsParseCache = new Map();
+
+  private parseProductsConfig: TParseProductsConfig = {
+    chunk: 10,
+    limit: Infinity,
+    sleep: 1000 * 2,
+    getAwaySleep: 1000 * 30,
+  };
 
   public readonly productsCacheFilePath = path
     .join(__dirname, '../../../data/cache/products-cache.json')
@@ -55,10 +72,6 @@ export class MicrotronProductsService {
     this.productsAPI = new MicrotronAPI.Product({
       token: configService.get('tokens.microtron'),
     });
-    this.productsAPIDefaultOptions = {
-      local: true,
-      lang: Types.Lang.UA,
-    };
   }
 
   private excludeInvalidProducts(products: IProductFull[]) {
@@ -168,12 +181,30 @@ export class MicrotronProductsService {
     }
   }
 
-  private async parseProduct(url: string): Promise<IParseResult> {
-    const parser = await MicrotronAPI.ParserV2.load(url);
-    const result = parser.parse();
+  private async parseProduct(url: string): Promise<IParseResult | null> {
+    let result: IParseResult | null;
+
+    try {
+      const parser = await MicrotronAPI.ParserV2.load(url);
+      result = parser.parse();
+    } catch (err: any) {
+      const response = err?.response;
+      if (response && response.status === 404) {
+        this.logger.debug('URL not found. Return null:', {
+          url,
+          response: {
+            status: response.status,
+            text: response.statusText,
+          },
+        });
+
+        result = null;
+      } else {
+        throw err;
+      }
+    }
 
     this.productsParseCache.set(url, result);
-
     return result;
   }
 
@@ -343,6 +374,23 @@ export class MicrotronProductsService {
     return translatedRecord;
   }
 
+  public buildProductRUUrl(url: string) {
+    const productIdIndex = url.lastIndexOf('/p');
+
+    const productId = url.slice(productIdIndex + 1); // with p*
+    const urlWithoutProductId = url.slice(0, productIdIndex);
+
+    if (urlWithoutProductId.endsWith('_ru')) {
+      this.logger.debug('Product url already RU version:', { url });
+      return url;
+    }
+
+    const newUrl = `${urlWithoutProductId}_ru/${productId}`;
+    this.logger.debug('Transform product url to RU version:', { url, newUrl });
+
+    return newUrl;
+  }
+
   public async getProductsByAPI(
     categoryIds: string[],
     force: boolean,
@@ -413,7 +461,10 @@ export class MicrotronProductsService {
       });
   }
 
-  public async parse(url: string, force: boolean): Promise<IParseResult> {
+  public async parse(
+    url: string,
+    force: boolean,
+  ): Promise<IParseResult | null> {
     if (force) {
       this.logger.debug('Force parse product:', { url });
       return this.parseProduct(url);
@@ -428,23 +479,144 @@ export class MicrotronProductsService {
     return this.parseProduct(url);
   }
 
-  public async parseRU(url: string, force: boolean): Promise<IParseResult> {
+  public async parseRU(
+    url: string,
+    force: boolean,
+  ): Promise<IParseResult | null> {
     this.logger.debug('RU Parse product:', { url });
 
-    const productIdIndex = url.lastIndexOf('/p');
+    const newUrl = this.buildProductRUUrl(url);
+    return this.parse(newUrl, force);
+  }
 
-    const productId = url.slice(productIdIndex + 1); // with p*
-    const urlWithoutProductId = url.slice(0, productIdIndex);
+  public async parseProducts(
+    products: Array<Pick<IProductFull, 'id' | 'url'>>,
+    force: boolean,
+    config: TParseProductsConfig = this.parseProductsConfig,
+  ): Promise<Record<string, IParseResult | null>> {
+    const parsedProducts: Record<string, IParseResult | null> = {};
+    const productsToParse: Array<Pick<IProductFull, 'id' | 'url'>> = [];
 
-    if (urlWithoutProductId.endsWith('_ru')) {
-      this.logger.debug('Product url already RU version:', { url });
-      return this.parse(url, force);
+    if (force) {
+      productsToParse.push(...products);
+    } else {
+      productsToParse.push(
+        ..._.filter(
+          products,
+          (product) => !this.productsParseCache.has(product.url),
+        ),
+      );
+
+      _.forEach(products, (product) => {
+        if (this.productsParseCache.has(product.url)) {
+          parsedProducts[product.url] = this.productsParseCache.get(
+            product.url,
+          );
+        }
+      });
+
+      this.logger.debug('Take parse products cache:', {
+        count: Object.keys(parsedProducts).length,
+      });
     }
 
-    const newUrl = `${urlWithoutProductId}_ru/${productId}`;
-    this.logger.debug('Transform product url to RU version:', { url, newUrl });
+    const orderedProducts = _.orderBy(
+      productsToParse,
+      (product) => product.id,
+      ['asc'],
+    );
+    const chunks = _.chunk(orderedProducts, config.chunk);
 
-    return this.parse(newUrl, force);
+    this.logger.debug('Parse products:', {
+      products: orderedProducts.length,
+      chunks: chunks.length,
+    });
+
+    let chunkIndex = 0;
+    for (const chunk of chunks) {
+      const chunkNumber = chunkIndex + 1;
+
+      this.logger.debug('Parse chunk:', {
+        number: chunkNumber,
+        size: chunk.length,
+      });
+
+      const parsedChunkProducts = _.compact(
+        _.flattenDeep(
+          await Promise.all(
+            chunk.map(async (product) => {
+              try {
+                const parse = await this.parse(product.url, true);
+
+                return {
+                  url: product.url,
+                  parse: parse,
+                };
+              } catch (err) {
+                const response = err?.response;
+                if (response && response.status === 502) {
+                  this.logger.debug('Request limit exceeded:', {
+                    productId: product.id,
+                    productUrl: product.url,
+                    response: {
+                      status: response.status,
+                      text: response.statusText,
+                    },
+                  });
+
+                  this.logger.log(
+                    'Push product to current chunk array and sleep...',
+                    {
+                      productId: product.id,
+                      productUrl: product.url,
+                      sleepMS: config.getAwaySleep,
+                    },
+                  );
+
+                  chunk.push(product);
+                  await this.timeHelper.sleep(config.getAwaySleep);
+
+                  return;
+                } else {
+                  throw err;
+                }
+              }
+            }),
+          ),
+        ),
+      );
+
+      _.forEach(
+        parsedChunkProducts,
+        (parsedProduct) =>
+          (parsedProducts[parsedProduct.url] = parsedProduct.parse),
+      );
+
+      this.logger.debug('Chunk parsed:', {
+        number: chunkNumber,
+        productsCount: parsedChunkProducts.length,
+        allProductsCount: orderedProducts.length,
+        productsLeft: orderedProducts.length - chunkNumber * config.chunk,
+      });
+
+      chunkIndex++;
+      if (chunkNumber < chunks.length) {
+        if (chunkNumber * config.chunk >= config.limit) {
+          this.logger.debug('Limit exceeded. Break:', {
+            limit: config.limit,
+            processed: chunkNumber * config.chunk,
+          });
+          break;
+        }
+
+        this.logger.log(`Sleep ${config.sleep / 1000}s`, {
+          timeMS: config.sleep,
+        });
+        await this.timeHelper.sleep(config.sleep);
+      }
+    }
+
+    return parsedProducts;
   }
 
   public async translate(
