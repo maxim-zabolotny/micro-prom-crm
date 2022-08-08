@@ -6,16 +6,24 @@ const {default: MicrotronAPI} = require('../lib/microtron');
 const AUTH_TOKEN = '';
 
 const SELECTED_CATEGORIES_FILE_PATH = path.join(__dirname, '../src/data/selected-categories.json');
+const PRODUCTS_CACHE_FILE_PATH = path.join(__dirname, '../src/data/cache/products-cache.json');
 
 const GROUPED_PRODUCTS_FILE_PATH = path.join(__dirname, './grouped-products.json');
 const PARSED_PRODUCTS_FILE_PATH = path.join(__dirname, './parsed-products.json');
 
-const CHUNK = 200;
-const SLEEP = 1000 * 60;
+const CHUNK = 10;
+const SLEEP = 1000 * 2;
+
+const LIMIT = Infinity;
 
 const isValidProduct = _.conforms({
   url: (url) => !_.isEmpty(url),
-})
+});
+
+async function sleep(time) {
+  console.debug(`Sleep ${time / 1000}s`, {timeMS: time});
+  return new Promise(r => setTimeout(r, time));
+}
 
 async function parseAllProductsByCategories() {
   console.debug('Load saved categories');
@@ -27,19 +35,27 @@ async function parseAllProductsByCategories() {
   });
 
   try {
-    const productsAPI = new MicrotronAPI.Product({
-      token: AUTH_TOKEN,
-    });
-
-    console.debug('Request products');
-    const products = await productsAPI.getProducts(
-      {
-        local: true,
-        lang: MicrotronAPI.Types.Lang.UA,
-        categoryIds,
-      },
-      true,
+    const products = _.flattenDeep(
+      _.map(
+        Object.entries(
+          JSON.parse(await fs.readFile(PRODUCTS_CACHE_FILE_PATH, {encoding: 'utf-8'}))
+        ),
+        ([key, value]) => value
+      )
     );
+    // const productsAPI = new MicrotronAPI.Product({
+    //   token: AUTH_TOKEN,
+    // });
+    //
+    // console.debug('Request products');
+    // const products = await productsAPI.getProducts(
+    //   {
+    //     local: true,
+    //     lang: MicrotronAPI.Types.Lang.UA,
+    //     categoryIds,
+    //   },
+    //   true,
+    // );
 
     const groupedProducts = _.groupBy(products, 'categoryId');
     const productCategoryIds = Object.keys(groupedProducts);
@@ -51,7 +67,7 @@ async function parseAllProductsByCategories() {
       }
 
       if (!_.isEmpty(groupedProducts[categoryId])) {
-        groupedProducts[categoryId] = _.filter(groupedProducts[categoryId], isValidProduct)
+        groupedProducts[categoryId] = _.filter(groupedProducts[categoryId], isValidProduct);
       }
     });
 
@@ -90,7 +106,7 @@ async function parseAllProductsByCategories() {
 
         const parsedChunkProducts = _.flattenDeep(
           await Promise.all(
-            _.map(chunk, async product => {
+            chunk.map(async product => {
               const UAUrl = product.url;
 
               const productIdIndex = UAUrl.lastIndexOf('/p');
@@ -98,10 +114,72 @@ async function parseAllProductsByCategories() {
               const urlWithoutProductId = UAUrl.slice(0, productIdIndex);
               const RUUrl = `${urlWithoutProductId}_ru/${productId}`;
 
-              const uaParse = (await MicrotronAPI.ParserV2.load(UAUrl)).parse();
-              const ruParse = (await MicrotronAPI.ParserV2.load(RUUrl)).parse();
+              try {
+                const uaParse = (await MicrotronAPI.ParserV2.load(UAUrl)).parse();
+                const ruParse = (await MicrotronAPI.ParserV2.load(RUUrl)).parse();
 
-              return [uaParse, ruParse];
+                return [
+                  {
+                    url: UAUrl,
+                    parse: uaParse
+                  },
+                  {
+                    url: RUUrl,
+                    parse: ruParse
+                  },
+                ];
+              } catch (err) {
+                const response = err?.response;
+                if (response) {
+                  switch (response.status) {
+                    case 404: {
+                      console.info('URL not found. Return [null, null]:', {
+                        productId: product.id,
+                        url: err?.config?.url,
+                        response: {
+                          status: response.status,
+                          text: response.statusText
+                        }
+                      });
+
+                      return [
+                        {
+                          url: UAUrl,
+                          parse: null
+                        },
+                        {
+                          url: RUUrl,
+                          parse: null
+                        },
+                      ];
+                    }
+                    case 502: {
+                      console.info('Request limit exceeded:', {
+                        productId: product.id,
+                        url: err?.config?.url,
+                        response: {
+                          status: response.status,
+                          text: response.statusText
+                        }
+                      });
+
+                      console.debug('Push product to chunk and and sleep...', {
+                        productId: product.id,
+                        productUrl: product.url,
+                      });
+                      chunk.push(product);
+                      await sleep(1000 * 30);
+
+                      return;
+                    }
+                    default: {
+                      throw err;
+                    }
+                  }
+                }
+
+                throw err;
+              }
             })
           )
         );
@@ -110,13 +188,22 @@ async function parseAllProductsByCategories() {
 
         console.debug('Chunk parsed:', {
           number: chunkIndex + 1,
-          productsCount: parsedChunkProducts.length,
+          productsUrlsCount: parsedChunkProducts.length,
+          allProductsCount: orderedProducts.length,
+          leftProducts: orderedProducts.length - (chunkIndex + 1) * CHUNK
         });
 
         chunkIndex++;
         if (chunkIndex < chunks.length) {
-          console.debug(`Sleep ${SLEEP / 1000}s`, {timeMS: SLEEP});
-          await new Promise(r => setTimeout(r, SLEEP));
+          if (chunkIndex * CHUNK >= LIMIT) {
+            console.info('Limit exceeded. Break:', {
+              limit: LIMIT,
+              processed: chunkIndex * CHUNK
+            });
+            break;
+          }
+
+          await sleep(SLEEP);
         }
       }
     } finally {
@@ -125,7 +212,7 @@ async function parseAllProductsByCategories() {
       });
 
       const parsedProductsObject = Object.fromEntries(
-        _.map(parsedProducts, parsedProduct => [parsedProduct.url, parsedProduct])
+        _.map(parsedProducts, parsedProduct => [parsedProduct.url, parsedProduct.parse])
       );
 
       console.debug('Saving parsed products');
