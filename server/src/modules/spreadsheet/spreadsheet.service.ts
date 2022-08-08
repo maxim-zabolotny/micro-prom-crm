@@ -6,6 +6,7 @@ import {
   GoogleSpreadsheetWorksheet,
   PaginationOptions,
   ServiceAccountCredentials,
+  WorksheetGridRange,
 } from 'google-spreadsheet';
 import {
   HttpException,
@@ -386,6 +387,32 @@ export class SpreadsheetService implements OnModuleInit {
     });
 
     return removedRows;
+  }
+
+  public async updateCells(
+    sheet: GoogleSpreadsheetWorksheet,
+    range: WorksheetGridRange,
+    callback: () => Promise<void>,
+  ) {
+    this.logger.debug('Load cells:', {
+      range,
+    });
+
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
+    await sheet.loadCells(range);
+
+    // LIMITS
+    await this.increaseRequestCountsAndWait();
+
+    await callback();
+
+    this.logger.debug('Save updated cells');
+    await sheet.saveUpdatedCells();
+
+    // LIMITS
+    await this.increaseRequestCountsAndWait();
   }
 
   public setRequestLimits(count: number) {
