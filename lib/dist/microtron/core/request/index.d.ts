@@ -1,6 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TObject } from '../types';
-import { IResponse, IResponseRaw, IResponseErrorRaw, IResponseError } from './IResponse';
+import { IResponse, IResponseError, IResponseErrorRaw, IResponseRaw } from './IResponse';
 declare type TUnknownRec = TObject.TUnknownRec;
 export declare abstract class Request<TInstance = unknown, TRawInstance = unknown> {
     protected config: AxiosRequestConfig;
