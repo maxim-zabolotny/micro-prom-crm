@@ -1,12 +1,12 @@
 /*external modules*/
+import _ from 'lodash';
 /*lib*/
 import { Request } from '../request';
-import { Product, TEntity as TProductEntity } from '../product';
+import { IProductRequestOptions, Product, TEntity as TProductEntity } from '../product';
 /*types*/
 import { Lang } from '../types/api';
 import { ICategoriesTree, ICategory, ICategoryRaw } from './ICategorie';
 import { IResponseRaw } from '../request/IResponse';
-import { IProductRequestOptions } from '../product/IOptions';
 /*utils*/
 import { makeTree } from '../utils';
 /*other*/
@@ -26,7 +26,14 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
 
     return {
       ...responseFields,
-      data: responseData,
+      data: _.map(
+        responseData,
+        (categoryData) => ({
+          ...categoryData,
+          id: String(categoryData.id),
+          parentId: String(categoryData.parentId),
+        }),
+      ) as TEntity[],
       // data: _.map(
       //   responseData,
       //   (categoryData) => ({
@@ -56,7 +63,7 @@ export class Category extends Request<TEntity[], TRawEntity[]> {
   }
 
   public static buildCategoriesTree(categories: TEntity[]) {
-    return makeTree<TEntity, 'parentId', ICategoriesTree[]>(categories, 'parentId', 0);
+    return makeTree<TEntity, 'parentId', ICategoriesTree[]>(categories, 'parentId', '0');
   }
 
   static readonly PATH = 'categories';

@@ -1,11 +1,11 @@
 /*external modules*/
 import _ from 'lodash';
+
 /*other*/
 
-export function fromTree<
-  TEntity extends object & { children: TEntity[] },
+export function fromTree<TEntity extends object & { children: TEntity[] },
   TTree extends Array<TEntity>,
->(tree: TTree, idKey: string, parentIdKey: string): TEntity[] {
+  >(tree: TTree, idKey: string, parentIdKey: string): TEntity[] {
   const nodes: TEntity[] = [];
 
   tree.forEach(
@@ -14,7 +14,7 @@ export function fromTree<
 
       const rootNode = _.omit(node, 'children');
       if (_.isEmpty(_.get(rootNode, parentIdKey))) {
-        _.set(rootNode, parentIdKey, 0);
+        _.set(rootNode, parentIdKey, '0');
       }
 
       localNodes.push(rootNode as TEntity);
