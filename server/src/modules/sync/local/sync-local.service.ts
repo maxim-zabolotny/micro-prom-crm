@@ -108,7 +108,6 @@ export class SyncLocalService {
 
         return {
           ...category,
-          parentId: String(category.parentId),
           ruName: ruCategory.name,
         };
       },
@@ -379,6 +378,7 @@ export class SyncLocalService {
       false,
     );
 
+    // todo: remove products with empty url
     const productsByCategory = allProducts[microtronId];
     this.logger.debug('Loaded Products by Category:', {
       count: productsByCategory.length,
