@@ -520,99 +520,103 @@ export class MicrotronProductsService {
       });
     }
 
-    const orderedProducts = _.orderBy(
-      productsToParse,
-      (product) => product.id,
-      ['asc'],
-    );
-    const chunks = _.chunk(orderedProducts, config.chunk);
+    if (!_.isEmpty(productsToParse)) {
+      const orderedProducts = _.orderBy(
+        productsToParse,
+        (product) => product.id,
+        ['asc'],
+      );
+      const chunks = _.chunk(orderedProducts, config.chunk);
 
-    this.logger.debug('Parse products:', {
-      products: orderedProducts.length,
-      chunks: chunks.length,
-    });
-
-    let chunkIndex = 0;
-    for (const chunk of chunks) {
-      const chunkNumber = chunkIndex + 1;
-
-      this.logger.debug('Parse chunk:', {
-        number: chunkNumber,
-        size: chunk.length,
+      this.logger.debug('Parse products:', {
+        products: orderedProducts.length,
+        chunks: chunks.length,
       });
 
-      const parsedChunkProducts = _.compact(
-        _.flattenDeep(
-          await Promise.all(
-            chunk.map(async (product) => {
-              try {
-                const parse = await this.parse(product.url, true);
+      let chunkIndex = 0;
+      for (const chunk of chunks) {
+        const chunkNumber = chunkIndex + 1;
 
-                return {
-                  url: product.url,
-                  parse: parse,
-                };
-              } catch (err) {
-                const response = err?.response;
-                if (response && response.status === 502) {
-                  this.logger.debug('Request limit exceeded:', {
-                    productId: product.id,
-                    productUrl: product.url,
-                    response: {
-                      status: response.status,
-                      text: response.statusText,
-                    },
-                  });
+        this.logger.debug('Parse chunk:', {
+          number: chunkNumber,
+          size: chunk.length,
+        });
 
-                  this.logger.log(
-                    'Push product to current chunk array and sleep...',
-                    {
+        const parsedChunkProducts = _.compact(
+          _.flattenDeep(
+            await Promise.all(
+              chunk.map(async (product) => {
+                try {
+                  const parse = await this.parse(product.url, true);
+
+                  return {
+                    url: product.url,
+                    parse: parse,
+                  };
+                } catch (err) {
+                  const response = err?.response;
+                  if (response && response.status === 502) {
+                    this.logger.debug('Request limit exceeded:', {
                       productId: product.id,
                       productUrl: product.url,
-                      sleepMS: config.getAwaySleep,
-                    },
-                  );
+                      response: {
+                        status: response.status,
+                        text: response.statusText,
+                      },
+                    });
 
-                  chunk.push(product);
-                  await this.timeHelper.sleep(config.getAwaySleep);
+                    this.logger.log(
+                      'Push product to current chunk array and sleep...',
+                      {
+                        productId: product.id,
+                        productUrl: product.url,
+                        sleepMS: config.getAwaySleep,
+                      },
+                    );
 
-                  return;
-                } else {
-                  throw err;
+                    chunk.push(product);
+                    await this.timeHelper.sleep(config.getAwaySleep);
+
+                    return;
+                  } else {
+                    throw err;
+                  }
                 }
-              }
-            }),
+              }),
+            ),
           ),
-        ),
-      );
+        );
 
-      _.forEach(
-        parsedChunkProducts,
-        (parsedProduct) =>
-          (parsedProducts[parsedProduct.url] = parsedProduct.parse),
-      );
+        _.forEach(
+          parsedChunkProducts,
+          (parsedProduct) =>
+            (parsedProducts[parsedProduct.url] = parsedProduct.parse),
+        );
 
-      this.logger.debug('Chunk parsed:', {
-        number: chunkNumber,
-        productsCount: parsedChunkProducts.length,
-        allProductsCount: orderedProducts.length,
-        productsLeft: orderedProducts.length - chunkNumber * config.chunk,
-      });
-
-      chunkIndex++;
-      if (chunkNumber < chunks.length) {
-        if (chunkNumber * config.chunk >= config.limit) {
-          this.logger.debug('Limit exceeded. Break:', {
-            limit: config.limit,
-            processed: chunkNumber * config.chunk,
-          });
-          break;
-        }
-
-        this.logger.log(`Sleep ${config.sleep / 1000}s`, {
-          timeMS: config.sleep,
+        const productsLeft =
+          orderedProducts.length - chunkNumber * config.chunk;
+        this.logger.debug('Chunk parsed:', {
+          number: chunkNumber,
+          productsCount: parsedChunkProducts.length,
+          allProductsCount: orderedProducts.length,
+          productsLeft: productsLeft >= 0 ? productsLeft : 0,
         });
-        await this.timeHelper.sleep(config.sleep);
+
+        chunkIndex++;
+        if (chunkNumber < chunks.length) {
+          if (chunkNumber * config.chunk >= config.limit) {
+            this.logger.debug('Limit exceeded. Break:', {
+              limit: config.limit,
+              processed: chunkNumber * config.chunk,
+            });
+            break;
+          }
+
+          this.logger.log(`Sleep ${config.sleep / 1000}s`, {
+            timeMS: config.sleep,
+          });
+          await this.timeHelper.sleep(config.sleep);
+        }
       }
     }
 
@@ -658,4 +662,7 @@ export class MicrotronProductsService {
 
     return result;
   }
+
+  // TODO
+  public async getFullProductsInfo(categoryIds: string[], force: boolean) {}
 }

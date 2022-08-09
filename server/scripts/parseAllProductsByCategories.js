@@ -25,6 +25,24 @@ async function sleep(time) {
   return new Promise(r => setTimeout(r, time));
 }
 
+function buildUnionProductUrl(url) {
+  const keyValue = 'microtron.ua';
+  const keyValueIndex = url.indexOf(keyValue);
+
+  if (keyValueIndex < 0) {
+    console.debug('Product url already union version:', {url});
+    return url;
+  }
+
+  const unionUrl = url.slice(keyValueIndex + keyValue.length);
+  console.debug('Transform Product url to union version:', {
+    url,
+    unionUrl,
+  });
+
+  return unionUrl;
+}
+
 async function parseAllProductsByCategories() {
   console.debug('Load saved categories');
   const savedCategories = JSON.parse(await fs.readFile(SELECTED_CATEGORIES_FILE_PATH, {encoding: 'utf-8'}));
@@ -42,7 +60,7 @@ async function parseAllProductsByCategories() {
         ),
         ([key, value]) => value
       )
-    );
+    ).slice(0, 10);
     // const productsAPI = new MicrotronAPI.Product({
     //   token: AUTH_TOKEN,
     // });
@@ -216,7 +234,10 @@ async function parseAllProductsByCategories() {
       });
 
       const parsedProductsObject = Object.fromEntries(
-        _.map(parsedProducts, parsedProduct => [parsedProduct.url, parsedProduct.parse])
+        _.map(parsedProducts, parsedProduct => [
+          buildUnionProductUrl(parsedProduct.url),
+          parsedProduct.parse
+        ])
       );
 
       console.debug('Saving parsed products');

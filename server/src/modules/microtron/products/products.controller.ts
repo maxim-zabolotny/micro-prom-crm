@@ -18,6 +18,7 @@ import { TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
 import { TranslateProductDto } from './dto/translate-product.dto';
 import { Types as GoogleTranslateTypes } from '@lib/google-translate';
+import { ParseProductsDto } from './dto/parse-products.dto';
 
 @Controller('/microtron/products')
 @UseFilters(MicrotronExceptionFilter)
@@ -39,7 +40,7 @@ export class MicrotronProductsController {
     return this.microtronProductsService.getProductsByAPI(categories, force);
   }
 
-  @Get('/products-by-all-saved-categories')
+  @Get('/all-products-by-saved-categories')
   @HttpCode(200)
   async getAllBySavedCategories(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
@@ -92,6 +93,19 @@ export class MicrotronProductsController {
     force: boolean,
   ) {
     return this.microtronProductsService.parseRU(url, force);
+  }
+
+  @Post('/parse-products')
+  @HttpCode(201)
+  getParseProducts(
+    @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
+    force: boolean,
+    @Body() productsData: ParseProductsDto,
+  ) {
+    return this.microtronProductsService.parseProducts(
+      productsData.products,
+      force,
+    );
   }
 
   @Post('/translate')
