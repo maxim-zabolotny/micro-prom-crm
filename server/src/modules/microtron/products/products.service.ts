@@ -14,6 +14,7 @@ import {
 import { ITranslatedProduct } from '@common/interfaces/product';
 import { MicrotronCategoriesService } from '../categories/categories.service';
 import { ICategoryInConstant } from '@common/interfaces/category';
+import { ProductsParseMap } from './utils/ProductsParseMap';
 
 type IProductFull = Product.IProductFull;
 type IProductRequestOptions = Product.IProductRequestOptions;
@@ -46,7 +47,7 @@ export class MicrotronProductsService {
   });
 
   private productsCache: TProductsCache = new Map();
-  private productsParseCache: TProductsParseCache = new Map();
+  private productsParseCache: TProductsParseCache = new ProductsParseMap();
 
   private parseProductsConfig: TParseProductsConfig = {
     chunk: 10,
@@ -244,6 +245,13 @@ export class MicrotronProductsService {
   public async saveProductsCache(
     filePath: string = this.productsCacheFilePath,
   ) {
+    this.logger.debug('Products cache size:', {
+      count: _.reduce(
+        [...this.productsCache.keys()],
+        (acc, key) => acc + this.productsCache.get(key).length,
+        0,
+      ),
+    });
     await this.saveCacheToFile(filePath, this.productsCache);
   }
 
@@ -251,7 +259,11 @@ export class MicrotronProductsService {
     const cache = await this.loadFileWithCache(filePath);
 
     this.logger.debug('Load products cache to service', {
-      count: Object.values(cache).length,
+      count: _.reduce(
+        Object.keys(cache),
+        (acc, key) => acc + cache[key].length,
+        0,
+      ),
     });
     this.productsCache = new Map(Object.entries(cache));
   }
@@ -259,6 +271,9 @@ export class MicrotronProductsService {
   public async saveProductsParseCache(
     filePath: string = this.productsParseCacheFilePath,
   ) {
+    this.logger.debug('Products parse cache size:', {
+      count: this.productsParseCache.size,
+    });
     await this.saveCacheToFile(filePath, this.productsParseCache);
   }
 
@@ -266,9 +281,9 @@ export class MicrotronProductsService {
     const cache = await this.loadFileWithCache(filePath);
 
     this.logger.debug('Load products parse cache to service', {
-      count: Object.values(cache).length,
+      count: Object.keys(cache).length,
     });
-    this.productsParseCache = new Map(Object.entries(cache));
+    this.productsParseCache = new ProductsParseMap(Object.entries(cache));
   }
 
   public async translateSentence(
@@ -391,6 +406,24 @@ export class MicrotronProductsService {
     return newUrl;
   }
 
+  public buildUnionProductUrl(url: string) {
+    const keyValue = 'microtron.ua';
+    const keyValueIndex = url.indexOf(keyValue);
+
+    if (keyValueIndex < 0) {
+      this.logger.debug('Product url already union version:', { url });
+      return url;
+    }
+
+    const unionUrl = url.slice(keyValueIndex + keyValue.length);
+    this.logger.debug('Transform Product url to union version:', {
+      url,
+      unionUrl,
+    });
+
+    return unionUrl;
+  }
+
   public async getProductsByAPI(
     categoryIds: string[],
     force: boolean,
@@ -420,7 +453,7 @@ export class MicrotronProductsService {
     };
   }
 
-  public async getProductsByAllSavedCategories(force: boolean) {
+  public async getAllProductsBySavedCategories(force: boolean) {
     const categories = (await this.microtronCategoriesService.getSaved(
       false,
     )) as ICategoryInConstant[];
@@ -459,6 +492,22 @@ export class MicrotronProductsService {
       .filter((product) => {
         return productIds.includes(product.id);
       });
+  }
+
+  public removeEmptyProductsParseResults() {
+    let countEmptyResults = 0;
+    this.productsParseCache.forEach((parseResult, url) => {
+      if (_.isNil(parseResult)) {
+        this.productsParseCache.delete(url);
+        countEmptyResults++;
+      }
+    });
+
+    this.logger.debug('Removed empty parse results:', {
+      count: countEmptyResults,
+    });
+
+    return countEmptyResults;
   }
 
   public async parse(
@@ -500,18 +549,13 @@ export class MicrotronProductsService {
     if (force) {
       productsToParse.push(...products);
     } else {
-      productsToParse.push(
-        ..._.filter(
-          products,
-          (product) => !this.productsParseCache.has(product.url),
-        ),
-      );
-
       _.forEach(products, (product) => {
-        if (this.productsParseCache.has(product.url)) {
-          parsedProducts[product.url] = this.productsParseCache.get(
-            product.url,
-          );
+        const { url } = product;
+
+        if (this.productsParseCache.has(url)) {
+          parsedProducts[url] = this.productsParseCache.get(url);
+        } else {
+          productsToParse.push(product);
         }
       });
 
@@ -604,10 +648,10 @@ export class MicrotronProductsService {
 
         chunkIndex++;
         if (chunkNumber < chunks.length) {
-          if (chunkNumber * config.chunk >= config.limit) {
+          if (orderedProducts.length - productsLeft >= config.limit) {
             this.logger.debug('Limit exceeded. Break:', {
               limit: config.limit,
-              processed: chunkNumber * config.chunk,
+              processed: orderedProducts.length - productsLeft,
             });
             break;
           }

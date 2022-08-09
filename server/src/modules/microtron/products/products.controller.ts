@@ -46,7 +46,7 @@ export class MicrotronProductsController {
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
   ) {
-    return this.microtronProductsService.getProductsByAllSavedCategories(force);
+    return this.microtronProductsService.getAllProductsBySavedCategories(force);
   }
 
   @Get('/cached')
