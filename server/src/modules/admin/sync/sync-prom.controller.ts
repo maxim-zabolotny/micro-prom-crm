@@ -41,7 +41,7 @@ export class SyncPromController {
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async loadAllProducts() {
-    return {};
+    return this.syncPromService.loadAllNewProductsToSheet();
   }
 
   @Get('/load-products-by-category')

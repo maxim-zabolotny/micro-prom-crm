@@ -496,4 +496,6 @@ export class SyncPromService {
       success,
     };
   }
+
+  public async loadAllNewProductsToSheet() {}
 }
