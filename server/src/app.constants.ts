@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 export namespace AppConstants {
   export namespace Product {
     export const changeFields = [];
@@ -12,7 +14,7 @@ export namespace AppConstants {
   }
 
   export namespace Prom {
-    const returnTheSame = (v) => String(v);
+    const returnTheSame = (v) => (_.isNil(v) ? '' : String(v));
 
     export namespace Sheet {
       type TFieldsMapping = Array<[string, string, (v: unknown) => string]>;
