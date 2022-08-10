@@ -128,7 +128,9 @@ export class CrmCategoriesService {
       modifiedCount,
     });
 
-    this.logger.debug('Category saved');
+    this.logger.debug('Category saved:', {
+      microtronId: categoryData.id,
+    });
 
     return category;
   }
@@ -153,7 +155,9 @@ export class CrmCategoriesService {
       )
       .exec();
 
-    this.logger.debug('Category updated');
+    this.logger.debug('Category updated:', {
+      categoryId,
+    });
 
     return updatedCategory;
   }
@@ -204,7 +208,9 @@ export class CrmCategoriesService {
       );
     }
 
-    this.logger.debug('Category removed');
+    this.logger.debug('Category removed:', {
+      categoryId,
+    });
 
     return removedCategory;
   }

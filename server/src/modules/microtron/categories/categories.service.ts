@@ -15,6 +15,7 @@ import { DataUtilsHelper } from '@common/helpers';
 import {
   ICategoryInConstant,
   ICategoryTreeInConstant,
+  ITranslatedCategoryInConstant,
 } from '@common/interfaces/category';
 import { SetMarkupDto } from './dto/set-markup.dto';
 
@@ -220,5 +221,33 @@ export class MicrotronCategoriesService {
     }
 
     return apiCategoriesIntercept;
+  }
+
+  public async getFullCategoriesInfo(): Promise<
+    ITranslatedCategoryInConstant[]
+  > {
+    const uaCategories = (await this.getSaved(false)) as ICategoryInConstant[];
+    const ruCategories = (await this.getSavedRUTranslate(
+      false,
+    )) as ICategoryInConstant[];
+
+    const ruCategoriesMap = new Map(
+      _.map(ruCategories, (ruCategory) => [ruCategory.id, ruCategory]),
+    );
+
+    this.logger.debug('Mapping UA and RU Categories');
+    const categories: ITranslatedCategoryInConstant[] = _.map(
+      uaCategories,
+      (category) => {
+        const ruCategory = ruCategoriesMap.get(category.id);
+
+        return {
+          ...category,
+          ruName: ruCategory.name,
+        };
+      },
+    );
+
+    return categories;
   }
 }

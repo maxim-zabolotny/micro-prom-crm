@@ -381,7 +381,7 @@ export class SyncPromService {
   // TODO: with prom
   public async syncAllCategoriesWithSheet(add = true, remove = true) {
     if (!add && !remove) {
-      return null;
+      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
     }
 
     this.logger.debug('Sync Prom actions:', {
