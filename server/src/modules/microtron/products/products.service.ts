@@ -11,7 +11,10 @@ import {
   Request as GoogleTranslate,
   Types as GoogleTranslateTypes,
 } from '@lib/google-translate';
-import { ITranslatedProduct } from '@common/interfaces/product';
+import {
+  IProductFullInfo,
+  ITranslatedProduct,
+} from '@common/interfaces/product';
 import { MicrotronCategoriesService } from '../categories/categories.service';
 import { ICategoryInConstant } from '@common/interfaces/category';
 import { ProductsParseMap } from './utils/ProductsParseMap';
@@ -707,6 +710,113 @@ export class MicrotronProductsService {
     return result;
   }
 
-  // TODO
-  public async getFullProductsInfo(categoryIds: string[], force: boolean) {}
+  public async getFullProductsInfo(
+    categoryIds: string[],
+    {
+      forceLoad,
+      forceParse,
+    }: {
+      forceLoad: boolean;
+      forceParse: boolean;
+    },
+  ): Promise<Record<string, IProductFullInfo[]>> {
+    this.logger.debug('Load full products info:', {
+      categoryIds,
+      forceLoad,
+      forceParse,
+    });
+
+    // load children categories too
+    const productsByCategories = await this.getProductsByAPI(
+      categoryIds,
+      forceLoad,
+    );
+    const productsEntriesByCategories = Object.entries(productsByCategories);
+
+    const productsWithFullInfo: Record<string, IProductFullInfo[]> = {};
+    for (const [
+      categoryId,
+      productsByCategory,
+    ] of productsEntriesByCategories) {
+      this.logger.debug('Loaded Products by Category:', {
+        categoryId,
+        count: productsByCategory.length,
+      });
+
+      this.logger.debug('Build RU Products URL');
+      const uaProducts = _.map(productsByCategory, (product) =>
+        _.pick(product, ['id', 'url']),
+      );
+      const ruProducts = _.map(uaProducts, (product) => ({
+        id: product.id,
+        url: this.buildProductRUUrl(product.url),
+      }));
+
+      const allProducts = _.uniqBy(
+        [...uaProducts, ...ruProducts],
+        (product) => product.url,
+      );
+
+      this.logger.debug('Start parsing Products:', {
+        allCount: allProducts.length,
+        uaCount: uaProducts.length,
+        ruCount: ruProducts.length,
+      });
+
+      const parsedProducts = await this.parseProducts(allProducts, forceParse);
+      const compactParsedProductsMap = new Map(
+        _.filter(Object.entries(parsedProducts), ([, parseResult]) =>
+          Boolean(parseResult),
+        ),
+      );
+
+      this.logger.debug('Parsed Products:', {
+        count: Object.keys(parsedProducts).length,
+        compactCount: compactParsedProductsMap.size,
+      });
+
+      const products: IProductFullInfo[] = _.compact(
+        _.map(productsByCategory, (product) => {
+          const uaParse = compactParsedProductsMap.get(product.url);
+          const ruParse = compactParsedProductsMap.get(
+            this.buildProductRUUrl(product.url),
+          );
+
+          if (!uaParse || !ruParse) {
+            this.logger.debug(`Product doesn't have parse results. Skip:`, {
+              id: product.id,
+              uaParse: Boolean(uaParse),
+              ruParse: Boolean(ruParse),
+            });
+
+            return null;
+          }
+
+          return {
+            ..._.omit(product, ['RRP', 'description']),
+            parse: _.omit(uaParse, ['name', 'brand', 'availability', 'url']),
+            translate: _.pick(ruParse, ['name', 'description']),
+          };
+        }),
+      );
+
+      productsWithFullInfo[categoryId] = products;
+
+      this.logger.debug('Loaded full info Products by Category:', {
+        categoryId,
+        count: products.length,
+      });
+    }
+
+    this.logger.debug('Loaded Full Products info:', {
+      categoriesCount: productsWithFullInfo.length,
+      productsCount: _.reduce(
+        Object.keys(productsWithFullInfo),
+        (acc, key) => acc + productsWithFullInfo[key].length,
+        0,
+      ),
+    });
+
+    return productsWithFullInfo;
+  }
 }
