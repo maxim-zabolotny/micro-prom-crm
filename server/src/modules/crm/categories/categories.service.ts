@@ -34,8 +34,16 @@ export class CrmCategoriesService {
     return this.categoryModel.count({ sync: false }).exec();
   }
 
-  public async getAllNotSyncedCategoriesFromDB() {
+  public async getNotSyncedCategoriesFromDB() {
     return this.categoryModel.find({ sync: false }).exec();
+  }
+
+  public async getCountOfNewCategoriesInDB() {
+    return this.categoryModel.count({ syncAt: undefined }).exec();
+  }
+
+  public async getNewCategoriesFromDB() {
+    return this.categoryModel.find({ syncAt: undefined }).exec();
   }
 
   public async getCategoriesByIdsFromDB(categoryIds: Types.ObjectId[]) {
@@ -120,6 +128,8 @@ export class CrmCategoriesService {
       modifiedCount,
     });
 
+    this.logger.debug('Category saved');
+
     return category;
   }
 
@@ -142,6 +152,8 @@ export class CrmCategoriesService {
         },
       )
       .exec();
+
+    this.logger.debug('Category updated');
 
     return updatedCategory;
   }
@@ -191,6 +203,8 @@ export class CrmCategoriesService {
         }),
       );
     }
+
+    this.logger.debug('Category removed');
 
     return removedCategory;
   }

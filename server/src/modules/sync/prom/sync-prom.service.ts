@@ -74,7 +74,7 @@ export class SyncPromService {
 
     this.logger.debug('Load Category ids from Google Sheet');
     const allRows = await this.spreadsheetService.getAllRows(categoriesSheet, {
-      limit: 300,
+      limit: 600,
     });
     const categoryIdsInSheet = _.map(allRows, (row) => row[idKey]);
 
@@ -331,18 +331,16 @@ export class SyncPromService {
     };
   }
 
-  // TODO: use "new" instead of "not synced"
   public async loadAllNewCategoriesToSheet() {
     const result: ILoadCategoriesToSheetResult = {
       newCategoriesCount: 0,
       addedRowsCount: 0,
       updatedCategories: [],
-      success: false, // TODO: true
+      success: true,
     };
 
-    const count =
-      await this.crmCategoriesService.getCountOfNotSyncedCategoriesInDB();
-    this.logger.debug('Not synced Categories count in DB', { count });
+    const count = await this.crmCategoriesService.getCountOfNewCategoriesInDB();
+    this.logger.debug('New Categories count in DB', { count });
     if (count === 0) {
       return result;
     }
@@ -350,11 +348,10 @@ export class SyncPromService {
     // RESULT
     result.newCategoriesCount = count;
 
-    this.logger.debug('Load not synced Categories from DB');
+    this.logger.debug('Load new Categories from DB');
 
-    const categories =
-      await this.crmCategoriesService.getAllNotSyncedCategoriesFromDB();
-    this.logger.debug('Loaded not synced Categories:', {
+    const categories = await this.crmCategoriesService.getNewCategoriesFromDB();
+    this.logger.debug('Loaded new Categories:', {
       count: categories.length,
     });
 
@@ -384,7 +381,7 @@ export class SyncPromService {
   // TODO: with prom
   public async syncAllCategoriesWithSheet(add = true, remove = true) {
     if (!add && !remove) {
-      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
+      return null;
     }
 
     this.logger.debug('Sync Prom actions:', {
