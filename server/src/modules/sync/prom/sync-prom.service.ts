@@ -26,7 +26,6 @@ export interface ISyncCategoriesResult {
 }
 
 export interface ILoadProductsToSheetResult {
-  category: Pick<Category, 'name' | 'microtronId'>;
   newProductsCount: number;
   addedRowsCount: number;
   updatedProducts: ProductDocument[];
@@ -295,6 +294,10 @@ export class SyncPromService {
   ) {
     const allProducts = _.flattenDeep(_.map(data, 'products'));
 
+    const productsByPromIdMap = new Map(
+      _.map(allProducts, (product) => [String(product.promId), product]),
+    );
+
     // ADD TO SHEET
     const addedRows = await this.addProductsToSheet(data);
 
@@ -303,10 +306,6 @@ export class SyncPromService {
       ids: _.map(allProducts, '_id'),
       count: allProducts.length,
     });
-
-    const productsByPromIdMap = new Map(
-      _.map(allProducts, (product) => [String(product.promId), product]),
-    );
 
     const updatedProducts = await Promise.all(
       _.map(addedRows, async (row) => {
@@ -444,7 +443,6 @@ export class SyncPromService {
     }
 
     const result: ILoadProductsToSheetResult = {
-      category: _.pick(category, ['name', 'microtronId']),
       newProductsCount: 0,
       addedRowsCount: 0,
       updatedProducts: [],

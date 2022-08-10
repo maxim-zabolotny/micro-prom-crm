@@ -8,7 +8,7 @@ import { Product, ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
 import { Category, CategoryDocument } from '@schemas/category';
 
-export type TAddProduct = IProductFullInfo & {
+export type TAddProduct = Omit<IProductFullInfo, 'categoryId'> & {
   category: CategoryDocument;
 };
 
@@ -159,7 +159,9 @@ export class CrmProductsService {
     });
     await product.save();
 
-    this.logger.debug('Product saved');
+    this.logger.debug('Product saved:', {
+      microtronId: productData.id,
+    });
 
     return product;
   }
@@ -235,7 +237,9 @@ export class CrmProductsService {
       )
       .exec();
 
-    this.logger.debug('Product updated');
+    this.logger.debug('Product updated:', {
+      id: productId,
+    });
 
     return updatedProduct;
   }

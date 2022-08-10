@@ -24,6 +24,7 @@ import {
   TAddProduct,
 } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
+import { IProductFullInfo } from '@common/interfaces/product';
 
 export type TCompareCategoriesKeys = Extract<
   keyof ITranslatedCategoryInConstant,
@@ -263,6 +264,32 @@ export class SyncLocalService {
     return result;
   }
 
+  public async addProductsToDB(
+    data: Pick<TAddProduct, 'category'>,
+    products: IProductFullInfo[],
+  ) {
+    const { category } = data;
+
+    this.logger.debug('Start loading Products to DB', {
+      count: products.length,
+    });
+
+    const addedProducts: ProductDocument[] = [];
+    for (const product of products) {
+      const addedProduct = await this.crmProductsService.addProductToDB({
+        ...product,
+        category,
+      });
+      addedProducts.push(addedProduct);
+    }
+
+    this.logger.debug('Loaded Products to DB:', {
+      count: addedProducts.length,
+    });
+
+    return addedProducts;
+  }
+
   public async loadAllCategoriesToDB() {
     const microtronIntegration = await this.getMicrotronIntegration();
     const course = await this.microtronCoursesService.getCoursesByAPI(false);
@@ -346,63 +373,14 @@ export class SyncLocalService {
       );
     }
 
-    // load children categories too
-    const allProducts = await this.microtronProductsService.getProductsByAPI(
-      [microtronId],
-      false,
-    );
-
-    // todo: remove products with empty url
-    const productsByCategory = allProducts[microtronId];
-    this.logger.debug('Loaded Products by Category:', {
-      count: productsByCategory.length,
-    });
-
-    this.logger.debug('Loaded Full Products info');
-
-    const productsWithFullInfo: Array<Omit<TAddProduct, 'category'>> =
-      await Promise.all(
-        _.map(productsByCategory, async (product) => {
-          const parseResultUA = await this.microtronProductsService.parse(
-            product.url,
-            false,
-          );
-          const parseResultRU = await this.microtronProductsService.parseRU(
-            product.url,
-            false,
-          );
-
-          return {
-            ..._.omit(product, ['categoryId', 'RRP', 'description']),
-            parse: _.omit(parseResultUA, [
-              'name',
-              'brand',
-              'availability',
-              'url',
-            ]),
-            translate: _.pick(parseResultRU, ['name', 'description']),
-          };
-        }),
-      );
-
-    this.logger.debug('Start loading Products to DB', {
-      count: productsWithFullInfo.length,
-    });
-
-    const addedProducts: ProductDocument[] = [];
-    for (const productWithFullInfo of productsWithFullInfo) {
-      const addedProduct = await this.crmProductsService.addProductToDB({
-        ...productWithFullInfo,
-        category,
+    const productsWithFullInfoByCategories =
+      await this.microtronProductsService.getFullProductsInfo([microtronId], {
+        forceLoad: false,
+        forceParse: false,
       });
-      addedProducts.push(addedProduct);
-    }
+    const productsWithFullInfo = productsWithFullInfoByCategories[microtronId];
 
-    this.logger.debug('Loaded Products to DB:', {
-      count: addedProducts.length,
-    });
-
-    return addedProducts;
+    return this.addProductsToDB({ category }, productsWithFullInfo);
   }
 
   public async loadAllProductsToDB() {}
