@@ -26,7 +26,7 @@ export class SpreadsheetService implements OnModuleInit {
   private doc: GoogleSpreadsheet;
   private readonly docCredentials: ServiceAccountCredentials;
   private readonly docLimits = {
-    requestLimitPerMinute: 300,
+    requestLimitPerMinute: 300, // todo: google returned  { "quota_limit_value": "60" }
     intervalForChecksRequestLimit: 60,
     countOfRequests: 0,
     lastWaitTimestamp: Date.now(),
@@ -48,9 +48,50 @@ export class SpreadsheetService implements OnModuleInit {
     this.doc = new GoogleSpreadsheet(AppConstants.Google.Sheet.ID);
 
     // HACK FOR MAX DATA
-    const axiosDefaults = this.doc['axios']['defaults'];
+    const googleSpreadsheetAxios = this.doc['axios'];
+    const axiosDefaults = googleSpreadsheetAxios['defaults'];
+
     axiosDefaults.maxContentLength = Infinity;
     axiosDefaults.maxBodyLength = Infinity;
+
+    // ERROR HANDLING HINT
+    googleSpreadsheetAxios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response && error.response.status === 429) {
+          this.logger.error('Request limit Google Sheet error:', {
+            message: error.message,
+            status: error.response.status,
+            statusText: error.response.statusText,
+            error: error.response.data.error ?? error.response.data,
+          });
+
+          const timeToSleep = 1000 * 20;
+
+          const now = Date.now();
+          const timestampsDiff = Math.floor(
+            (now - this.docLimits.lastWaitTimestamp) / 1000,
+          );
+
+          this.logger.log(`Sleep and repeat request:`, {
+            timeToSleep: timeToSleep / 1000,
+            countOfRequests: this.docLimits.countOfRequests,
+            timestampNow: now,
+            lastWaitTimestamp: this.docLimits.lastWaitTimestamp,
+            timestampsDiff: timestampsDiff,
+          });
+
+          await this.timeHelper.sleep(timeToSleep);
+
+          this.docLimits.countOfRequests = 0;
+          this.docLimits.lastWaitTimestamp = Date.now();
+
+          return googleSpreadsheetAxios.request(error.config);
+        }
+
+        return Promise.reject(error);
+      },
+    );
 
     this.logger.debug('Auth in Google Sheet');
     await this.doc.useServiceAccountAuth(this.docCredentials);
@@ -60,6 +101,9 @@ export class SpreadsheetService implements OnModuleInit {
   }
 
   private async checkRequestLimitsAndWait() {
+    // TODO: it doesn't work
+    return;
+
     const now = Date.now();
     const oneMinute = 1000 * 60;
 
@@ -67,53 +111,54 @@ export class SpreadsheetService implements OnModuleInit {
       this.docLimits;
 
     const timeInterval = oneMinute / intervalForChecksRequestLimit;
-    const requestsCountForInterval =
-      requestLimitPerMinute / intervalForChecksRequestLimit;
+    const requestsCountForInterval = Math.floor(
+      requestLimitPerMinute / intervalForChecksRequestLimit,
+    );
+
     const timestampsDiff = now - this.docLimits.lastWaitTimestamp;
     const timeToSleep =
-      1000 * (requestLimitPerMinute / this.docLimits.countOfRequests);
+      1000 * (requestLimitPerMinute / this.docLimits.countOfRequests); // bug here
 
-    // Limit was used in less or a one half of minute. Need to sleep
-    if (
-      timestampsDiff <= timeInterval &&
-      this.docLimits.countOfRequests >= requestsCountForInterval
-    ) {
-      this.logger.log(`Request limit used. Sleep ${timeToSleep / 1000}s:`, {
-        timeInterval,
-        requestsCountForInterval,
-        timeToSleep: timeToSleep / 1000,
-        countOfRequests: this.docLimits.countOfRequests,
-      });
+    switch (true) {
+      case timestampsDiff <= timeInterval &&
+        this.docLimits.countOfRequests >= requestsCountForInterval: {
+        // Limit was used in less or a one half of minute. Need to sleep
 
-      await this.timeHelper.sleep(timeToSleep);
+        this.logger.log(`Request limit used. Sleep ${timeToSleep / 1000}s:`, {
+          timeInterval,
+          requestsCountForInterval,
+          timeToSleep: timeToSleep / 1000,
+          countOfRequests: this.docLimits.countOfRequests,
+        });
 
-      this.docLimits.countOfRequests = 0;
-      this.docLimits.lastWaitTimestamp = Date.now();
+        await this.timeHelper.sleep(timeToSleep);
 
-      return;
-    }
+        this.docLimits.countOfRequests = 0;
+        this.docLimits.lastWaitTimestamp = Date.now();
 
-    // Limit didn't be use in a one half of minute. Need update timestamp
-    if (
-      timestampsDiff >= timeInterval &&
-      this.docLimits.countOfRequests < requestsCountForInterval
-    ) {
-      this.logger.log(`Request limit didn't be use. Update requests info:`, {
-        timeInterval,
-        requestsCountForInterval,
-        countOfRequests: this.docLimits.countOfRequests,
-      });
+        return;
+      }
+      case timestampsDiff >= timeInterval &&
+        this.docLimits.countOfRequests < requestsCountForInterval: {
+        // Limit didn't be use in a one half of minute. Need update timestamp
 
-      this.docLimits.countOfRequests = 0;
-      this.docLimits.lastWaitTimestamp = Date.now();
+        this.logger.log(`Request limit didn't be use. Update requests info:`, {
+          timeInterval,
+          requestsCountForInterval,
+          countOfRequests: this.docLimits.countOfRequests,
+        });
 
-      return;
+        this.docLimits.countOfRequests = 0;
+        this.docLimits.lastWaitTimestamp = Date.now();
+
+        return;
+      }
     }
   }
 
   private async increaseRequestCountsAndWait(count = 1) {
     this.docLimits.countOfRequests += count;
-    await this.checkRequestLimitsAndWait();
+    // await this.checkRequestLimitsAndWait();
   }
 
   private async iterateByRows(
