@@ -47,7 +47,9 @@ export class SyncPromController {
   @Get('/load-products-by-category')
   @HttpCode(200)
   @Auth(UserRole.Admin)
-  async loadProductsByCategory(@Query('categoryId') categoryId: string) {
-    return {};
+  async loadProductsByCategory(@Query('microtronId') microtronId: string) {
+    return this.syncPromService.loadAllNewProductsByCategoryToSheet(
+      microtronId,
+    );
   }
 }
