@@ -17,7 +17,7 @@ export interface IAPIDefaultError {
 
 export interface IAPIProductEditError {
   errors: Record<string, unknown>;
-  processed_ids: number;
+  processed_ids: number[];
 }
 
 export interface IAPIImportProductsError {

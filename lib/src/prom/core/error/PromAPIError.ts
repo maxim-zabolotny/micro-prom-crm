@@ -52,8 +52,14 @@ export class PromAPIError<IErrorData extends TAPIError> {
     this.response = response;
   }
 
-  private static errorHasAllKeys(data: object, keys: string[]) {
-    return _.every(keys, (key) => (key in data)) && _.isEqual(Object.keys(data).length, keys.length);
+  private static validateError(data: object, keys: string[], conforms?: Record<string, (v: never) => boolean>) {
+    const keysIsEqual = _.every(keys, (key) => (key in data)) && _.isEqual(Object.keys(data).length, keys.length);
+
+    if (conforms) {
+      return keysIsEqual && _.conformsTo(data, conforms);
+    }
+
+    return keysIsEqual;
   }
 
   public static isPromError<IAPIError extends TAPIError>(
@@ -69,16 +75,33 @@ export class PromAPIError<IErrorData extends TAPIError> {
     const saveDeliveryDeclarationKeys: Array<keyof IAPISaveDeliveryDeclarationError> = ['status', 'message', 'errors'];
 
     switch (true) {
-      case (this.errorHasAllKeys(data, saveDeliveryDeclarationKeys)): {
+      case (
+        this.validateError(
+          data,
+          saveDeliveryDeclarationKeys,
+          {
+            status: (v: string) => v === 'error',
+            errors: (v: object) => Object.keys(v).length > 0,
+          },
+        )
+      ): {
         return APIErrorType.SaveDeliveryDeclaration;
       }
-      case (this.errorHasAllKeys(data, importProductsKeys)): {
+      case (this.validateError(data, importProductsKeys)): {
         return APIErrorType.ImportProducts;
       }
-      case (this.errorHasAllKeys(data, productEditKeys)): {
+      case (
+        this.validateError(
+          data,
+          productEditKeys,
+          {
+            errors: (v: object) => Object.keys(v).length > 0,
+          },
+        )
+      ): {
         return APIErrorType.ProductEdit;
       }
-      case (this.errorHasAllKeys(data, defaultKeys)): {
+      case (this.validateError(data, defaultKeys)): {
         return APIErrorType.Default;
       }
       default: {
