@@ -1,12 +1,12 @@
 /*external modules*/
 import _ from 'lodash';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import urlJoin from 'url-join';
 /*lib*/
 /*types*/
 import { HttpMethods } from './HttpMethods';
 import { ILibraryResponse } from '../types/api';
-import { PromAPIError } from '../error';
+import { AxiosExtendedError, PromAPIError } from '../error';
 import { TObject } from '../types';
 /*other*/
 
@@ -14,7 +14,7 @@ export {
   HttpMethods,
 };
 
-export class Request {
+export abstract class Request {
   protected config: AxiosRequestConfig;
   protected token: string;
 
@@ -46,6 +46,8 @@ export class Request {
     return this;
   }
 
+  protected abstract buildUrl(path: string | number): string;
+
   protected async makeRequest<TBody extends object, TParams extends object, TResponse>(
     method: HttpMethods,
     resource: string,
@@ -70,13 +72,18 @@ export class Request {
         maxBodyLength: Infinity,
       });
 
+      if (Request.isErrorCase(response)) {
+        throw new PromAPIError(response);
+      }
+
       return {
         response,
         body: response.data,
       };
     } catch (err: unknown) {
       if (err instanceof AxiosError && err.response) {
-        throw new PromAPIError(err as TObject.MakeRequired<AxiosError, 'response'>);
+        const error = err as TObject.MakeRequired<AxiosError, 'response'>;
+        throw new AxiosExtendedError(error);
       }
 
       throw err;
@@ -86,4 +93,9 @@ export class Request {
   public static readonly HOST = 'https://my.prom.ua';
   public static readonly API_VERSION = '/api/v1';
   public static readonly PORT = 443;
+
+  public static isErrorCase(response: AxiosResponse): boolean {
+    const errorType = PromAPIError.getErrorType(response.data);
+    return Boolean(errorType);
+  }
 }
