@@ -22,10 +22,12 @@
   },
   "ignorePatterns": ["dist/**"],
   "rules": {
+    "max-len": ["error", 120],
     "indent": ["error", 2, { "SwitchCase": 1 }],
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
     "linebreak-style": ["error", "unix"],
+    "camelcase": "off",
     "spaced-comment": "off",
     "func-names": "off",
     "no-shadow": "off",
@@ -45,6 +47,7 @@
       "rules": {
         "import/extensions": 0,
         "import/prefer-default-export": 0,
+        "@typescript-eslint/no-empty-interface": 0,
         "@typescript-eslint/no-shadow": ["error"],
         "@typescript-eslint/ban-types": [
           "error",
