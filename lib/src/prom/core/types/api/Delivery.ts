@@ -3,6 +3,7 @@ export enum DeliveryProvider {
   Justin = 'justin',
   DeliveryAuto = 'delivery_auto',
   UkrPoshta = 'ukrposhta',
+  Meest = 'meest'
 }
 
 //  W - отделение, D - курьер
