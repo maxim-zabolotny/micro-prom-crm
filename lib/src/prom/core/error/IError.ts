@@ -4,7 +4,6 @@ import { AxiosError } from 'axios';
 
 // ENUMS
 export enum APIErrorType {
-  Unknown = 'Unknown',
   Default = 'Default',
   ProductEdit = 'ProductEdit',
   ImportProducts = 'ImportProducts',
@@ -12,9 +11,6 @@ export enum APIErrorType {
 }
 
 // INTERFACES
-export interface IAPIUnknownError extends Record<string, unknown> {
-}
-
 export interface IAPIDefaultError {
   error: string;
 }
@@ -37,10 +33,10 @@ export interface IAPISaveDeliveryDeclarationError {
 
 // TYPES
 export type TAPIError =
-  | IAPIUnknownError
   | IAPIDefaultError
   | IAPIProductEditError
   | IAPIImportProductsError
   | IAPISaveDeliveryDeclarationError;
 
-export type TErrorCode = Exclude<keyof typeof AxiosError, 'prototype' | 'captureStackTrace' | 'prepareStackTrace' | 'stackTraceLimit'>;
+export type TErrorCode = Exclude<keyof typeof AxiosError,
+  'prototype' | 'captureStackTrace' | 'prepareStackTrace' | 'stackTraceLimit'>;
