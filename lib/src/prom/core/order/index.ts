@@ -59,7 +59,7 @@ export class Order extends Request {
     return urlJoin(Order.BASE_PATH, String(path));
   }
 
-  public async getOrdersList(params: IGetOrdersListQueryParams = {}): Promise<TGetOrdersListResponse> {
+  public async getList(params: IGetOrdersListQueryParams = {}): Promise<TGetOrdersListResponse> {
     const { date_to, date_from } = params;
     const queryParams = { ...params };
 
@@ -81,7 +81,7 @@ export class Order extends Request {
     return body;
   }
 
-  public async getOrderById(orderId: number): Promise<TGetOrderByIdResponse> {
+  public async getById(orderId: number): Promise<TGetOrderByIdResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetOrderByIdResponse>(
       HttpMethods.Get,
       this.buildUrl(orderId),
@@ -92,7 +92,7 @@ export class Order extends Request {
     return body;
   }
 
-  public async setOrdersStatus(data: TPostOrdersSetStatusBody): Promise<TPostOrdersSetStatusResponse> {
+  public async setStatus(data: TPostOrdersSetStatusBody): Promise<TPostOrdersSetStatusResponse> {
     const { body } = await this.makeRequest<TPostOrdersSetStatusBody, {}, TPostOrdersSetStatusResponse>(
       HttpMethods.Post,
       this.buildUrl('set_status'),
@@ -103,7 +103,7 @@ export class Order extends Request {
     return body;
   }
 
-  public async refundOrders(data: IPostOrdersRefundBody): Promise<TPostOrdersRefundResponse> {
+  public async refund(data: IPostOrdersRefundBody): Promise<TPostOrdersRefundResponse> {
     const { body } = await this.makeRequest<IPostOrdersRefundBody, {}, TPostOrdersRefundResponse>(
       HttpMethods.Post,
       this.buildUrl('refund'),

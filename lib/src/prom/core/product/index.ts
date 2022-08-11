@@ -68,7 +68,7 @@ export class Product extends Request {
     return urlJoin(Product.BASE_PATH, String(path));
   }
 
-  public async getProductsList(params: IGetProductsListQueryParams = {}): Promise<TGetProductsListResponse> {
+  public async getList(params: IGetProductsListQueryParams = {}): Promise<TGetProductsListResponse> {
     const queryParams = { ...params };
 
     const { body } = await this.makeRequest<{}, IGetProductsListQueryParams, TGetProductsListResponse>(
@@ -81,7 +81,7 @@ export class Product extends Request {
     return body;
   }
 
-  public async getProductById(productId: number): Promise<TGetProductByIdResponse> {
+  public async getById(productId: number): Promise<TGetProductByIdResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetProductByIdResponse>(
       HttpMethods.Get,
       this.buildUrl(productId),
@@ -92,7 +92,7 @@ export class Product extends Request {
     return body;
   }
 
-  public async getProductByExternalId(externalId: string): Promise<TGetProductByExternalIdResponse> {
+  public async getByExternalId(externalId: string): Promise<TGetProductByExternalIdResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetProductByExternalIdResponse>(
       HttpMethods.Get,
       this.buildUrl(`by_external_id/${externalId}`),
@@ -103,8 +103,8 @@ export class Product extends Request {
     return body;
   }
 
-  public async editProducts(data: IPostProductsEditBody): Promise<TPostProductsEditResponse> {
-    const { body } = await this.makeRequest<IPostProductsEditBody, {}, TPostProductsEditResponse>(
+  public async edit(data: IPostProductsEditBody[]): Promise<TPostProductsEditResponse> {
+    const { body } = await this.makeRequest<IPostProductsEditBody[], {}, TPostProductsEditResponse>(
       HttpMethods.Post,
       this.buildUrl('edit'),
       data,
@@ -114,12 +114,12 @@ export class Product extends Request {
     return body;
   }
 
-  public async editProductsByExternalId(
-    data: IPostProductsEditByExternalIdBody,
+  public async editByExternalId(
+    data: IPostProductsEditByExternalIdBody[],
   ): Promise<TPostProductsEditByExternalIdResponse> {
     const {
       body,
-    } = await this.makeRequest<IPostProductsEditByExternalIdBody, {}, TPostProductsEditByExternalIdResponse>(
+    } = await this.makeRequest<IPostProductsEditByExternalIdBody[], {}, TPostProductsEditByExternalIdResponse>(
       HttpMethods.Post,
       this.buildUrl('edit_by_external_id'),
       data,
@@ -129,7 +129,7 @@ export class Product extends Request {
     return body;
   }
 
-  public async importProductsByUrl(data: IPostProductsImportUrlBody): Promise<TPostProductsImportUrlResponse> {
+  public async importUrl(data: IPostProductsImportUrlBody): Promise<TPostProductsImportUrlResponse> {
     const { body } = await this.makeRequest<IPostProductsImportUrlBody, {}, TPostProductsImportUrlResponse>(
       HttpMethods.Post,
       this.buildUrl('edit_by_external_id'),
@@ -140,7 +140,7 @@ export class Product extends Request {
     return body;
   }
 
-  public async getProductImportStatus(importId: number): Promise<TGetProductsImportStatusResponse> {
+  public async getImportStatus(importId: number): Promise<TGetProductsImportStatusResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetProductsImportStatusResponse>(
       HttpMethods.Get,
       this.buildUrl(`import/status/${importId}`),

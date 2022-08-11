@@ -22,7 +22,7 @@ export class Client extends Request {
     return urlJoin(Client.BASE_PATH, String(path));
   }
 
-  public async getClientsList(params: IGetClientsListQueryParams = {}): Promise<TGetClientsListResponse> {
+  public async getList(params: IGetClientsListQueryParams = {}): Promise<TGetClientsListResponse> {
     const queryParams = { ...params };
 
     const { body } = await this.makeRequest<{}, IGetClientsListQueryParams, TGetClientsListResponse>(
@@ -35,7 +35,7 @@ export class Client extends Request {
     return body;
   }
 
-  public async getClientById(clientId: number): Promise<TGetClientByIdResponse> {
+  public async getById(clientId: number): Promise<TGetClientByIdResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetClientByIdResponse>(
       HttpMethods.Get,
       this.buildUrl(clientId),

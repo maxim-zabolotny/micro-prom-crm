@@ -19,7 +19,7 @@ export class Group extends Request {
     return urlJoin(Group.BASE_PATH, String(path));
   }
 
-  public async getGroupsList(params: IGetGroupsListQueryParams = {}): Promise<TGetGroupsListResponse> {
+  public async getList(params: IGetGroupsListQueryParams = {}): Promise<TGetGroupsListResponse> {
     const queryParams = { ...params };
 
     const { body } = await this.makeRequest<{}, IGetGroupsListQueryParams, TGetGroupsListResponse>(

@@ -17,7 +17,7 @@ export class PaymentOption extends Request {
     return urlJoin(PaymentOption.BASE_PATH, String(path));
   }
 
-  public async getPaymentOptionsList(): Promise<TGetPaymentOptionsListResponse> {
+  public async getList(): Promise<TGetPaymentOptionsListResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetPaymentOptionsListResponse>(
       HttpMethods.Get,
       this.buildUrl('list'),

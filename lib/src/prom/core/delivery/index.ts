@@ -17,7 +17,7 @@ export class Delivery extends Request {
     return urlJoin(Delivery.BASE_PATH, String(path));
   }
 
-  public async saveDeliveryDeclaration(
+  public async saveDeclaration(
     data: IPostSaveDeliveryDeclarationBody,
   ): Promise<TPostSaveDeliveryDeclarationResponse> {
     const { body } = await this.makeRequest<IPostSaveDeliveryDeclarationBody, {}, TPostSaveDeliveryDeclarationResponse>(
