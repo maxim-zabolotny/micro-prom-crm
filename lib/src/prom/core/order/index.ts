@@ -5,8 +5,6 @@ import urlJoin from 'url-join';
 import { HttpMethods, Request } from '../request';
 /*types*/
 import {
-  DeliveryProvider,
-  DeliveryType,
   IGetOrdersListQueryParams,
   IOrder,
   IOrderDeliveryOption,
@@ -34,8 +32,6 @@ export {
   OrderStatus,
   OrderSource,
   OrderCancellationReason,
-  DeliveryProvider,
-  DeliveryType,
   PaymentType,
   PaymentStatus,
 

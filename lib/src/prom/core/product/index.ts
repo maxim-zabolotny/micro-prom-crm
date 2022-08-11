@@ -29,7 +29,7 @@ import {
   TPostProductsEditByExternalIdResponse,
   TPostProductsEditResponse,
   TPostProductsImportUrlResponse,
-} from './IProduct ';
+} from './IProduct';
 /*other*/
 
 export {
