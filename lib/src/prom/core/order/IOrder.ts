@@ -1,3 +1,9 @@
+/*external modules*/
+/*lib*/
+/*types*/
+import { IPagination, ITimestampPeriod } from '../types/api';
+/*other*/
+
 // ENTITY
 export enum OrderStatus {
   Pending = 'pending',
@@ -112,12 +118,8 @@ export interface IOrder {
 }
 
 // REQUEST
-export interface IGetOrdersListQueryParams {
+export interface IGetOrdersListQueryParams extends Partial<IPagination>, Partial<ITimestampPeriod> {
   status?: OrderStatus;
-  date_from?: Date | string;
-  date_to?: Date | string;
-  limit?: number;
-  last_id?: number; // selection to orders with IDs not higher than the specified one.
 }
 
 export interface IPostOrdersSetStatusDefaultBody {
