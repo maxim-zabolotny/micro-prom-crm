@@ -132,7 +132,7 @@ export class Product extends Request {
   public async importUrl(data: IPostProductsImportUrlBody): Promise<TPostProductsImportUrlResponse> {
     const { body } = await this.makeRequest<IPostProductsImportUrlBody, {}, TPostProductsImportUrlResponse>(
       HttpMethods.Post,
-      this.buildUrl('edit_by_external_id'),
+      this.buildUrl('import_url'),
       data,
       {},
     );
