@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import keywordExtractor from 'keyword-extractor';
 
 export namespace AppConstants {
   export namespace Product {
@@ -50,7 +51,22 @@ export namespace AppConstants {
           ['Код_товару', 'promId', returnTheSame],
           ['Назва_позиції', 'translate.name', returnTheSame],
           ['Назва_позиції_укр', 'name', returnTheSame],
-          ['Пошукові_запити', 'translate.name', returnTheSame],
+          [
+            'Пошукові_запити',
+            'translate.name',
+            (v: string) =>
+              keywordExtractor
+                .extract(v, {
+                  language: 'russian',
+                  remove_digits: false,
+                  return_changed_case: false,
+                  remove_duplicates: false,
+                  return_max_ngrams: false,
+                  return_chained_words: false,
+                })
+                .filter((key) => key.length > 1)
+                .join(','),
+          ],
           ['Пошукові_запити_укр', 'name', returnTheSame],
           ['Опис', 'translate.description', returnTheSame],
           ['Опис_укр', 'description', returnTheSame],
