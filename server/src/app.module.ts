@@ -22,6 +22,7 @@ import { SpreadsheetModule } from './modules/spreadsheet/spreadsheet.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { SyncModule } from './modules/sync/sync.module';
 import { NgrokModule } from './modules/ngrok/ngrok.module';
+import { PromModule } from './modules/prom/prom.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { NgrokModule } from './modules/ngrok/ngrok.module';
     TranslateModule,
     TelegramModule,
     MicrotronModule,
+    PromModule,
     SyncModule,
     CrmModule,
     AdminModule,
