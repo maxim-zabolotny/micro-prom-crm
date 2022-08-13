@@ -46,6 +46,7 @@ export class SyncPromService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
+  // UTILITIES PART
   private mapEntityFields(
     mapRecord: Array<[string, string, (v: unknown) => string]>,
     mapDefaultRecord: Array<[string, string]>,
@@ -130,7 +131,7 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async syncAddedCategoriesToSheet(categories: Category[]) {
+  public async addAndSyncCategoriesWithSheet(categories: Category[]) {
     // ADD TO SHEET
     const addedRows = await this.addCategoriesToSheet(categories);
 
@@ -289,7 +290,7 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async syncAddedProductsToSheet(
+  public async addAndSyncProductsWithSheet(
     data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
   ) {
     const allProducts = _.flattenDeep(_.map(data, 'products'));
@@ -330,6 +331,7 @@ export class SyncPromService {
     };
   }
 
+  // MAIN PART
   public async loadAllNewCategoriesToSheet() {
     const result: ILoadCategoriesToSheetResult = {
       newCategoriesCount: 0,
@@ -356,7 +358,7 @@ export class SyncPromService {
 
     // ADD TO SHEET
     const { addedRows, updatedCategories } =
-      await this.syncAddedCategoriesToSheet(categories);
+      await this.addAndSyncCategoriesWithSheet(categories);
 
     // RESULT
     result.addedRowsCount = addedRows.length;
@@ -471,12 +473,13 @@ export class SyncPromService {
     });
 
     // ADD TO SHEET
-    const { addedRows, updatedProducts } = await this.syncAddedProductsToSheet([
-      {
-        products,
-        promGroupNumber: category.promId,
-      },
-    ]);
+    const { addedRows, updatedProducts } =
+      await this.addAndSyncProductsWithSheet([
+        {
+          products,
+          promGroupNumber: category.promId,
+        },
+      ]);
 
     // RESULT
     result.addedRowsCount = addedRows.length;
