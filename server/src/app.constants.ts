@@ -22,16 +22,16 @@ export namespace AppConstants {
 
       export namespace Category {
         export const FieldsMapping: TFieldsMapping = [
-          ['Номер_группы', 'promId', returnTheSame],
-          ['Название_группы', 'translate.name', returnTheSame],
-          ['Название_группы_укр', 'name', returnTheSame],
-          ['Идентификатор_группы', '_id', returnTheSame],
-          ['Номер_родителя', 'parentPromId', returnTheSame],
-          ['Идентификатор_родителя', 'parent', returnTheSame],
-          // ['HTML_заголовок_группы', 'translate.name', returnTheSame],
-          // ['HTML_заголовок_группы_укр', 'name', returnTheSame],
-          // ['HTML_ключевые_слова_группы', 'translate.name', returnTheSame],
-          // ['HTML_ключевые_слова_группы_укр', 'name', returnTheSame],
+          ['Номер_групи', 'promId', returnTheSame],
+          ['Назва_групи', 'translate.name', returnTheSame],
+          ['Назва_групи_укр', 'name', returnTheSame],
+          ['Ідентифікатор_групи', '_id', returnTheSame],
+          ['Номер_батьківської_групи', 'parentPromId', returnTheSame],
+          ['Ідентифікатор_батьківської_групи', 'parent', returnTheSame],
+          // ['HTML_заголовок_групи', 'translate.name', returnTheSame],
+          // ['HTML_заголовок_групи_укр', 'name', returnTheSame],
+          // ['HTML_ключові_слова_групи', 'translate.name', returnTheSame],
+          // ['HTML_ключові_слова_групи_укр', 'name', returnTheSame],
         ];
 
         export const FieldsMappingDefaults: TFieldsMappingDefaults = [];

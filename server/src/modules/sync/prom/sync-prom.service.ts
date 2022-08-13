@@ -143,7 +143,7 @@ export class SyncPromService {
     const updatedCategories = await Promise.all(
       _.map(addedRows, async (row) => {
         return this.crmCategoriesService.updateCategoryInDB(
-          new Types.ObjectId(row['Идентификатор_группы']),
+          new Types.ObjectId(row['Ідентифікатор_групи']),
           {
             sync: true,
             syncAt: new Date(),
@@ -176,8 +176,8 @@ export class SyncPromService {
     );
     this.logger.debug('Removed Categories from Google Sheet:', {
       categories: _.map(removedCategoriesFromSheet, (category) => ({
-        id: category['Идентификатор_группы'],
-        name: category['Название_группы'],
+        id: category['Ідентифікатор_групи'],
+        name: category['Назва_групи'],
       })),
       count: removedCategoriesFromSheet.length,
     });
@@ -396,7 +396,7 @@ export class SyncPromService {
 
     if (remove) {
       // SELECT
-      const idKey = 'Идентификатор_группы';
+      const idKey = 'Ідентифікатор_групи';
       const deletedCategories = await this.getDeletedCategoriesFromDB(idKey);
 
       // REMOVE
