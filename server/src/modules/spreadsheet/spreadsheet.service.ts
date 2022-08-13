@@ -460,6 +460,26 @@ export class SpreadsheetService implements OnModuleInit {
     await this.increaseRequestCountsAndWait();
   }
 
+  public async clearRows(
+    sheet: GoogleSpreadsheetWorksheet,
+    start: number,
+    end: number,
+  ) {
+    this.logger.debug('Clear rows:', {
+      start,
+      end,
+    });
+
+    // LIMITS
+    await this.checkRequestLimitsAndWait();
+
+    await sheet.clearRows({ start, end });
+    this.logger.debug('Rows cleared');
+
+    // LIMITS
+    await this.increaseRequestCountsAndWait();
+  }
+
   public setRequestLimits(count: number) {
     this.docLimits.requestLimitPerMinute = count;
   }
