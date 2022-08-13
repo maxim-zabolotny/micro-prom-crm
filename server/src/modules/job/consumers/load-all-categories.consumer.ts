@@ -26,13 +26,24 @@ export class LoadAllCategoriesConsumer {
     private readonly syncPromService: SyncPromService,
   ) {}
 
+  private async unionLogger(
+    job: Job,
+    message: string,
+    data: string | object = {},
+  ) {
+    this.logger.log(message, data);
+    await job.log(
+      `${message}: ${typeof data === 'object' ? JSON.stringify(data) : data}`,
+    );
+  }
+
   @Process()
-  async loadAllCategories() {
-    this.logger.log('Start loading categories to DB');
+  async loadAllCategories(job: Job<TLoadAllCategoriesProcessorData>) {
+    await this.unionLogger(job, 'Start loading categories to DB');
     const loadedCategories =
       await this.syncLocalService.loadAllCategoriesToDB();
 
-    this.logger.log('Start loading categories to Google Sheet');
+    await this.unionLogger(job, 'Start loading categories to Google Sheet');
     const { addedRowsCount, updatedCategories, newCategoriesCount, success } =
       await this.syncPromService.loadAllNewCategoriesToSheet();
 
