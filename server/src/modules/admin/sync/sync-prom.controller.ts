@@ -27,6 +27,13 @@ export class SyncPromController {
     return this.syncPromService.loadAllNewCategoriesToSheet();
   }
 
+  @Get('/reload-all-categories')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async reloadAllCategories() {
+    return this.syncPromService.reloadAllCategoriesToSheet();
+  }
+
   @Get('/sync-all-categories')
   @HttpCode(200)
   @Auth(UserRole.Admin)

@@ -428,7 +428,7 @@ export class SyncPromService {
     };
   }
 
-  // MAIN PART
+  // MAIN PART - CATEGORIES
   public async loadAllNewCategoriesToSheet() {
     const result: ILoadCategoriesToSheetResult = {
       newCategoriesCount: 0,
@@ -475,7 +475,24 @@ export class SyncPromService {
     };
   }
 
-  // TODO: with prom
+  public async reloadAllCategoriesToSheet() {
+    const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
+
+    this.logger.debug('Clear all rows in Categories Google Sheet');
+    await this.spreadsheetService.clearRows(
+      categoriesSheet,
+      2,
+      categoriesSheet.rowCount,
+    );
+
+    this.logger.debug('Update all Categories in DB');
+    await this.crmCategoriesService.updateAllCategoriesInDB({
+      syncAt: null,
+    });
+
+    return this.loadAllNewCategoriesToSheet();
+  }
+
   public async syncAllCategoriesWithSheet(add = true, remove = true) {
     if (!add && !remove) {
       throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
@@ -524,6 +541,7 @@ export class SyncPromService {
     return result;
   }
 
+  // MAIN PART - PRODUCTS
   public async loadAllNewProductsByCategoryToSheet(microtronId: string) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
