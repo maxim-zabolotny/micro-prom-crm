@@ -72,6 +72,9 @@ export class Product {
   @Prop({ type: Date })
   syncAt?: Date;
 
+  @Prop({ type: Boolean, required: true, default: false })
+  deleted: boolean;
+
   @Prop({ type: Number })
   promTableLine?: number;
 
