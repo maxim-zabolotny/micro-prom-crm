@@ -1,4 +1,10 @@
-import { Controller, HttpCode, Post, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  HttpCode,
+  Post,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
 import { JobBoardService } from '../../job/board/job-board.service';
 
@@ -17,5 +23,11 @@ export class JobBoardController {
   @HttpCode(201)
   addLoadAllCategoriesJob() {
     return this.jobBoardService.addLoadAllCategories();
+  }
+
+  @Post('/test-load-products-by-category')
+  @HttpCode(201)
+  addLoadProductsByCategoryJob(@Query('categoryId') categoryId: string) {
+    return this.jobBoardService.addLoadProductsByCategory(categoryId);
   }
 }
