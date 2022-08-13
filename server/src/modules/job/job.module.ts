@@ -7,6 +7,7 @@ import {
   audioProcessorName,
   LoadAllCategoriesConsumer,
   loadAllCategoriesName,
+  loadProductsByCategoryName,
 } from './consumers';
 import { JobBoardService } from './board/job-board.service';
 import { SyncModule } from '../sync/sync.module';
@@ -15,7 +16,11 @@ import { SyncModule } from '../sync/sync.module';
 /*controllers*/
 /*consumers*/
 
-const consumers = [AudioConsumer, LoadAllCategoriesConsumer];
+const consumers = [
+  AudioConsumer,
+  LoadAllCategoriesConsumer,
+  LoadAllCategoriesConsumer,
+];
 
 @Global()
 @Module({
@@ -38,6 +43,7 @@ const consumers = [AudioConsumer, LoadAllCategoriesConsumer];
     }),
     BullModule.registerQueue({ name: audioProcessorName }),
     BullModule.registerQueue({ name: loadAllCategoriesName }),
+    BullModule.registerQueue({ name: loadProductsByCategoryName }),
   ],
   providers: [...consumers, JobBoardService],
   exports: [BullModule, JobBoardService, ...consumers],
