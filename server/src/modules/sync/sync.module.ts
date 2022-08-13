@@ -8,10 +8,12 @@ import { SyncPromService } from './prom/sync-prom.service';
 import { SyncLocalService } from './local/sync-local.service';
 import { Category, CategorySchema } from '@schemas/category';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
+import { PromModule } from '../prom/prom.module';
 
 @Module({
   imports: [
     MicrotronModule,
+    PromModule,
     CrmModule,
     MongooseModule.forFeature([
       {
