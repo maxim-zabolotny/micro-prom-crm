@@ -61,7 +61,7 @@ export class JobBoardService {
     const job = await this.audioQueue.add();
     return {
       id: job.id,
-      name: job.name,
+      name: job.queue.name,
       data: job.data,
     };
   }
@@ -70,7 +70,7 @@ export class JobBoardService {
     const job = await this.loadAllCategoriesQueue.add();
     return {
       id: job.id,
-      name: job.name,
+      name: job.queue.name,
       data: job.data,
     };
   }
@@ -79,7 +79,7 @@ export class JobBoardService {
     const job = await this.loadProductsByCategoryQueue.add({ categoryId });
     return {
       id: job.id,
-      name: job.name,
+      name: job.queue.name,
       data: job.data,
     };
   }
