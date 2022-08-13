@@ -47,42 +47,42 @@ export namespace AppConstants {
           AVAILABLE_NUMBER_OF_PROPERTIES * SINGLE_PROPERTY_CELLS_SIZE;
 
         export const FieldsMapping: TFieldsMapping = [
-          ['Код_товара', 'promId', returnTheSame],
-          ['Название_позиции', 'translate.name', returnTheSame],
-          ['Название_позиции_укр', 'name', returnTheSame],
-          ['Поисковые_запросы', 'translate.name', returnTheSame],
-          ['Поисковые_запросы_укр', 'name', returnTheSame],
-          ['Описание', 'translate.description', returnTheSame],
-          ['Описание_укр', 'description', returnTheSame],
-          ['Цена', 'ourPrice', returnTheSame],
+          ['Код_товару', 'promId', returnTheSame],
+          ['Назва_позиції', 'translate.name', returnTheSame],
+          ['Назва_позиції_укр', 'name', returnTheSame],
+          ['Пошукові_запити', 'translate.name', returnTheSame],
+          ['Пошукові_запити_укр', 'name', returnTheSame],
+          ['Опис', 'translate.description', returnTheSame],
+          ['Опис_укр', 'description', returnTheSame],
+          ['Ціна', 'ourPrice', returnTheSame],
           [
-            'Ссылка_изображения',
+            'Посилання_зображення',
             'images',
             (images: string[]) => images.slice(0, 10).join(', '),
           ],
-          ['Наличие', 'available', (v: boolean) => (v ? '"+"' : '"-"')],
-          ['Количество', 'quantity', returnTheSame],
-          ['Производитель', 'brand', returnTheSame],
-          ['Номер_группы', 'promGroupNumber', returnTheSame],
-          ['Идентификатор_товара', '_id', returnTheSame],
+          ['Наявність', 'available', (v: boolean) => (v ? '"+"' : '"-"')],
+          ['Кількість', 'quantity', returnTheSame],
+          ['Виробник', 'brand', returnTheSame],
+          ['Номер_групи', 'promGroupNumber', returnTheSame],
+          ['Ідентифікатор_товару', '_id', returnTheSame],
           // ['HTML_заголовок', 'translate.name', returnTheSame],
           // ['HTML_заголовок_укр', 'name', returnTheSame],
-          // ['HTML_описание', 'translate.description', returnTheSame],
-          // ['HTML_описание_укр', 'description', returnTheSame],
-          // ['HTML_ключевые_слова', 'translate.name', returnTheSame],
-          // ['HTML_ключевые_слова_укр', 'name', returnTheSame],
+          // ['HTML_опис', 'translate.description', returnTheSame],
+          // ['HTML_опис_укр', 'description', returnTheSame],
+          // ['HTML_ключові_слова', 'translate.name', returnTheSame],
+          // ['HTML_ключові_слова_укр', 'name', returnTheSame],
         ];
 
         export const FieldsMappingDefaults: TFieldsMappingDefaults = [
-          ['Тип_товара', 'r'],
+          ['Тип_товару', 'r'],
           ['Валюта', 'UAH'],
-          ['Единица_измерения', 'шт'],
-          ['Минимальный_объем_заказа', '1'],
-          ['Цена от', '-'],
-          ['Где_находится_товар', 'Запоріжжя'], // 194007000 - Запоріжжя - Запорожье
+          ['Одиниця_виміру', 'шт'],
+          ['Мінімальний_обсяг_замовлення', '1'],
+          ['Ціна_від', '-'],
+          ['Де_знаходиться_товар', 'Запоріжжя'], // 194007000 - Запоріжжя - Запорожье
         ];
 
-        export enum SPECIAL_SPECIFICATION_KEYS {
+        export enum SpecialSpecificationKeys {
           GuaranteeTerm = 'Гарантийный срок (міс)',
           State = 'Состояние',
         }

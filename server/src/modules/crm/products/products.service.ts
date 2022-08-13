@@ -127,18 +127,18 @@ export class CrmProductsService {
     if (
       productData.warranty > 0 &&
       !parse.specifications[
-        ProductConstants.SPECIAL_SPECIFICATION_KEYS.GuaranteeTerm
+        ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
       ]
     ) {
       parse.specifications[
-        ProductConstants.SPECIAL_SPECIFICATION_KEYS.GuaranteeTerm
+        ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
       ] = `${productData.warranty}`;
     }
 
     if (
-      !parse.specifications[ProductConstants.SPECIAL_SPECIFICATION_KEYS.State]
+      !parse.specifications[ProductConstants.SpecialSpecificationKeys.State]
     ) {
-      parse.specifications[ProductConstants.SPECIAL_SPECIFICATION_KEYS.State] =
+      parse.specifications[ProductConstants.SpecialSpecificationKeys.State] =
         parse.new ? 'Новое' : 'Б/У';
     }
     // END SPEC PART

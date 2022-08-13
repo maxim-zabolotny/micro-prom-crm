@@ -247,7 +247,7 @@ export class SyncPromService {
       },
       async () => {
         _.forEach(addedRows, (row) => {
-          const promId = row['Код_товара'];
+          const promId = row['Код_товару'];
           const product = productsByPromIdMap.get(promId);
 
           const specifications = [...product.specifications.entries()];
@@ -310,7 +310,7 @@ export class SyncPromService {
     const updatedProducts = await Promise.all(
       _.map(addedRows, async (row) => {
         return this.crmProductsService.updateProductInDB(
-          productsByPromIdMap.get(row['Код_товара'])._id,
+          productsByPromIdMap.get(row['Код_товару'])._id,
           {
             sync: true,
             syncAt: new Date(),
