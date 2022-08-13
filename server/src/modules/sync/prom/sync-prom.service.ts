@@ -11,6 +11,8 @@ import { CrmCategoriesService } from '../../crm/categories/categories.service';
 import { GoogleSpreadsheetRow } from 'google-spreadsheet';
 import { CrmProductsService } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
+import { PromProductsService } from '../../prom/products/products.service';
+import { Product as PromProduct } from '@lib/prom';
 
 export interface ILoadCategoriesToSheetResult {
   newCategoriesCount: number;
@@ -32,6 +34,18 @@ export interface ILoadProductsToSheetResult {
   success: boolean;
 }
 
+export type TEditPromProduct = Required<
+  Pick<
+    PromProduct.IPostProductsEditByExternalIdBody,
+    'id' | 'presence' | 'price' | 'status' | 'quantity_in_stock'
+  >
+>;
+
+export type TUpdateProductInProm = Pick<
+  ProductDocument,
+  '_id' | 'ourPrice' | 'quantity' | 'available' | 'deleted'
+>;
+
 @Injectable()
 export class SyncPromService {
   private readonly logger = new Logger(this.constructor.name);
@@ -41,6 +55,7 @@ export class SyncPromService {
     private spreadsheetService: SpreadsheetService,
     private crmCategoriesService: CrmCategoriesService,
     private crmProductsService: CrmProductsService,
+    private promProductsService: PromProductsService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
@@ -327,6 +342,88 @@ export class SyncPromService {
 
     return {
       addedRows,
+      updatedProducts,
+    };
+  }
+
+  public async updateProductsInProm(products: Array<TUpdateProductInProm>) {
+    this.logger.debug('Build bulk data for Prom');
+    const bulkData: Array<TEditPromProduct> = _.map(products, (product) => {
+      return {
+        id: product._id.toString(),
+        price: product.ourPrice,
+        quantity_in_stock: product.quantity,
+        presence: product.available
+          ? PromProduct.ProductPresence.Available
+          : PromProduct.ProductPresence.NotAvailable,
+        status: product.deleted
+          ? PromProduct.ProductStatus.NotOnDisplay
+          : PromProduct.ProductStatus.OnDisplay,
+      };
+    });
+
+    this.logger.debug('Update Products in Prom:', {
+      count: bulkData.length,
+    });
+
+    const { processed_ids, errors } = await this.promProductsService.edit(
+      bulkData as PromProduct.IPostProductsEditByExternalIdBody[],
+    );
+
+    const processedIds = processed_ids;
+    const unProcessedIds = _.difference(
+      _.map(products, (product) => product._id.toString()),
+      processedIds,
+    );
+
+    this.logger.debug('Update Products in Prom result:', {
+      errors,
+      processedIds,
+      unProcessedIds,
+      count: processedIds.length,
+    });
+
+    return {
+      errors,
+      processedIds,
+      unProcessedIds,
+      products,
+    };
+  }
+
+  public async updateAndSyncProductsWithProm(
+    products: Array<TUpdateProductInProm>,
+  ) {
+    // UPDATE IN PROM
+    const { processedIds, unProcessedIds, errors } =
+      await this.updateProductsInProm(products);
+
+    // UPDATE IN DB
+    this.logger.debug('Update Products in DB:', {
+      ids: processedIds,
+      count: processedIds.length,
+    });
+
+    const updatedProducts = await Promise.all(
+      _.map(processedIds, async (productId) => {
+        return this.crmProductsService.updateProductInDB(
+          new Types.ObjectId(productId),
+          {
+            sync: true,
+            syncAt: new Date(),
+          },
+        );
+      }),
+    );
+    this.logger.debug('Updated Products in DB:', {
+      ids: _.map(updatedProducts, '_id'),
+      count: updatedProducts.length,
+    });
+
+    return {
+      processedIds,
+      unProcessedIds,
+      errors,
       updatedProducts,
     };
   }
