@@ -7,6 +7,7 @@ import {
   audioProcessorName,
   LoadAllCategoriesConsumer,
   loadAllCategoriesName,
+  LoadProductsByCategoryConsumer,
   loadProductsByCategoryName,
 } from './consumers';
 import { JobBoardService } from './board/job-board.service';
@@ -19,7 +20,7 @@ import { SyncModule } from '../sync/sync.module';
 const consumers = [
   AudioConsumer,
   LoadAllCategoriesConsumer,
-  LoadAllCategoriesConsumer,
+  LoadProductsByCategoryConsumer,
 ];
 
 @Global()
