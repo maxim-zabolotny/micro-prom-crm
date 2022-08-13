@@ -26,6 +26,10 @@ export class CrmCategoriesService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
+  public async getCountOfAllCategoriesInDB() {
+    return this.categoryModel.count().exec();
+  }
+
   public async getAllCategoriesFromDB() {
     return this.categoryModel.find().exec();
   }
@@ -133,6 +137,27 @@ export class CrmCategoriesService {
     });
 
     return category;
+  }
+
+  public async updateAllCategoriesInDB(data: Partial<Category>) {
+    this.logger.debug('Process update all Categories:', {
+      data,
+    });
+
+    const updateResult = await this.categoryModel
+      .updateMany(
+        {},
+        {
+          $set: data,
+        },
+      )
+      .exec();
+
+    this.logger.debug('Categories update result:', {
+      ...updateResult,
+    });
+
+    return updateResult;
   }
 
   public async updateCategoryInDB(
