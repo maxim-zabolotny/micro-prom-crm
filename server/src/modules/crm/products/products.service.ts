@@ -196,7 +196,7 @@ export class CrmProductsService {
     ]);
 
     if (data.quantity) {
-      const quantity = Math.min(data.quantity, 0);
+      const quantity = Math.max(data.quantity, 0);
 
       dataForUpdate.quantity = quantity;
       dataForUpdate.available = quantity > 0;
