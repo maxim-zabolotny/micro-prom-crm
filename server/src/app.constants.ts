@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import keywordExtractor from 'keyword-extractor';
+import * as keywordExtractor from 'keyword-extractor';
 
 export namespace AppConstants {
   export namespace Product {
@@ -9,8 +9,8 @@ export namespace AppConstants {
   export namespace Google {
     export namespace Sheet {
       export const URL =
-        'https://docs.google.com/spreadsheets/d/118REcDeqq0oABCp4AuAeHPAD5otXtk4HtKrOI5cvljI';
-      export const ID = '118REcDeqq0oABCp4AuAeHPAD5otXtk4HtKrOI5cvljI';
+        'https://docs.google.com/spreadsheets/d/1SzMijwhuMnJTjNoRqiFTHPXM9y7TdgkJCqMVsuATBY0';
+      export const ID = '1SzMijwhuMnJTjNoRqiFTHPXM9y7TdgkJCqMVsuATBY0';
     }
   }
 
@@ -39,7 +39,7 @@ export namespace AppConstants {
       }
 
       export namespace Product {
-        export const START_PROPERTIES_CELL_INDEX = 47;
+        export const START_PROPERTIES_CELL_INDEX = 46;
 
         export const AVAILABLE_NUMBER_OF_PROPERTIES = 50;
         export const SINGLE_PROPERTY_CELLS_SIZE = 3;
@@ -55,7 +55,7 @@ export namespace AppConstants {
             'Пошукові_запити',
             'translate.name',
             (v: string) =>
-              keywordExtractor
+              (keywordExtractor as any)
                 .extract(v, {
                   language: 'russian',
                   remove_digits: false,
@@ -64,7 +64,25 @@ export namespace AppConstants {
                   return_max_ngrams: false,
                   return_chained_words: false,
                 })
-                .filter((key) => key.length > 1)
+                .reduce((acc, key, index) => {
+                  if (key.length < 3) {
+                    acc[index] = [];
+
+                    const nextIndex = index + 1;
+                    const nextArr = acc[nextIndex];
+
+                    acc[nextIndex] = nextArr
+                      ? nextArr.unshift(key)
+                      : (acc[nextIndex] = [key]);
+                  } else {
+                    const currentArr = acc[index];
+                    currentArr ? currentArr.push(key) : (acc[index] = [key]);
+                  }
+
+                  return acc;
+                }, [])
+                .map((arr) => arr.join(' '))
+                .filter((key) => key.length > 2)
                 .join(','),
           ],
           ['Пошукові_запити_укр', 'name', returnTheSame],
