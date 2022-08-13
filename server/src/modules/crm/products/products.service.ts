@@ -7,6 +7,9 @@ import { DataGenerateHelper } from '@common/helpers';
 import { Product, ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
 import { Category, CategoryDocument } from '@schemas/category';
+import { AppConstants } from '../../../app.constants';
+
+import ProductConstants = AppConstants.Prom.Sheet.Product;
 
 export type TAddProduct = Omit<IProductFullInfo, 'categoryId'> & {
   category: CategoryDocument;
@@ -123,15 +126,20 @@ export class CrmProductsService {
     // SPEC PART
     if (
       productData.warranty > 0 &&
-      !parse.specifications['Гарантійний термін']
+      !parse.specifications[
+        ProductConstants.SPECIAL_SPECIFICATION_KEYS.GuaranteeTerm
+      ]
     ) {
       parse.specifications[
-        'Гарантійний термін'
-      ] = `${productData.warranty} міс`;
+        ProductConstants.SPECIAL_SPECIFICATION_KEYS.GuaranteeTerm
+      ] = `${productData.warranty}`;
     }
 
-    if (!parse.specifications['Стан']) {
-      parse.specifications['Стан'] = parse.new ? 'Нове' : 'Б/У';
+    if (
+      !parse.specifications[ProductConstants.SPECIAL_SPECIFICATION_KEYS.State]
+    ) {
+      parse.specifications[ProductConstants.SPECIAL_SPECIFICATION_KEYS.State] =
+        parse.new ? 'Новое' : 'Б/У';
     }
     // END SPEC PART
 
