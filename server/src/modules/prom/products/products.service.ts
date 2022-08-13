@@ -20,4 +20,13 @@ export class PromProductsService {
 
     return products;
   }
+
+  public async edit(
+    data: PromProduct.IPostProductsEditByExternalIdBody[],
+  ): Promise<PromProduct.TPostProductsEditByExternalIdResponse> {
+    this.logger.debug('Edit products by API');
+    const editeResult = await this.productAPI.editByExternalId(data);
+
+    return editeResult;
+  }
 }
