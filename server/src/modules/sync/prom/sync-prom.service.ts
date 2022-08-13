@@ -130,7 +130,7 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async syncCategoriesWithSheet(categories: Category[]) {
+  public async syncAddedCategoriesToSheet(categories: Category[]) {
     // ADD TO SHEET
     const addedRows = await this.addCategoriesToSheet(categories);
 
@@ -289,7 +289,7 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async syncProductsWithSheet(
+  public async syncAddedProductsToSheet(
     data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
   ) {
     const allProducts = _.flattenDeep(_.map(data, 'products'));
@@ -355,9 +355,8 @@ export class SyncPromService {
     });
 
     // ADD TO SHEET
-    const { addedRows, updatedCategories } = await this.syncCategoriesWithSheet(
-      categories,
-    );
+    const { addedRows, updatedCategories } =
+      await this.syncAddedCategoriesToSheet(categories);
 
     // RESULT
     result.addedRowsCount = addedRows.length;
@@ -472,7 +471,7 @@ export class SyncPromService {
     });
 
     // ADD TO SHEET
-    const { addedRows, updatedProducts } = await this.syncProductsWithSheet([
+    const { addedRows, updatedProducts } = await this.syncAddedProductsToSheet([
       {
         products,
         promGroupNumber: category.promId,
