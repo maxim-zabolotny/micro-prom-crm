@@ -145,7 +145,7 @@ export declare type TPostProductsEditResponse = {
     errors: Record<string, unknown>;
 };
 export declare type TPostProductsEditByExternalIdResponse = {
-    processed_ids: number[];
+    processed_ids: string[];
     errors: Record<string, unknown>;
 };
 export declare type TPostProductsImportUrlResponse = {
