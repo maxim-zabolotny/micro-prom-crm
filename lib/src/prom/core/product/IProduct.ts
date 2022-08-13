@@ -151,7 +151,7 @@ export interface IPostProductsEditBody {
 
 export interface IPostProductsEditByExternalIdBody extends Omit<IPostProductsEditBody, 'id'> {
   id: string;
-  quantity_in_stock: number;
+  quantity_in_stock?: number;
 }
 
 export interface IPostProductsImportUrlBody {
