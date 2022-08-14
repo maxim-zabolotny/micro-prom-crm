@@ -8,5 +8,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "google-auth-library": "^8.1.1",
+    "googleapis": "^105.0.0"
+  }
 }
