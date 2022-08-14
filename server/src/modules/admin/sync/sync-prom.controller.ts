@@ -1,9 +1,7 @@
 import {
   Controller,
-  DefaultValuePipe,
   Get,
   HttpCode,
-  ParseBoolPipe,
   Query,
   UseFilters,
   UseInterceptors,
@@ -32,16 +30,6 @@ export class SyncPromController {
   @Auth(UserRole.Admin)
   async reloadAllCategories() {
     return this.syncPromService.reloadAllCategoriesToSheet();
-  }
-
-  @Get('/sync-all-categories')
-  @HttpCode(200)
-  @Auth(UserRole.Admin)
-  syncAllCategories(
-    @Query('add', new DefaultValuePipe(true), ParseBoolPipe) add: boolean,
-    @Query('remove', new DefaultValuePipe(true), ParseBoolPipe) remove: boolean,
-  ) {
-    return this.syncPromService.syncAllCategoriesWithSheet(add, remove);
   }
 
   @Get('/load-all-products')
