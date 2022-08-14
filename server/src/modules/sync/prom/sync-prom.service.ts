@@ -573,5 +573,65 @@ export class SyncPromService {
     };
   }
 
-  public async loadAllNewProductsToSheet() {}
+  public async loadAllNewProductsToSheet() {
+    const result: ILoadProductsToSheetResult = {
+      newProductsCount: 0,
+      addedRowsCount: 0,
+      updatedProducts: [],
+      success: true,
+    };
+
+    const count = await this.crmProductsService.getCountOfNewProductsInDB();
+    this.logger.debug('New Products count in DB', { count });
+    if (count === 0) {
+      return result;
+    }
+
+    // RESULT
+    result.newProductsCount = count;
+
+    this.logger.debug('Load new Products from DB');
+
+    const products = await this.crmProductsService
+      .getModel()
+      .find({ syncAt: undefined })
+      .populate('category', '', this.crmCategoriesService.getModel())
+      .exec();
+    const groupedProductsByCategory = _.groupBy(
+      products,
+      (product) => product.category.promId,
+    );
+    this.logger.debug('Loaded new Products:', {
+      count: products.length,
+    });
+
+    // ADD TO SHEET
+    const { addedRows, updatedProducts } =
+      await this.addAndSyncProductsWithSheet(
+        _.map(
+          Object.entries(groupedProductsByCategory),
+          ([promGroupNumber, products]) => ({
+            products,
+            promGroupNumber: Number(promGroupNumber),
+          }),
+        ),
+      );
+
+    // RESULT
+    result.addedRowsCount = addedRows.length;
+    result.updatedProducts = updatedProducts;
+
+    const success = _.isEqual(
+      _.uniq([
+        result.newProductsCount,
+        result.addedRowsCount,
+        result.updatedProducts.length,
+      ]).length,
+      1,
+    );
+    return {
+      ...result,
+      success,
+    };
+  }
 }

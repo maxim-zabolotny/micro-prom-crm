@@ -645,5 +645,46 @@ export class SyncLocalService {
     return this.addProductsToDB({ category }, productsWithFullInfo);
   }
 
-  public async loadAllProductsToDB() {}
+  public async loadAllProductsToDB() {
+    this.logger.debug('Load All Categories from DB');
+
+    const categories = await this.crmCategoriesService.getAllCategoriesFromDB();
+    this.logger.debug('Loaded Categories from DB:', {
+      count: categories.length,
+    });
+
+    const productsWithFullInfoByCategories =
+      await this.microtronProductsService.getFullProductsInfo(
+        _.map(categories, 'microtronId'),
+        {
+          forceLoad: true,
+          forceParse: false,
+        },
+      );
+
+    const loadedProducts: ProductDocument[] = [];
+
+    for (const category of categories) {
+      const productsWithFullInfo =
+        productsWithFullInfoByCategories[category.microtronId];
+
+      this.logger.debug('Process Category:', {
+        id: category._id,
+        name: category.name,
+        products: productsWithFullInfo.length,
+      });
+
+      const addedProducts = await this.addProductsToDB(
+        { category },
+        productsWithFullInfo,
+      );
+      loadedProducts.push(...addedProducts);
+    }
+
+    this.logger.debug('Loaded Products to DB:', {
+      count: loadedProducts.length,
+    });
+
+    return loadedProducts;
+  }
 }
