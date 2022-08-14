@@ -46,7 +46,17 @@ export class MicrotronProductsService {
   };
 
   private readonly isValidProduct = _.conforms<Pick<IProductFull, 'url'>>({
-    url: (url: string) => !_.isEmpty(url),
+    url: (url: string) => {
+      const isEmptyUrl = _.isEmpty(url);
+      if (isEmptyUrl) return false;
+
+      const isInvalidUrl = url
+        .slice(0, url.lastIndexOf('/p'))
+        .endsWith('microtron.ua');
+      if (isInvalidUrl) return false;
+
+      return true;
+    },
   });
 
   private productsCache: TProductsCache = new Map();
