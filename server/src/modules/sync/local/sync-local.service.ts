@@ -22,6 +22,7 @@ import { MicrotronProductsService } from '../../microtron/products/products.serv
 import {
   CrmProductsService,
   TAddProduct,
+  TUpdateProduct,
 } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
@@ -40,6 +41,14 @@ export interface IChangeCategoriesActions {
     >
   >;
   categoriesToRemove: CategoryDocument[];
+}
+
+export interface IChangeProductsActions {
+  productsToAdd: IProductFullInfo[];
+  productsToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>>;
+  productsToRemove: Array<
+    TArray.Pair<ProductDocument, Pick<TUpdateProduct, 'deleted'>>
+  >;
 }
 
 export interface ISyncCategoriesResult {
@@ -69,6 +78,7 @@ export class SyncLocalService {
     private integrationModel: Model<IntegrationDocument>,
   ) {}
 
+  // UTILITIES PART
   public async getMicrotronIntegration() {
     this.logger.debug('Load Microtron Integration from DB');
 
@@ -264,6 +274,9 @@ export class SyncLocalService {
     return result;
   }
 
+  // TODO
+  public async makeCategoriesChangeActions() {}
+
   public async addProductsToDB(
     data: Pick<TAddProduct, 'category'>,
     products: IProductFullInfo[],
@@ -290,6 +303,189 @@ export class SyncLocalService {
     return addedProducts;
   }
 
+  public async getProductsToUpdateByCategories(
+    categories: Array<Pick<CategoryDocument, '_id' | 'course' | 'markup'>>,
+  ) {
+    this.logger.debug('Get Products for Update by Categories:', {
+      categories,
+    });
+    const productToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>> =
+      [];
+
+    for (const category of categories) {
+      this.logger.debug('Load Products by Category from DB');
+      const productsByCategory =
+        await this.crmProductsService.getProductsByCategoryFromDB(category._id);
+
+      this.logger.debug('Search Products to update');
+      productToUpdate.push(
+        ..._.chain(productsByCategory)
+          .filter((product) => {
+            const { ourPrice } = this.crmProductsService.calculateProductPrice(
+              product.originalPrice,
+              category,
+            );
+
+            return product.ourPrice !== ourPrice;
+          })
+          .map((product) => {
+            return [
+              product,
+              {
+                category: _.pick(category, ['course', 'markup']),
+                originalPrice: product.originalPrice,
+                sync: false,
+              },
+            ] as TArray.Pair<ProductDocument, TUpdateProduct>;
+          })
+          .value(),
+      );
+    }
+
+    this.logger.debug('Products to update result:', {
+      count: productToUpdate.length,
+    });
+
+    return productToUpdate;
+  }
+
+  public async getChangeProductsActions(
+    categories: Array<
+      Pick<CategoryDocument, '_id' | 'course' | 'markup' | 'microtronId'>
+    >,
+    add = true,
+    update = true,
+    remove = true,
+  ) {
+    const result: IChangeProductsActions = {
+      productsToAdd: [],
+      productsToUpdate: [],
+      productsToRemove: [],
+    };
+
+    const productsFromAPI =
+      await this.microtronProductsService.getFullProductsInfo(
+        _.map(categories, 'microtronId'),
+        {
+          forceLoad: true,
+          forceParse: false,
+        },
+      );
+
+    for (const category of categories) {
+      const productsFromAPIByCategory = productsFromAPI[category.microtronId];
+      const productsFromAPIByCategoryMap = new Map(
+        _.map(productsFromAPIByCategory, (product) => [product.id, product]),
+      );
+
+      this.logger.debug('Load Products by Category from DB');
+
+      const productsFromDB =
+        await this.crmProductsService.getProductsByCategoryFromDB(category._id);
+      const productsFromDBMap = new Map(
+        _.map(productsFromDB, (product) => [product.microtronId, product]),
+      );
+
+      const {
+        added: addedProductIds,
+        intersection: productIds,
+        removed: removedProductIds,
+      } = this.dataUtilsHelper.getDiff(
+        _.map(productsFromAPIByCategory, 'id'),
+        _.map(productsFromDB, 'microtronId'),
+      );
+
+      if (add) {
+        if (!_.isEmpty(addedProductIds)) {
+          result.productsToAdd = _.map(addedProductIds, (productId) =>
+            productsFromAPIByCategoryMap.get(productId),
+          );
+
+          this.logger.debug('Found Products to add to DB:', {
+            count: result.productsToAdd.length,
+          });
+        } else {
+          this.logger.debug('Not found added Products between DB and API');
+        }
+      }
+
+      if (update) {
+        if (!_.isEmpty(productIds)) {
+          this.logger.debug('Found intercepted Products between DB and API:', {
+            count: productIds.length,
+          });
+
+          result.productsToUpdate = _.compact(
+            _.map(productIds, (productId) => {
+              const productFromAPI =
+                productsFromAPIByCategoryMap.get(productId);
+              const productFromDB = productsFromDBMap.get(productId);
+
+              const price =
+                this.crmProductsService.getProductPrice(productFromAPI);
+              const quantity =
+                this.crmProductsService.getProductQuantity(productFromAPI);
+              const { ourPrice } =
+                this.crmProductsService.calculateProductPrice(price, category);
+
+              const isEqual = _.isEqual(
+                {
+                  price,
+                  quantity,
+                  ourPrice,
+                },
+                {
+                  price: productFromDB.originalPrice,
+                  quantity: productFromDB.quantity,
+                  ourPrice: productFromDB.ourPrice,
+                },
+              );
+              if (isEqual && !productFromDB.deleted) return null;
+
+              return [
+                productFromDB,
+                {
+                  category,
+                  originalPrice: price,
+                  quantity: quantity,
+                  deleted: false,
+                  sync: false,
+                },
+              ];
+            }),
+          );
+
+          this.logger.debug('Found Products to update in DB:', {
+            count: result.productsToUpdate.length,
+          });
+        } else {
+          this.logger.debug('Not found updated Products between DB and API');
+        }
+      }
+
+      if (remove) {
+        if (!_.isEmpty(removedProductIds)) {
+          result.productsToRemove = _.map(removedProductIds, (productId) => [
+            productsFromDBMap.get(productId),
+            {
+              sync: false,
+              deleted: true,
+            },
+          ]);
+
+          this.logger.debug('Found Products to make as deleted in DB:', {
+            count: result.productsToRemove.length,
+          });
+        } else {
+          this.logger.debug('Not found deleted Products between DB and API');
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // MAIN PART - CATEGORIES
   public async loadAllCategoriesToDB() {
     const microtronIntegration = await this.getMicrotronIntegration();
     const course = await this.microtronCoursesService.getCoursesByAPI(false);
@@ -357,6 +553,7 @@ export class SyncLocalService {
     return result;
   }
 
+  // MAIN PART - PRODUCTS
   public async loadAllProductsByCategoryToDB(microtronId: string) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
@@ -375,7 +572,7 @@ export class SyncLocalService {
 
     const productsWithFullInfoByCategories =
       await this.microtronProductsService.getFullProductsInfo([microtronId], {
-        forceLoad: false,
+        forceLoad: true,
         forceParse: false,
       });
     const productsWithFullInfo = productsWithFullInfoByCategories[microtronId];
