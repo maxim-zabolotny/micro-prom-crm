@@ -14,6 +14,8 @@ import { ProductDocument } from '@schemas/product';
 import { PromProductsService } from '../../prom/products/products.service';
 import { Product as PromProduct } from '@lib/prom';
 
+import SPEC_CELLS_VIEW_TYPE = AppConstants.Google.Sheet.SPEC_CELLS_VIEW_TYPE;
+
 export interface ILoadCategoriesToSheetResult {
   newCategoriesCount: number;
   addedRowsCount: number;
@@ -204,6 +206,10 @@ export class SyncPromService {
   public async addProductsToSheet(
     data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
   ) {
+    await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
+      SPEC_CELLS_VIEW_TYPE.Increment,
+    );
+
     const {
       NUMBER_OF_CELLS_FOR_PROPERTIES,
       START_PROPERTIES_CELL_INDEX,
@@ -252,11 +258,14 @@ export class SyncPromService {
     });
 
     // TODO: check max length of specifications
+
+    const firstAddedRowIndex =
+      _.minBy(addedRows, (row) => row.rowIndex).rowIndex - 1;
     await this.spreadsheetService.updateCells(
       productsSheet,
       {
-        startRowIndex: 1,
-        endRowIndex: addedRows.length + 1,
+        startRowIndex: firstAddedRowIndex,
+        endRowIndex: firstAddedRowIndex + addedRows.length,
         startColumnIndex: START_PROPERTIES_CELL_INDEX,
         endColumnIndex:
           START_PROPERTIES_CELL_INDEX + NUMBER_OF_CELLS_FOR_PROPERTIES + 1,
@@ -301,6 +310,10 @@ export class SyncPromService {
     this.logger.debug('Added Products specifications to Google Sheet cells:', {
       productsCount: addedRows.length,
     });
+
+    await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
+      SPEC_CELLS_VIEW_TYPE.Default,
+    );
 
     return addedRows;
   }
