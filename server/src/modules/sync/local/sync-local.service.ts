@@ -274,8 +274,50 @@ export class SyncLocalService {
     return result;
   }
 
-  // TODO
-  public async makeCategoriesChangeActions() {}
+  public async makeCategoriesChangeActions(
+    data: Partial<IChangeCategoriesActions>,
+  ) {
+    if (_.every(Object.values(data), (ids) => _.isEmpty(ids))) {
+      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
+    }
+
+    this.logger.debug('Sync Categories changes with DB:', {
+      add: data.categoriesToAdd.length,
+      update: data.categoriesToUpdate.length,
+      remove: data.categoriesToRemove.length,
+    });
+
+    const result: ISyncCategoriesResult = {
+      added: [],
+      updated: [],
+      removed: [],
+    };
+
+    const { categoriesToAdd, categoriesToUpdate, categoriesToRemove } = data;
+
+    if (!_.isEmpty(categoriesToAdd)) {
+      const microtronIntegration = await this.getMicrotronIntegration();
+      const course = await this.microtronCoursesService.getCoursesByAPI(false);
+
+      result.added = await this.addCategoriesToDB(
+        {
+          course: course.bank,
+          integrationId: microtronIntegration._id,
+        },
+        categoriesToAdd,
+      );
+    }
+
+    if (!_.isEmpty(categoriesToUpdate)) {
+      result.updated = await this.updateCategoriesInDB(categoriesToUpdate);
+    }
+
+    if (!_.isEmpty(categoriesToRemove)) {
+      result.removed = await this.deleteCategoriesFromDB(categoriesToRemove);
+    }
+
+    return result;
+  }
 
   public async addProductsToDB(
     data: Pick<TAddProduct, 'category'>,
@@ -500,57 +542,6 @@ export class SyncLocalService {
       },
       categories,
     );
-  }
-
-  public async syncAllCategoriesWithConstant(
-    add = true,
-    update = true,
-    remove = true,
-  ) {
-    if (!add && !update && !remove) {
-      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
-    }
-
-    this.logger.debug(
-      'Sync Local Categories in DB with Categories in Constant actions:',
-      {
-        add,
-        update,
-        remove,
-      },
-    );
-
-    const result: ISyncCategoriesResult = {
-      added: [],
-      updated: [],
-      removed: [],
-    };
-
-    const { categoriesToAdd, categoriesToUpdate, categoriesToRemove } =
-      await this.getChangeCategoriesActions(add, update, remove);
-
-    if (!_.isEmpty(categoriesToAdd)) {
-      const microtronIntegration = await this.getMicrotronIntegration();
-      const course = await this.microtronCoursesService.getCoursesByAPI(false);
-
-      result.added = await this.addCategoriesToDB(
-        {
-          course: course.bank,
-          integrationId: microtronIntegration._id,
-        },
-        categoriesToAdd,
-      );
-    }
-
-    if (!_.isEmpty(categoriesToUpdate)) {
-      result.updated = await this.updateCategoriesInDB(categoriesToUpdate);
-    }
-
-    if (!_.isEmpty(categoriesToRemove)) {
-      result.removed = await this.deleteCategoriesFromDB(categoriesToRemove);
-    }
-
-    return result;
   }
 
   // MAIN PART - PRODUCTS
