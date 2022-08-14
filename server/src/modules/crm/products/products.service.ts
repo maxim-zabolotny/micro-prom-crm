@@ -12,7 +12,7 @@ import { AppConstants } from '../../../app.constants';
 import ProductConstants = AppConstants.Prom.Sheet.Product;
 
 export type TAddProduct = Omit<IProductFullInfo, 'categoryId'> & {
-  category: CategoryDocument;
+  category: Pick<CategoryDocument, '_id' | 'microtronId' | 'course' | 'markup'>;
 };
 
 export type TUpdateProduct = Partial<
