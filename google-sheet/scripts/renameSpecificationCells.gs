@@ -1,3 +1,4 @@
+// CONSTANTS
 const VIEW_TYPE = {
   INCREMENT: 'increment',
   DEFAULT: 'default'
@@ -9,10 +10,46 @@ const CELL_NAMES = [
   'Значення_Характеристики'
 ];
 
-const RANGE = 'AU1:GO1';
+const RANGE = 'AU1:GN1';
 
-// const RANGE = 'A1:B1'
+// REQUEST
+function doGet(request) {
+  const viewType = request.parameter.q;
 
+  if (!Object.values(VIEW_TYPE)
+    .includes(viewType)) {
+    const response = {
+      result: 'error',
+      message: 'Invalid view type',
+      viewType
+    };
+
+    return ContentService
+      .createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    renameSpecificationCells(viewType);
+
+    const response = {
+      result: 'OK',
+      viewType
+    };
+    return ContentService
+      .createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        result: 'error',
+        error: e
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// UTILS
 function renameSpecificationCells(CURRENT_VIEW_TYPE) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet()
     .getSheetByName('Export Products Sheet');
@@ -48,8 +85,3 @@ function renameSpecificationCellsToDefault() {
 function renameSpecificationCellsToIncrement() {
   renameSpecificationCells(VIEW_TYPE.INCREMENT);
 }
-
-
-
-
-
