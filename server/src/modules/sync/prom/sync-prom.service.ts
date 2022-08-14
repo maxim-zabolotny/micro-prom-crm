@@ -23,12 +23,6 @@ export interface ILoadCategoriesToSheetResult {
   success: boolean;
 }
 
-export interface ISyncCategoriesResult {
-  addedRowsCount: number;
-  removedRowsCount: number;
-  updatedCategories: CategoryDocument[];
-}
-
 export interface ILoadProductsToSheetResult {
   newProductsCount: number;
   addedRowsCount: number;
@@ -86,7 +80,7 @@ export class SyncPromService {
     return Object.fromEntries([...entityFields, ...entityDefaultFields]);
   }
 
-  public async getDeletedCategoriesFromDB(idKey: string) {
+  public async getDeletedCategoriesFromDB(idKey = 'Ідентифікатор_групи') {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
     this.logger.debug('Load Category ids from Google Sheet');
@@ -504,54 +498,6 @@ export class SyncPromService {
     });
 
     return this.loadAllNewCategoriesToSheet();
-  }
-
-  public async syncAllCategoriesWithSheet(add = true, remove = true) {
-    if (!add && !remove) {
-      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
-    }
-
-    this.logger.debug('Sync Prom actions:', {
-      add,
-      remove,
-    });
-
-    const result: ISyncCategoriesResult = {
-      addedRowsCount: 0,
-      removedRowsCount: 0,
-      updatedCategories: [],
-    };
-
-    if (remove) {
-      // SELECT
-      const idKey = 'Ідентифікатор_групи';
-      const deletedCategories = await this.getDeletedCategoriesFromDB(idKey);
-
-      // REMOVE
-      if (!_.isEmpty(deletedCategories)) {
-        const removedCategoriesFromSheet = await this.deleteCategoriesFromSheet(
-          deletedCategories,
-        );
-
-        // RESULT
-        result.removedRowsCount = removedCategoriesFromSheet.length;
-      } else {
-        this.logger.debug(
-          'Not found deleted Categories between DB and Google Sheet',
-        );
-      }
-    }
-
-    if (add) {
-      const { addedRowsCount, updatedCategories } =
-        await this.loadAllNewCategoriesToSheet();
-
-      // RESULT
-      result.addedRowsCount = addedRowsCount;
-      result.updatedCategories = updatedCategories;
-    }
-
-    return result;
   }
 
   // MAIN PART - PRODUCTS
