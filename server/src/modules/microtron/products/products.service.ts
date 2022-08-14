@@ -726,6 +726,12 @@ export class MicrotronProductsService {
       forceParse,
     });
 
+    this.logger.debug('Load parse products cache');
+    this.loadProductsParseCacheFromFile(this.productsParseCacheFilePath);
+
+    this.logger.debug('Remove empty parse results');
+    this.removeEmptyProductsParseResults();
+
     // load children categories too
     const productsByCategories = await this.getProductsByAPI(
       categoryIds,
@@ -816,6 +822,10 @@ export class MicrotronProductsService {
         0,
       ),
     });
+
+    this.logger.debug('Save cache');
+    await this.saveProductsCache(this.productsCacheFilePath);
+    await this.saveProductsParseCache(this.productsParseCacheFilePath);
 
     return productsWithFullInfo;
   }
