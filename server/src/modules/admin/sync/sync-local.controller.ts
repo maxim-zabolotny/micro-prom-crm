@@ -1,9 +1,7 @@
 import {
   Controller,
-  DefaultValuePipe,
   Get,
   HttpCode,
-  ParseBoolPipe,
   Query,
   UseFilters,
   UseInterceptors,
@@ -25,21 +23,6 @@ export class SyncLocalController {
   @Auth(UserRole.Admin)
   async loadAllCategories() {
     return this.syncLocalService.loadAllCategoriesToDB();
-  }
-
-  @Get('/sync-all-categories')
-  @HttpCode(200)
-  @Auth(UserRole.Admin)
-  syncAllCategories(
-    @Query('add', new DefaultValuePipe(true), ParseBoolPipe) add: boolean,
-    @Query('update', new DefaultValuePipe(true), ParseBoolPipe) update: boolean,
-    @Query('remove', new DefaultValuePipe(true), ParseBoolPipe) remove: boolean,
-  ) {
-    return this.syncLocalService.syncAllCategoriesWithConstant(
-      add,
-      update,
-      remove,
-    );
   }
 
   @Get('/load-all-products')
