@@ -1,4 +1,5 @@
 /*external modules*/
+import axios, { Axios } from 'axios';
 import * as _ from 'lodash';
 import {
   GoogleSpreadsheet,
@@ -23,6 +24,8 @@ import { TimeHelper } from '@common/helpers';
 export class SpreadsheetService implements OnModuleInit {
   private readonly logger = new Logger(this.constructor.name);
 
+  private readonly importProductsAppAPI: Axios;
+
   private doc: GoogleSpreadsheet;
   private readonly docCredentials: ServiceAccountCredentials;
   private readonly docLimits = {
@@ -42,6 +45,8 @@ export class SpreadsheetService implements OnModuleInit {
         .get('google.privateKey')
         .replaceAll('\\n', '\n'),
     };
+
+    this.importProductsAppAPI = axios.create();
   }
 
   async onModuleInit() {
@@ -478,6 +483,30 @@ export class SpreadsheetService implements OnModuleInit {
 
     // LIMITS
     await this.increaseRequestCountsAndWait();
+  }
+
+  public async changeSpecCellsViewTypeInSheet(
+    viewType: AppConstants.Google.Sheet.SPEC_CELLS_VIEW_TYPE,
+  ) {
+    this.logger.debug('Exec API request to Google Sheet App:', { viewType });
+
+    const { data } = await this.importProductsAppAPI.get(
+      AppConstants.Google.Sheet.EXEC_URL,
+      {
+        params: {
+          q: viewType,
+        },
+      },
+    );
+
+    this.logger.debug('Result of API exec request to Google Sheet App:', {
+      data,
+    });
+
+    if (data.result !== 'OK') {
+      this.logger.error('API response from Google Sheet App with error:', data);
+      throw new HttpException(data, HttpStatus.BAD_REQUEST);
+    }
   }
 
   public setRequestLimits(count: number) {
