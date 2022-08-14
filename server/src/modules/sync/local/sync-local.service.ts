@@ -43,18 +43,22 @@ export interface IChangeCategoriesActions {
   categoriesToRemove: CategoryDocument[];
 }
 
-export interface IChangeProductsActions {
-  productsToAdd: IProductFullInfo[];
-  productsToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>>;
-  productsToRemove: Array<
-    TArray.Pair<ProductDocument, Pick<TUpdateProduct, 'deleted'>>
-  >;
-}
-
 export interface ISyncCategoriesResult {
   added: CategoryDocument[];
   updated: CategoryDocument[];
   removed: CategoryDocument[];
+}
+
+export interface IChangeProductsActions {
+  productsToAdd: Array<
+    TArray.Pair<Pick<TAddProduct, 'category'>, IProductFullInfo[]>
+  >;
+  productsToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>>;
+}
+
+export interface ISyncProductsResult {
+  added: ProductDocument[];
+  updated: ProductDocument[];
 }
 
 @Injectable()
@@ -345,6 +349,31 @@ export class SyncLocalService {
     return addedProducts;
   }
 
+  public async updateProductsInDB(
+    productsWithData: IChangeProductsActions['productsToUpdate'],
+  ) {
+    this.logger.debug('Update Products in DB:', {
+      ids: _.map(productsWithData, (productData) => productData[0]._id),
+      count: productsWithData.length,
+    });
+
+    const updatedProducts: ProductDocument[] = [];
+    for (const [product, data] of productsWithData) {
+      const updatedProduct = await this.crmProductsService.updateProductInDB(
+        product._id,
+        data,
+      );
+      updatedProducts.push(updatedProduct);
+    }
+
+    this.logger.debug('Updated Products in DB:', {
+      ids: _.map(updatedProducts, '_id'),
+      count: updatedProducts.length,
+    });
+
+    return updatedProducts;
+  }
+
   public async getProductsToUpdateByCategories(
     categories: Array<Pick<CategoryDocument, '_id' | 'course' | 'markup'>>,
   ) {
@@ -402,7 +431,6 @@ export class SyncLocalService {
     const result: IChangeProductsActions = {
       productsToAdd: [],
       productsToUpdate: [],
-      productsToRemove: [],
     };
 
     const productsFromAPI =
@@ -439,13 +467,15 @@ export class SyncLocalService {
 
       if (add) {
         if (!_.isEmpty(addedProductIds)) {
-          result.productsToAdd = _.map(addedProductIds, (productId) =>
+          const productsToAdd = _.map(addedProductIds, (productId) =>
             productsFromAPIByCategoryMap.get(productId),
           );
 
           this.logger.debug('Found Products to add to DB:', {
-            count: result.productsToAdd.length,
+            count: productsToAdd.length,
           });
+
+          result.productsToAdd.push([{ category }, productsToAdd]);
         } else {
           this.logger.debug('Not found added Products between DB and API');
         }
@@ -457,7 +487,7 @@ export class SyncLocalService {
             count: productIds.length,
           });
 
-          result.productsToUpdate = _.compact(
+          const productsToUpdate = _.compact(
             _.map(productIds, (productId) => {
               const productFromAPI =
                 productsFromAPIByCategoryMap.get(productId);
@@ -493,13 +523,15 @@ export class SyncLocalService {
                   deleted: false,
                   sync: false,
                 },
-              ];
+              ] as TArray.Pair<ProductDocument, TUpdateProduct>;
             }),
           );
 
           this.logger.debug('Found Products to update in DB:', {
-            count: result.productsToUpdate.length,
+            count: productsToUpdate.length,
           });
+
+          result.productsToUpdate.push(...productsToUpdate);
         } else {
           this.logger.debug('Not found updated Products between DB and API');
         }
@@ -507,21 +539,63 @@ export class SyncLocalService {
 
       if (remove) {
         if (!_.isEmpty(removedProductIds)) {
-          result.productsToRemove = _.map(removedProductIds, (productId) => [
-            productsFromDBMap.get(productId),
-            {
-              sync: false,
-              deleted: true,
-            },
-          ]);
+          const productsToMarkDeleted = _.map(
+            removedProductIds,
+            (productId) =>
+              [
+                productsFromDBMap.get(productId),
+                {
+                  sync: false,
+                  deleted: true,
+                },
+              ] as TArray.Pair<ProductDocument, TUpdateProduct>,
+          );
 
           this.logger.debug('Found Products to make as deleted in DB:', {
-            count: result.productsToRemove.length,
+            count: productsToMarkDeleted.length,
           });
+
+          result.productsToUpdate.push(...productsToMarkDeleted);
         } else {
           this.logger.debug('Not found deleted Products between DB and API');
         }
       }
+    }
+
+    return result;
+  }
+
+  public async makeProductsChangeActions(
+    data: Partial<IChangeProductsActions>,
+  ) {
+    if (_.every(Object.values(data), (ids) => _.isEmpty(ids))) {
+      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
+    }
+
+    this.logger.debug('Sync Products changes with DB:', {
+      add: data.productsToAdd.length,
+      update: data.productsToUpdate.length,
+    });
+
+    const result: ISyncProductsResult = {
+      added: [],
+      updated: [],
+    };
+
+    const { productsToAdd, productsToUpdate } = data;
+
+    if (!_.isEmpty(productsToAdd)) {
+      for (const [{ category }, productsWithFullInfo] of productsToAdd) {
+        const addedProducts = await this.addProductsToDB(
+          { category },
+          productsWithFullInfo,
+        );
+        result.added.push(...addedProducts);
+      }
+    }
+
+    if (!_.isEmpty(productsToUpdate)) {
+      result.updated = await this.updateProductsInDB(productsToUpdate);
     }
 
     return result;
