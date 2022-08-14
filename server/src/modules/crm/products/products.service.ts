@@ -18,7 +18,12 @@ export type TAddProduct = Omit<IProductFullInfo, 'categoryId'> & {
 export type TUpdateProduct = Partial<
   Pick<
     Product,
-    'originalPrice' | 'quantity' | 'promTableLine' | 'sync' | 'syncAt'
+    | 'originalPrice'
+    | 'quantity'
+    | 'promTableLine'
+    | 'sync'
+    | 'syncAt'
+    | 'deleted'
   > & {
     category: Pick<Category, 'course' | 'markup'>;
   }
@@ -33,6 +38,10 @@ export class CrmProductsService {
     private dataGenerateHelper: DataGenerateHelper,
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
+
+  public getModel() {
+    return this.productModel;
+  }
 
   public getProductPrice(product: Pick<IProductFullInfo, 'price' | 'price_s'>) {
     return _.isNumber(product.price) ? product.price : product.price_s;
@@ -56,7 +65,7 @@ export class CrmProductsService {
 
     return {
       rawPrice: Number(rawPrice.toFixed(3)),
-      ourPrice: Number(ourPrice.toFixed(3)),
+      ourPrice: Math.round(Number(ourPrice.toFixed(3))),
     };
   }
 
@@ -115,7 +124,7 @@ export class CrmProductsService {
     const price = this.getProductPrice(productData);
     const quantity = this.getProductQuantity(productData);
 
-    const available = quantity > 0 ? parse.available : false;
+    const available = quantity > 0;
 
     const { rawPrice, ourPrice } = this.calculateProductPrice(price, category);
     const siteMarkup = this.calculateSiteProductMarkup(
@@ -193,9 +202,10 @@ export class CrmProductsService {
       'promTableLine',
       'sync',
       'syncAt',
+      'deleted',
     ]);
 
-    if (data.quantity) {
+    if ('quantity' in data) {
       const quantity = Math.max(data.quantity, 0);
 
       dataForUpdate.quantity = quantity;
@@ -207,7 +217,7 @@ export class CrmProductsService {
       });
     }
 
-    if (data.originalPrice || data.category) {
+    if ('originalPrice' in data || data.category) {
       if (!data.category) {
         throw new HttpException('Category is required', HttpStatus.BAD_REQUEST);
       }

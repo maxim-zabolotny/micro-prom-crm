@@ -26,6 +26,10 @@ export class CrmCategoriesService {
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
+  public getModel() {
+    return this.categoryModel;
+  }
+
   public async getCountOfAllCategoriesInDB() {
     return this.categoryModel.count().exec();
   }
