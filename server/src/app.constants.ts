@@ -10,7 +10,16 @@ export namespace AppConstants {
     export namespace Sheet {
       export const URL =
         'https://docs.google.com/spreadsheets/d/1SzMijwhuMnJTjNoRqiFTHPXM9y7TdgkJCqMVsuATBY0';
+
       export const ID = '1SzMijwhuMnJTjNoRqiFTHPXM9y7TdgkJCqMVsuATBY0';
+
+      export const EXEC_URL =
+        'https://script.google.com/macros/s/AKfycbwgq7LKfhJgfUYGDhyeco5mRLB7xduWkIOrO-nB9KSTp8ycmeNfB9wEU6acWrPw4eyZ0Q/exec';
+
+      export enum SPEC_CELLS_VIEW_TYPE {
+        Increment = 'increment',
+        Default = 'default',
+      }
     }
   }
 
