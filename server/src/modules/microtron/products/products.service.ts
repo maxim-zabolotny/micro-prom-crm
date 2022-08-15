@@ -59,6 +59,16 @@ export class MicrotronProductsService {
     },
   });
 
+  private readonly isValidProductFullInfo = _.conforms<
+    Partial<IProductFullInfo>
+  >({
+    parse: (v: Partial<IProductFullInfo['parse']>) => {
+      return _.conformsTo(v, {
+        description: (v: string) => v.length > 0,
+      });
+    },
+  });
+
   private productsCache: TProductsCache = new Map();
   private productsParseCache: TProductsParseCache = new ProductsParseMap();
 
@@ -816,11 +826,16 @@ export class MicrotronProductsService {
         }),
       );
 
-      productsWithFullInfo[categoryId] = products;
+      this.logger.debug('Validate products with full info');
+      productsWithFullInfo[categoryId] = _.filter(
+        products,
+        this.isValidProductFullInfo,
+      ) as IProductFullInfo[];
 
       this.logger.debug('Loaded full info Products by Category:', {
         categoryId,
-        count: products.length,
+        allCount: products.length,
+        validCount: productsWithFullInfo[categoryId].length,
       });
     }
 
