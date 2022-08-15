@@ -775,7 +775,10 @@ export class MicrotronProductsService {
     );
     const productsEntriesByCategories = Object.entries(productsByCategories);
 
+    let invalidParsedProductsCount = 0;
+    let invalidProductsWithFullInfoCount = 0;
     const productsWithFullInfo: Record<string, IProductFullInfo[]> = {};
+
     for (const [
       categoryId,
       productsByCategory,
@@ -817,6 +820,10 @@ export class MicrotronProductsService {
         compactCount: compactParsedProductsMap.size,
       });
 
+      // STAT
+      invalidParsedProductsCount +=
+        Object.keys(parsedProducts).length - compactParsedProductsMap.size;
+
       const products: IProductFullInfo[] = _.compact(
         _.map(productsByCategory, (product) => {
           const uaParse = compactParsedProductsMap.get(product.url);
@@ -853,9 +860,15 @@ export class MicrotronProductsService {
         allCount: products.length,
         validCount: productsWithFullInfo[categoryId].length,
       });
+
+      // STAT
+      invalidProductsWithFullInfoCount +=
+        products.length - productsWithFullInfo[categoryId].length;
     }
 
     this.logger.debug('Loaded Full Products info:', {
+      invalidParsedProductsCount,
+      invalidProductsWithFullInfoCount,
       categoriesCount: productsWithFullInfo.length,
       productsCount: _.reduce(
         Object.keys(productsWithFullInfo),
