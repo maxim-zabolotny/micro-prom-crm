@@ -489,6 +489,22 @@ export class MicrotronProductsService {
     return this.getProductsByAPI(categoryIds, force);
   }
 
+  public async getAllProductsFullInfoBySavedCategories(
+    forceLoad: boolean,
+    forceParse: boolean,
+  ) {
+    const categories = (await this.microtronCategoriesService.getSaved(
+      false,
+    )) as ICategoryInConstant[];
+
+    const categoryIds = _.map(categories, 'id');
+    this.logger.debug('Count of saved categories in DB:', {
+      count: categoryIds.length,
+    });
+
+    return this.getFullProductsInfo(categoryIds, { forceLoad, forceParse });
+  }
+
   public getAllCachedProducts(): TLoadProductsResult {
     const cachedIds = [...this.productsCache.keys()];
     return Object.fromEntries(
