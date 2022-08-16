@@ -7,6 +7,8 @@ import {
   audioProcessorName,
   LoadAllCategoriesConsumer,
   loadAllCategoriesName,
+  LoadAllProductsConsumer,
+  loadAllProductsName,
   LoadProductsByCategoryConsumer,
   loadProductsByCategoryName,
 } from './consumers';
@@ -21,6 +23,7 @@ const consumers = [
   AudioConsumer,
   LoadAllCategoriesConsumer,
   LoadProductsByCategoryConsumer,
+  LoadAllProductsConsumer,
 ];
 
 @Global()
@@ -42,9 +45,18 @@ const consumers = [
       },
       inject: [ConfigService],
     }),
-    BullModule.registerQueue({ name: audioProcessorName }),
-    BullModule.registerQueue({ name: loadAllCategoriesName }),
-    BullModule.registerQueue({ name: loadProductsByCategoryName }),
+    BullModule.registerQueue({
+      name: audioProcessorName,
+    }),
+    BullModule.registerQueue({
+      name: loadAllCategoriesName,
+    }),
+    BullModule.registerQueue({
+      name: loadProductsByCategoryName,
+    }),
+    BullModule.registerQueue({
+      name: loadAllProductsName,
+    }),
   ],
   providers: [...consumers, JobBoardService],
   exports: [BullModule, JobBoardService, ...consumers],
