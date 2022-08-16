@@ -1,6 +1,7 @@
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
 import { Category } from '@schemas/category';
+import { Types as MicrotronTypes } from '@lib/microtron';
 
 export type ProductDocument = Product & Document;
 
@@ -38,6 +39,9 @@ export class Product {
 
   @Prop({ type: Number, required: true })
   siteMarkup: number;
+
+  @Prop({ type: String, required: true })
+  originalPriceCurrency: MicrotronTypes.Currency;
 
   @Prop({ type: Number, required: true })
   originalPrice: number;
