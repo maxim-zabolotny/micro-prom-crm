@@ -7,9 +7,11 @@ import { BullAdapter } from '@bull-board/api/bullAdapter';
 import {
   audioProcessorName,
   loadAllCategoriesName,
+  loadAllProductsName,
   loadProductsByCategoryName,
   TAudioProcessorQueue,
   TLoadAllCategoriesProcessorQueue,
+  TLoadAllProductsProcessorQueue,
   TLoadProductsByCategoryProcessorQueue,
 } from '../consumers';
 
@@ -29,6 +31,8 @@ export class JobBoardService {
     private loadAllCategoriesQueue: TLoadAllCategoriesProcessorQueue,
     @InjectQueue(loadProductsByCategoryName)
     private loadProductsByCategoryQueue: TLoadProductsByCategoryProcessorQueue,
+    @InjectQueue(loadAllProductsName)
+    private loadAllProductsQueue: TLoadAllProductsProcessorQueue,
   ) {
     this.serverAdapter.setBasePath(this.basePath);
     this.serverAdapter.setErrorHandler((err) => {
@@ -44,6 +48,7 @@ export class JobBoardService {
         new BullAdapter(this.audioQueue),
         new BullAdapter(this.loadAllCategoriesQueue),
         new BullAdapter(this.loadProductsByCategoryQueue),
+        new BullAdapter(this.loadAllProductsQueue),
       ],
       serverAdapter: this.serverAdapter,
     });
@@ -77,6 +82,15 @@ export class JobBoardService {
 
   public async addLoadProductsByCategory(categoryId: string) {
     const job = await this.loadProductsByCategoryQueue.add({ categoryId });
+    return {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    };
+  }
+
+  public async addLoadAllProducts() {
+    const job = await this.loadAllProductsQueue.add();
     return {
       id: job.id,
       name: job.queue.name,

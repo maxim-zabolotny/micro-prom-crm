@@ -30,4 +30,10 @@ export class JobBoardController {
   addLoadProductsByCategoryJob(@Query('categoryId') categoryId: string) {
     return this.jobBoardService.addLoadProductsByCategory(categoryId);
   }
+
+  @Post('/test-load-all-products')
+  @HttpCode(201)
+  addLoadAllProductsJob() {
+    return this.jobBoardService.addLoadAllProducts();
+  }
 }
