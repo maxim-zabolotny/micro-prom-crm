@@ -103,7 +103,7 @@ export namespace AppConstants {
             'images',
             (images: string[]) => images.slice(0, 10).join(', '),
           ],
-          ['Наявність', 'available', (v: boolean) => (v ? '"+"' : '"-"')],
+          ['Наявність', 'available', (v: boolean) => (v ? `'+` : '-')],
           ['Кількість', 'quantity', returnTheSame],
           ['Виробник', 'brand', returnTheSame],
           ['Номер_групи', 'promGroupNumber', returnTheSame],
@@ -119,7 +119,7 @@ export namespace AppConstants {
         export const FieldsMappingDefaults: TFieldsMappingDefaults = [
           ['Тип_товару', 'r'],
           ['Валюта', 'UAH'],
-          ['Одиниця_виміру', 'шт'],
+          ['Одиниця_виміру', 'шт.'],
           ['Мінімальний_обсяг_замовлення', '1'],
           ['Ціна_від', '-'],
           ['Де_знаходиться_товар', 'Запоріжжя'], // 194007000 - Запоріжжя - Запорожье
