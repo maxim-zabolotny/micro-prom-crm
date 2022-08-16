@@ -1,4 +1,5 @@
 /*external modules*/
+import * as ms from 'ms';
 import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
@@ -38,24 +39,37 @@ const consumers = [
             port: configService.get('redis.port'),
           },
           prefix: `${configService.get('env')}:bull`,
-          defaultJobOptions: {
-            attempts: 3,
-          },
         };
       },
       inject: [ConfigService],
     }),
     BullModule.registerQueue({
       name: audioProcessorName,
+      defaultJobOptions: {
+        attempts: 1,
+        timeout: ms('5s'),
+      },
     }),
     BullModule.registerQueue({
       name: loadAllCategoriesName,
+      defaultJobOptions: {
+        attempts: 3,
+        timeout: ms('10m'),
+      },
     }),
     BullModule.registerQueue({
       name: loadProductsByCategoryName,
+      defaultJobOptions: {
+        attempts: 3,
+        timeout: ms('1h'),
+      },
     }),
     BullModule.registerQueue({
       name: loadAllProductsName,
+      defaultJobOptions: {
+        attempts: 3,
+        timeout: ms('2h'),
+      },
     }),
   ],
   providers: [...consumers, JobBoardService],
