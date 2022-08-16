@@ -8,7 +8,7 @@ import { AppConstants } from '../../../app.constants';
 import { SpreadsheetService } from '../../spreadsheet/spreadsheet.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { CrmCategoriesService } from '../../crm/categories/categories.service';
-import { GoogleSpreadsheetRow } from 'google-spreadsheet';
+import { GoogleSpreadsheetRow, WorksheetGridRange } from 'google-spreadsheet';
 import { CrmProductsService } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 import { PromProductsService } from '../../prom/products/products.service';
@@ -200,25 +200,14 @@ export class SyncPromService {
   public async addProductsToSheet(
     data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
   ) {
+    const productsSheet = this.spreadsheetService.getProductsSheet();
+
+    // RENAME CELLS
     await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
       SPEC_CELLS_VIEW_TYPE.Increment,
     );
 
-    const {
-      NUMBER_OF_CELLS_FOR_PROPERTIES,
-      START_PROPERTIES_CELL_INDEX,
-      SINGLE_PROPERTY_CELLS_SIZE,
-      AVAILABLE_NUMBER_OF_PROPERTIES,
-    } = AppConstants.Prom.Sheet.Product;
-
-    const allProducts = _.flattenDeep(_.map(data, 'products'));
-
-    const productsByPromIdMap = new Map(
-      _.map(allProducts, (product) => [String(product.promId), product]),
-    );
-
-    const productsSheet = this.spreadsheetService.getProductsSheet();
-
+    // ROWS
     this.logger.debug('Build bulk rows for Google Sheet');
     const bulkRows = _.flattenDeep(
       _.map(data, ({ products, promGroupNumber }) => {
@@ -247,69 +236,150 @@ export class SyncPromService {
       count: addedRows.length,
     });
 
-    this.logger.debug('Add Products specifications to Google Sheet cells:', {
-      productsCount: addedRows.length,
-    });
-
-    // TODO: check max length of specifications
-
-    const firstAddedRowIndex =
-      _.minBy(addedRows, (row) => row.rowIndex).rowIndex - 1;
-    await this.spreadsheetService.updateCells(
-      productsSheet,
-      {
-        startRowIndex: firstAddedRowIndex,
-        endRowIndex: firstAddedRowIndex + addedRows.length,
-        startColumnIndex: START_PROPERTIES_CELL_INDEX,
-        endColumnIndex:
-          START_PROPERTIES_CELL_INDEX + NUMBER_OF_CELLS_FOR_PROPERTIES + 1,
-      },
-      async () => {
-        _.forEach(addedRows, (row) => {
-          const promId = row['Код_товару'];
-          const product = productsByPromIdMap.get(promId);
-
-          const specifications = [...Object.entries(product.specifications)];
-          _.forEach(specifications, ([specKey, specValue], index) => {
-            if (index >= AVAILABLE_NUMBER_OF_PROPERTIES) {
-              this.logger.debug(
-                'Product has too many specifications. Skip next specifications:',
-                {
-                  count: product.specifications.size,
-                  maxCount: AVAILABLE_NUMBER_OF_PROPERTIES,
-                },
-              );
-              return;
-            }
-
-            const cellIndex = index * SINGLE_PROPERTY_CELLS_SIZE;
-
-            const [cellNameIndex, cellDimensionIndex, cellValueIndex] = [
-              START_PROPERTIES_CELL_INDEX + cellIndex,
-              START_PROPERTIES_CELL_INDEX + cellIndex + 1,
-              START_PROPERTIES_CELL_INDEX + cellIndex + 2,
-            ];
-
-            const [specKeyCell, specValueCell] = [
-              productsSheet.getCell(row.rowIndex - 1, cellNameIndex),
-              productsSheet.getCell(row.rowIndex - 1, cellValueIndex),
-            ];
-
-            specKeyCell.value = specKey;
-            specValueCell.value = specValue;
-          });
-        });
-      },
+    // CELLS
+    await this.addProductsSpecificationsToSheetCells(
+      _.flattenDeep(_.map(data, 'products')),
+      addedRows,
     );
-    this.logger.debug('Added Products specifications to Google Sheet cells:', {
-      productsCount: addedRows.length,
-    });
 
+    // RENAME CELLS
     await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
       SPEC_CELLS_VIEW_TYPE.Default,
     );
 
     return addedRows;
+  }
+
+  public async addProductsSpecificationsToSheetCells(
+    products: ProductDocument[],
+    rows: GoogleSpreadsheetRow[],
+    chunkSize = 1700,
+  ) {
+    const {
+      START_PROPERTIES_CELL_INDEX,
+      SINGLE_PROPERTY_CELLS_SIZE,
+      AVAILABLE_NUMBER_OF_PROPERTIES,
+    } = AppConstants.Prom.Sheet.Product;
+
+    const productsSheet = this.spreadsheetService.getProductsSheet();
+    const productsByPromIdMap = new Map(
+      _.map(products, (product) => [String(product.promId), product]),
+    );
+
+    // LOAD AND UPDATE CELLS
+    const chunks = _.chunk(rows, chunkSize);
+    this.logger.debug('Add Products specifications to Google Sheet cells:', {
+      chunkSize,
+      chunksCount: chunks.length,
+      productsCount: rows.length,
+    });
+
+    let chunkIndex = 0;
+    for (const chunk of chunks) {
+      const chunkNumber = chunkIndex + 1;
+
+      this.logger.debug('Process chunk:', {
+        number: chunkNumber,
+        size: chunk.length,
+      });
+
+      const minAddedRowIndex =
+        _.minBy(chunk, (row) => row.rowIndex).rowIndex - 1;
+      const maxSpecificationCount =
+        _.max(
+          _.map(chunk, (row) => {
+            const promId = row['Код_товару'];
+            const product = productsByPromIdMap.get(promId);
+
+            return Object.keys(product.specifications).length;
+          }),
+        ) ?? 0;
+
+      const rangeConfig: WorksheetGridRange = {
+        startRowIndex: minAddedRowIndex,
+        endRowIndex: minAddedRowIndex + chunk.length,
+        startColumnIndex: START_PROPERTIES_CELL_INDEX,
+        endColumnIndex:
+          START_PROPERTIES_CELL_INDEX +
+          maxSpecificationCount * SINGLE_PROPERTY_CELLS_SIZE +
+          1,
+      };
+
+      await this.spreadsheetService.updateCells(
+        productsSheet,
+        rangeConfig,
+        async () => {
+          this.logger.debug(
+            'Start setting Product specifications to Sheet cells:',
+            {
+              size: chunk.length,
+              maxSpecificationCount,
+            },
+          );
+
+          _.forEach(chunk, (row) => {
+            const promId = row['Код_товару'];
+            const product = productsByPromIdMap.get(promId);
+
+            const specifications = [...Object.entries(product.specifications)];
+            _.forEach(specifications, ([specKey, specValue], index) => {
+              if (index >= AVAILABLE_NUMBER_OF_PROPERTIES) {
+                this.logger.debug(
+                  'Product has too many specifications. Skip next specifications:',
+                  {
+                    count: Object.keys(product.specifications).length,
+                    maxCount: AVAILABLE_NUMBER_OF_PROPERTIES,
+                  },
+                );
+                return;
+              }
+
+              const cellIndex = index * SINGLE_PROPERTY_CELLS_SIZE;
+
+              const [cellNameIndex, cellDimensionIndex, cellValueIndex] = [
+                START_PROPERTIES_CELL_INDEX + cellIndex,
+                START_PROPERTIES_CELL_INDEX + cellIndex + 1,
+                START_PROPERTIES_CELL_INDEX + cellIndex + 2,
+              ];
+
+              const [specKeyCell, specValueCell] = [
+                productsSheet.getCell(row.rowIndex - 1, cellNameIndex),
+                productsSheet.getCell(row.rowIndex - 1, cellValueIndex),
+              ];
+
+              specKeyCell.value = specKey;
+              specValueCell.value = specValue;
+            });
+          });
+
+          this.logger.debug('Set Product specifications to Sheet cells:', {
+            size: chunk.length,
+            maxSpecificationCount,
+          });
+        },
+      );
+
+      const productsLeft = Math.max(0, rows.length - chunkNumber * chunkSize);
+      this.logger.debug('Chunk processed:', {
+        number: chunkNumber,
+        productsCount: chunk.length,
+        allProductsCount: rows.length,
+        productsLeft: productsLeft,
+      });
+
+      chunkIndex++;
+      if (chunkNumber < chunks.length) {
+        const timeToSleep = 1000 * 5;
+        this.logger.log(`Sleep ${timeToSleep}s`, {
+          timeMS: timeToSleep,
+        });
+        await this.timeHelper.sleep(timeToSleep);
+      }
+    }
+
+    this.logger.debug('Added Products specifications to Google Sheet cells:', {
+      productsCount: rows.length,
+    });
   }
 
   public async addAndSyncProductsWithSheet(
