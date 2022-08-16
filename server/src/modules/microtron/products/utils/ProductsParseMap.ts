@@ -33,6 +33,11 @@ export class ProductsParseMap extends Map<string, ParserV2.IResult | null> {
     return super.set(unionUrl, value);
   }
 
+  delete(url: string) {
+    const unionUrl = ProductsParseMap.buildUnionProductUrl(url);
+    return super.delete(unionUrl);
+  }
+
   public static buildUnionProductUrl(url: string) {
     const keyValue = 'microtron.ua';
     const keyValueIndex = url.indexOf(keyValue);
