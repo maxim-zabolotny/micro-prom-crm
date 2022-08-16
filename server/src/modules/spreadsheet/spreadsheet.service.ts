@@ -94,6 +94,32 @@ export class SpreadsheetService implements OnModuleInit {
           return googleSpreadsheetAxios.request(error.config);
         }
 
+        if (
+          error.code === 'EAI_AGAIN' ||
+          error.message?.includes('getaddrinfo')
+        ) {
+          this.logger.error('A temporary failure in name resolution:', {
+            code: error.code,
+            message: error.message,
+          });
+
+          const timeToSleep = 1000 * 60;
+
+          this.logger.log(`Sleep and repeat request:`, {
+            timeToSleep: timeToSleep / 1000,
+            countOfRequests: this.docLimits.countOfRequests,
+            timestampNow: Date.now(),
+            lastWaitTimestamp: this.docLimits.lastWaitTimestamp,
+          });
+
+          await this.timeHelper.sleep(timeToSleep);
+
+          this.docLimits.countOfRequests = 0;
+          this.docLimits.lastWaitTimestamp = Date.now();
+
+          return googleSpreadsheetAxios.request(error.config);
+        }
+
         return Promise.reject(error);
       },
     );
