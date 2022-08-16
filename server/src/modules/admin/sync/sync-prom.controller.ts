@@ -39,6 +39,13 @@ export class SyncPromController {
     return this.syncPromService.loadAllNewProductsToSheet();
   }
 
+  @Get('/reload-all-products')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async reloadAllProducts() {
+    return this.syncPromService.reloadAllProductsToSheet();
+  }
+
   @Get('/load-products-by-category')
   @HttpCode(200)
   @Auth(UserRole.Admin)

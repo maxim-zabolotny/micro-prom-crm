@@ -704,4 +704,22 @@ export class SyncPromService {
       success,
     };
   }
+
+  public async reloadAllProductsToSheet() {
+    const productsSheet = this.spreadsheetService.getProductsSheet();
+
+    this.logger.debug('Clear all rows in Products Google Sheet');
+    await this.spreadsheetService.clearRows(
+      productsSheet,
+      2,
+      productsSheet.rowCount,
+    );
+
+    this.logger.debug('Update all Products in DB');
+    await this.crmProductsService.updateAllProductsInDB({
+      syncAt: null,
+    });
+
+    return this.loadAllNewProductsToSheet();
+  }
 }
