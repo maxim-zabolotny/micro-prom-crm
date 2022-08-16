@@ -8,7 +8,7 @@ import { Product, ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
 import { Category, CategoryDocument } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
-
+import { Types as MicrotronTypes } from '@lib/microtron';
 import ProductConstants = AppConstants.Prom.Sheet.Product;
 
 export type TAddProduct = Omit<IProductFullInfo, 'categoryId'> & {
@@ -19,6 +19,7 @@ export type TUpdateProduct = Partial<
   Pick<
     Product,
     | 'originalPrice'
+    | 'originalPriceCurrency'
     | 'quantity'
     | 'promTableLine'
     | 'sync'
@@ -55,9 +56,13 @@ export class CrmProductsService {
 
   public calculateProductPrice(
     originalPrice: number,
+    currency: MicrotronTypes.Currency,
     category: Pick<Category, 'course' | 'markup'>,
   ) {
-    const rawPrice = originalPrice * category.course;
+    const course =
+      currency === MicrotronTypes.Currency.UAH ? 1 : category.course;
+
+    const rawPrice = originalPrice * course;
     const onePercentFromRawPrice = rawPrice / 100;
 
     const markupAmount = onePercentFromRawPrice * category.markup;
@@ -126,7 +131,11 @@ export class CrmProductsService {
 
     const available = quantity > 0;
 
-    const { rawPrice, ourPrice } = this.calculateProductPrice(price, category);
+    const { rawPrice, ourPrice } = this.calculateProductPrice(
+      price,
+      productData.currency,
+      category,
+    );
     const siteMarkup = this.calculateSiteProductMarkup(
       rawPrice,
       parse.cost.price,
@@ -166,6 +175,7 @@ export class CrmProductsService {
       sitePrice: parse.cost.price,
       siteMarkup: siteMarkup,
       originalPrice: price,
+      originalPriceCurrency: productData.currency,
       ourPrice: ourPrice,
       quantity: quantity,
       warranty: productData.warranty,
@@ -222,16 +232,23 @@ export class CrmProductsService {
       });
     }
 
-    if ('originalPrice' in data || data.category) {
+    if (
+      'originalPrice' in data ||
+      'originalPriceCurrency' in data ||
+      data.category
+    ) {
       if (!data.category) {
         throw new HttpException('Category is required', HttpStatus.BAD_REQUEST);
       }
 
       const category = data.category;
       const originalPrice = data.originalPrice ?? oldProduct.originalPrice;
+      const originalPriceCurrency =
+        data.originalPriceCurrency ?? oldProduct.originalPriceCurrency;
 
       const { rawPrice, ourPrice } = this.calculateProductPrice(
         originalPrice,
+        originalPriceCurrency,
         category,
       );
       const siteMarkup = this.calculateSiteProductMarkup(
@@ -240,6 +257,7 @@ export class CrmProductsService {
       );
 
       dataForUpdate.originalPrice = originalPrice;
+      dataForUpdate.originalPriceCurrency = originalPriceCurrency;
       dataForUpdate.ourPrice = ourPrice;
       dataForUpdate.siteMarkup = siteMarkup;
 

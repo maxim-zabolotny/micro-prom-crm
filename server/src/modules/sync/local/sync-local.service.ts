@@ -394,6 +394,7 @@ export class SyncLocalService {
           .filter((product) => {
             const { ourPrice } = this.crmProductsService.calculateProductPrice(
               product.originalPrice,
+              product.originalPriceCurrency,
               category,
             );
 
@@ -497,17 +498,25 @@ export class SyncLocalService {
                 this.crmProductsService.getProductPrice(productFromAPI);
               const quantity =
                 this.crmProductsService.getProductQuantity(productFromAPI);
+
+              const currency = productFromAPI.currency;
               const { ourPrice } =
-                this.crmProductsService.calculateProductPrice(price, category);
+                this.crmProductsService.calculateProductPrice(
+                  price,
+                  currency,
+                  category,
+                );
 
               const isEqual = _.isEqual(
                 {
                   price,
+                  currency,
                   quantity,
                   ourPrice,
                 },
                 {
                   price: productFromDB.originalPrice,
+                  currency: productFromDB.originalPriceCurrency,
                   quantity: productFromDB.quantity,
                   ourPrice: productFromDB.ourPrice,
                 },
@@ -519,6 +528,7 @@ export class SyncLocalService {
                 {
                   category,
                   originalPrice: price,
+                  originalPriceCurrency: currency,
                   quantity: quantity,
                   deleted: false,
                   sync: false,
