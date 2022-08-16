@@ -369,7 +369,7 @@ export class SyncPromService {
 
       chunkIndex++;
       if (chunkNumber < chunks.length) {
-        const timeToSleep = 1000 * 5;
+        const timeToSleep = 1000 * 10;
         this.logger.log(`Sleep ${timeToSleep}s`, {
           timeMS: timeToSleep,
         });
