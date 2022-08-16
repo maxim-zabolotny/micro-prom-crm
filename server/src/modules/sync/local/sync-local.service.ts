@@ -661,14 +661,21 @@ export class SyncLocalService {
           forceParse: false,
         },
       );
+    const allProductsCount = _.flattenDeep(
+      Object.values(productsWithFullInfoByCategories),
+    ).length;
 
     const loadedProducts: ProductDocument[] = [];
 
+    let categoryIndex = 0;
     for (const category of categories) {
+      const categoryNumber = categoryIndex + 1;
+
       const productsWithFullInfo =
         productsWithFullInfoByCategories[category.microtronId];
 
       this.logger.debug('Process Category:', {
+        number: categoryNumber,
         id: category._id,
         name: category.name,
         products: productsWithFullInfo.length,
@@ -681,9 +688,27 @@ export class SyncLocalService {
         );
         loadedProducts.push(...addedProducts);
 
-        this.logger.log('Sleep 1s');
-        await this.timeHelper.sleep(1000);
+        this.logger.debug('Category processed:', {
+          id: category._id,
+          name: category.name,
+          products: productsWithFullInfo.length,
+          categoriesLeft: Math.max(0, categories.length - categoryNumber),
+          productsLeft: Math.max(0, allProductsCount - loadedProducts.length),
+        });
+
+        this.logger.log('Sleep 2s');
+        await this.timeHelper.sleep(2000);
+      } else {
+        this.logger.debug('Empty Category processed:', {
+          id: category._id,
+          name: category.name,
+          products: productsWithFullInfo.length,
+          categoriesLeft: Math.max(0, categories.length - categoryNumber),
+          productsLeft: Math.max(0, allProductsCount - loadedProducts.length),
+        });
       }
+
+      categoryIndex++;
     }
 
     this.logger.debug('Loaded Products to DB:', {
