@@ -3,6 +3,8 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 
+process.env.UV_THREADPOOL_SIZE = '8';
+
 async function bootstrap() {
   // INIT
   const app = await NestFactory.create(AppModule);
