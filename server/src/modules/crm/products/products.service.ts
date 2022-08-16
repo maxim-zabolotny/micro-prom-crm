@@ -284,4 +284,25 @@ export class CrmProductsService {
 
     return updatedProduct;
   }
+
+  public async updateAllProductsInDB(data: Partial<Product>) {
+    this.logger.debug('Process update all Products:', {
+      data,
+    });
+
+    const updateResult = await this.productModel
+      .updateMany(
+        {},
+        {
+          $set: data,
+        },
+      )
+      .exec();
+
+    this.logger.debug('Products update result:', {
+      ...updateResult,
+    });
+
+    return updateResult;
+  }
 }
