@@ -269,7 +269,7 @@ export class SyncPromService {
           const promId = row['Код_товару'];
           const product = productsByPromIdMap.get(promId);
 
-          const specifications = [...product.specifications.entries()];
+          const specifications = [...Object.entries(product.specifications)];
           _.forEach(specifications, ([specKey, specValue], index) => {
             if (index >= AVAILABLE_NUMBER_OF_PROPERTIES) {
               this.logger.debug(

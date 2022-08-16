@@ -133,21 +133,26 @@ export class CrmProductsService {
     );
 
     // SPEC PART
+    const specifications = _.reduce(
+      parse.specifications,
+      (acc, value, key) => {
+        acc[String(key)] = String(value);
+        return acc;
+      },
+      {},
+    );
+
     if (
       productData.warranty > 0 &&
-      !parse.specifications[
-        ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
-      ]
+      !specifications[ProductConstants.SpecialSpecificationKeys.GuaranteeTerm]
     ) {
-      parse.specifications[
+      specifications[
         ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
       ] = `${productData.warranty}`;
     }
 
-    if (
-      !parse.specifications[ProductConstants.SpecialSpecificationKeys.State]
-    ) {
-      parse.specifications[ProductConstants.SpecialSpecificationKeys.State] =
+    if (!specifications[ProductConstants.SpecialSpecificationKeys.State]) {
+      specifications[ProductConstants.SpecialSpecificationKeys.State] =
         parse.new ? 'Новое' : 'Б/У';
     }
     // END SPEC PART
@@ -157,7 +162,7 @@ export class CrmProductsService {
       description: parse.description,
       translate: translate,
       brand: productData.brand,
-      specifications: parse.specifications,
+      specifications: specifications,
       sitePrice: parse.cost.price,
       siteMarkup: siteMarkup,
       originalPrice: price,
