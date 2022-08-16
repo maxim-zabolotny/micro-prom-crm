@@ -1,4 +1,10 @@
-import { Controller, UseFilters, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  UseFilters,
+  UseInterceptors,
+} from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
 import { MongoExceptionFilter } from '@common/filters';
 import { CrmProductsService } from './products.service';
@@ -8,4 +14,10 @@ import { CrmProductsService } from './products.service';
 @UseInterceptors(LoggingInterceptor)
 export class CrmProductsController {
   constructor(private readonly crmProductsService: CrmProductsService) {}
+
+  @Get('/all')
+  @HttpCode(200)
+  async getAllProducts() {
+    return this.crmProductsService.getAllProductsFromDB();
+  }
 }

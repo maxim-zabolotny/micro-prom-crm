@@ -8,6 +8,7 @@ import { Category, CategorySchema } from '@schemas/category';
 import { DataGenerateHelper } from '@common/helpers';
 import { Product, ProductSchema } from '@schemas/product';
 import { CrmProductsService } from './products/products.service';
+import { CrmProductsController } from './products/products.controller';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { CrmProductsService } from './products/products.service';
       },
     ]),
   ],
-  controllers: [CrmController, CrmCategoriesController],
+  controllers: [CrmController, CrmCategoriesController, CrmProductsController],
   providers: [
     DataGenerateHelper,
     CrmService,
