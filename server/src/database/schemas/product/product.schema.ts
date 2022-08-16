@@ -27,8 +27,11 @@ export class Product {
   @Prop({ type: String, required: true })
   brand: string;
 
-  @Prop({ type: Map, of: String, required: true })
-  specifications: Map<string, string>;
+  @Prop({
+    type: SchemaTypes.Mixed,
+    required: true,
+  })
+  specifications: Record<string, string>;
 
   @Prop({ type: Number, required: true })
   sitePrice: number;
