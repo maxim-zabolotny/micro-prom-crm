@@ -674,11 +674,16 @@ export class SyncLocalService {
         products: productsWithFullInfo.length,
       });
 
-      const addedProducts = await this.addProductsToDB(
-        { category },
-        productsWithFullInfo,
-      );
-      loadedProducts.push(...addedProducts);
+      if (!_.isEmpty(productsWithFullInfo)) {
+        const addedProducts = await this.addProductsToDB(
+          { category },
+          productsWithFullInfo,
+        );
+        loadedProducts.push(...addedProducts);
+
+        this.logger.log('Sleep 1s');
+        await this.timeHelper.sleep(1000);
+      }
     }
 
     this.logger.debug('Loaded Products to DB:', {
