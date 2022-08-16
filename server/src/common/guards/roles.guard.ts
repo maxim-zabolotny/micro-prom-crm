@@ -19,6 +19,10 @@ export class RolesGuard implements CanActivate {
   }
 
   matchRoles(roles: UserRole[], userRole: UserRole): boolean {
+    if (roles.every((role) => role === UserRole.General)) {
+      return true;
+    }
+
     return roles.some((role) => role === userRole);
   }
 }
