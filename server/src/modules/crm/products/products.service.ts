@@ -177,7 +177,7 @@ export class CrmProductsService {
       available: available,
       category: category._id,
       microtronId: productData.id,
-      promId: this.dataGenerateHelper.randomNumber(1, 9, 8),
+      promId: this.dataGenerateHelper.randomNumber(1, 9, 19),
     });
     await product.save();
 
