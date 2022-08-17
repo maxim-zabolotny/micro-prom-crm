@@ -6,6 +6,7 @@ import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { DataGenerateHelper } from '@common/helpers';
 import { ITranslatedCategoryInConstant } from '@common/interfaces/category';
+import { Product, ProductDocument } from '@schemas/product';
 
 export type TAddCategory = ITranslatedCategoryInConstant & {
   course: number;
@@ -24,6 +25,7 @@ export class CrmCategoriesService {
     private configService: ConfigService,
     private dataGenerateHelper: DataGenerateHelper,
     @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
+    @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
   public getModel() {
@@ -68,6 +70,56 @@ export class CrmCategoriesService {
 
   public async getCategoryByMicrotronId(microtronId: string) {
     return this.categoryModel.findOne({ microtronId }).exec();
+  }
+
+  public async getCategoriesWithProductsCount(): Promise<
+    Array<CategoryDocument & { productsCount: number }>
+  > {
+    // return this.categoryModel
+    //   .aggregate([
+    //     {
+    //       $lookup: {
+    //         from: 'products',
+    //         localField: '_id',
+    //         foreignField: 'category',
+    //         pipeline: [{ $project: { _id: 1 } }],
+    //         as: 'products',
+    //       },
+    //     },
+    //     { $set: { productsCount: { $size: '$products' } } },
+    //     { $unset: ['products'] },
+    //     { $sort: { productsCount: -1 } },
+    //   ])
+    //   .exec();
+
+    // faster than category version
+    return this.productModel
+      .aggregate([
+        {
+          $group: {
+            _id: '$category',
+            productsCount: { $sum: 1 },
+          },
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'categories',
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [{ $arrayElemAt: ['$categories', 0] }, '$$ROOT'],
+            },
+          },
+        },
+        { $unset: 'categories' },
+        { $sort: { productsCount: -1 } },
+      ])
+      .exec();
   }
 
   public async addCategoryToDB(categoryData: TAddCategory) {
