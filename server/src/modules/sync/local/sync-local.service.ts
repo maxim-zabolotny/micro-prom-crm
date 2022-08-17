@@ -365,44 +365,61 @@ export class SyncLocalService {
     categories: Array<Pick<CategoryDocument, '_id' | 'course' | 'markup'>>,
   ) {
     this.logger.debug('Get Products for Update by Categories:', {
-      categories,
+      categories: _.map(categories, (category) =>
+        _.pick(category, ['_id', 'course', 'markup']),
+      ),
     });
     const productToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>> =
       [];
 
+    let allProductsCount = 0;
+    let allExcludedProductsFromUpdateCount = 0;
     for (const category of categories) {
-      this.logger.debug('Load Products by Category from DB');
+      this.logger.debug('Load Products by Category from DB:', {
+        categoryId: category._id,
+      });
       const productsByCategory =
         await this.crmProductsService.getProductsByCategoryFromDB(category._id);
 
-      this.logger.debug('Search Products to update');
-      productToUpdate.push(
-        ..._.chain(productsByCategory)
-          .filter((product) => {
-            const { ourPrice } = this.crmProductsService.calculateProductPrice(
-              product.originalPrice,
-              product.originalPriceCurrency,
-              category,
-            );
+      const productsToUpdateByCategory = _.chain(productsByCategory)
+        .filter((product) => {
+          const { ourPrice } = this.crmProductsService.calculateProductPrice(
+            product.originalPrice,
+            product.originalPriceCurrency,
+            category,
+          );
 
-            return product.ourPrice !== ourPrice;
-          })
-          .map((product) => {
-            return [
-              product,
-              {
-                category: _.pick(category, ['course', 'markup']),
-                originalPrice: product.originalPrice,
-                sync: false,
-              },
-            ] as TArray.Pair<ProductDocument, TUpdateProduct>;
-          })
-          .value(),
-      );
+          return product.ourPrice !== ourPrice;
+        })
+        .map((product) => {
+          return [
+            product,
+            {
+              category: _.pick(category, ['course', 'markup']),
+              sync: false,
+            },
+          ] as TArray.Pair<ProductDocument, TUpdateProduct>;
+        })
+        .value();
+      productToUpdate.push(...productsToUpdateByCategory);
+
+      const excludedProductsFromUpdateCount =
+        productsByCategory.length - productsToUpdateByCategory.length;
+      this.logger.debug('Search Products to update result:', {
+        categoryId: category._id,
+        productsByCategoryCount: productsByCategory.length,
+        productsToUpdateByCategoryCount: productsToUpdateByCategory.length,
+        excludedProductsToUpdateCount: excludedProductsFromUpdateCount,
+      });
+
+      allProductsCount += productsByCategory.length;
+      allExcludedProductsFromUpdateCount += excludedProductsFromUpdateCount;
     }
 
     this.logger.debug('Products to update result:', {
-      count: productToUpdate.length,
+      allProductsCount,
+      allExcludedProductsFromUpdateCount,
+      productsToUpdateCount: productToUpdate.length,
     });
 
     return productToUpdate;
@@ -716,4 +733,69 @@ export class SyncLocalService {
   }
 
   // MAIN PART - CATEGORIES + PRODUCTS
+  public async syncCourse() {
+    const course = await this.microtronCoursesService.getCoursesByAPI(true);
+    this.logger.debug('Loaded new Course:', {
+      course,
+    });
+
+    this.logger.debug('Load all Categories with another Course');
+
+    const categories = await this.crmCategoriesService
+      .getModel()
+      .find({
+        course: {
+          $ne: course.bank,
+        },
+      })
+      .exec();
+    this.logger.debug('Loaded Categories with another Course:', {
+      count: categories.length,
+    });
+
+    if (_.isEmpty(categories)) {
+      this.logger.debug(
+        'Categories is empty. Nothing for update. Return empty result',
+      );
+      return {
+        updatedCategories: [],
+        updatedProducts: [],
+      };
+    }
+
+    const allUpdatedCategories: CategoryDocument[] = [];
+    const allUpdatedProducts: ProductDocument[] = [];
+
+    for (const category of categories) {
+      const updatedCategory = await this.updateCategoriesInDB([
+        [
+          category,
+          {
+            course: course.bank,
+            sync: true,
+            syncAt: new Date(),
+          },
+        ],
+      ]);
+      allUpdatedCategories.push(...updatedCategory);
+
+      const productsToUpdate = await this.getProductsToUpdateByCategories(
+        updatedCategory,
+      );
+      if (!_.isEmpty(productsToUpdate)) {
+        const updatedProducts = await this.updateProductsInDB(productsToUpdate);
+        allUpdatedProducts.push(...updatedProducts);
+      }
+    }
+
+    this.logger.debug('Result of sync Course:', {
+      updatedCategoriesCount: allUpdatedCategories.length,
+      updatedProductsCount: allUpdatedProducts.length,
+    });
+
+    return {
+      updatedCategories: allUpdatedCategories,
+      updatedProducts: allUpdatedProducts,
+    };
+  }
 }
