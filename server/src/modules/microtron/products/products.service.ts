@@ -45,19 +45,27 @@ export class MicrotronProductsService {
     lang: Types.Lang.UA,
   };
 
-  private readonly isValidProduct = _.conforms<Pick<IProductFull, 'url'>>({
-    url: (url: string) => {
-      const isEmptyUrl = _.isEmpty(url);
-      if (isEmptyUrl) return false;
+  private readonly isValidProduct = (
+    product: Pick<IProductFull, 'url' | 'price' | 'price_s'>,
+  ) => {
+    const price = _.isNumber(product.price) ? product.price : product.price_s;
 
-      const isInvalidUrl = url
-        .slice(0, url.lastIndexOf('/p'))
-        .endsWith('microtron.ua');
-      if (isInvalidUrl) return false;
+    return (
+      _.conforms<Pick<IProductFull, 'url'>>({
+        url: (url: string) => {
+          const isEmptyUrl = _.isEmpty(url);
+          if (isEmptyUrl) return false;
 
-      return true;
-    },
-  });
+          const isInvalidUrl = url
+            .slice(0, url.lastIndexOf('/p'))
+            .endsWith('microtron.ua');
+          if (isInvalidUrl) return false;
+
+          return true;
+        },
+      }) && price > 0
+    );
+  };
 
   private readonly isValidProductFullInfo = _.conforms<
     Partial<IProductFullInfo>
