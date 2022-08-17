@@ -38,4 +38,11 @@ export class SyncLocalController {
   async loadProductsByCategory(@Query('microtronId') microtronId: string) {
     return this.syncLocalService.loadAllProductsByCategoryToDB(microtronId);
   }
+
+  @Get('/sync-course')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async syncCourse() {
+    return this.syncLocalService.syncCourse();
+  }
 }
