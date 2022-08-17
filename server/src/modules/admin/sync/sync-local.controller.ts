@@ -45,4 +45,11 @@ export class SyncLocalController {
   async syncCourse() {
     return this.syncLocalService.syncCourse();
   }
+
+  @Get('/sync-categories-with-products')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async syncCategoriesWithProducts() {
+    return this.syncLocalService.syncCategoriesWithProducts();
+  }
 }
