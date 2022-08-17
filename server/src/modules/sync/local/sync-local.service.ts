@@ -14,6 +14,7 @@ import {
 import {
   CrmCategoriesService,
   TAddCategory,
+  TUpdateCategory,
 } from '../../crm/categories/categories.service';
 import { CategoryDocument } from '@schemas/category';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
@@ -27,19 +28,9 @@ import {
 import { ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
 
-export type TCompareCategoriesKeys = Extract<
-  keyof ITranslatedCategoryInConstant,
-  'markup'
->;
-
 export interface IChangeCategoriesActions {
   categoriesToAdd: ITranslatedCategoryInConstant[];
-  categoriesToUpdate: Array<
-    TArray.Pair<
-      CategoryDocument,
-      Pick<ITranslatedCategoryInConstant, TCompareCategoriesKeys>
-    >
-  >;
+  categoriesToUpdate: Array<TArray.Pair<CategoryDocument, TUpdateCategory>>;
   categoriesToRemove: CategoryDocument[];
 }
 
@@ -64,10 +55,6 @@ export interface ISyncProductsResult {
 @Injectable()
 export class SyncLocalService {
   private readonly logger = new Logger(this.constructor.name);
-
-  private readonly compareCategoriesKeys: Array<TCompareCategoriesKeys> = [
-    'markup',
-  ];
 
   constructor(
     private configService: ConfigService,
@@ -234,15 +221,15 @@ export class SyncLocalService {
             const categoryFromDB = categoriesFromDBMap.get(categoryId);
 
             const isEqual = _.isEqual(
-              _.pick(categoryFromConstant, this.compareCategoriesKeys),
-              _.pick(categoryFromDB, this.compareCategoriesKeys),
+              _.pick(categoryFromConstant, ['markup']),
+              _.pick(categoryFromDB, ['markup']),
             );
             if (isEqual) return null;
 
             return [
               categoryFromDB,
               {
-                ..._.pick(categoryFromConstant, this.compareCategoriesKeys),
+                ..._.pick(categoryFromConstant, ['markup']),
                 sync: false,
               },
             ];
@@ -727,4 +714,6 @@ export class SyncLocalService {
 
     return loadedProducts;
   }
+
+  // MAIN PART - CATEGORIES + PRODUCTS
 }
