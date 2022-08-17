@@ -275,6 +275,9 @@ export class CrmProductsService {
         {
           $set: dataForUpdate,
         },
+        {
+          returnOriginal: false,
+        },
       )
       .exec();
 

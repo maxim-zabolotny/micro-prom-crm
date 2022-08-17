@@ -233,6 +233,9 @@ export class CrmCategoriesService {
         {
           $set: data,
         },
+        {
+          returnOriginal: false,
+        },
       )
       .exec();
 
