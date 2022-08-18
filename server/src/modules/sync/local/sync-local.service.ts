@@ -230,7 +230,8 @@ export class SyncLocalService {
               categoryFromDB,
               {
                 ..._.pick(categoryFromConstant, ['markup']),
-                sync: false,
+                sync: true,
+                syncAt: new Date(),
               },
             ];
           }),
@@ -789,6 +790,49 @@ export class SyncLocalService {
     }
 
     this.logger.debug('Result of sync Course:', {
+      updatedCategoriesCount: allUpdatedCategories.length,
+      updatedProductsCount: allUpdatedProducts.length,
+    });
+
+    return {
+      updatedCategories: allUpdatedCategories,
+      updatedProducts: allUpdatedProducts,
+    };
+  }
+
+  public async syncMarkup() {
+    const { categoriesToUpdate } = await this.getChangeCategoriesActions(
+      false,
+      true,
+      false,
+    );
+    if (_.isEmpty(categoriesToUpdate)) {
+      this.logger.debug('Categories to update is empty. Return empty result');
+      return {
+        updatedCategories: [],
+        updatedProducts: [],
+      };
+    }
+
+    const allUpdatedCategories: CategoryDocument[] = [];
+    const allUpdatedProducts: ProductDocument[] = [];
+
+    for (const categoryToUpdate of categoriesToUpdate) {
+      const updatedCategory = await this.updateCategoriesInDB([
+        categoryToUpdate,
+      ]);
+      allUpdatedCategories.push(...updatedCategory);
+
+      const productsToUpdate = await this.getProductsToUpdateByCategories(
+        updatedCategory,
+      );
+      if (!_.isEmpty(productsToUpdate)) {
+        const updatedProducts = await this.updateProductsInDB(productsToUpdate);
+        allUpdatedProducts.push(...updatedProducts);
+      }
+    }
+
+    this.logger.debug('Result of sync Markup:', {
       updatedCategoriesCount: allUpdatedCategories.length,
       updatedProductsCount: allUpdatedProducts.length,
     });
