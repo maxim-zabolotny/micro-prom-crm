@@ -46,6 +46,13 @@ export class SyncLocalController {
     return this.syncLocalService.syncCourse();
   }
 
+  @Get('/sync-markup')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async syncMarkup() {
+    return this.syncLocalService.syncMarkup();
+  }
+
   @Get('/sync-categories-with-products')
   @HttpCode(200)
   @Auth(UserRole.Admin)
