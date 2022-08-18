@@ -63,6 +63,35 @@ export class MicrotronCategoriesService {
     return cache;
   }
 
+  private async retrieveRUFromAPI(categoryIds: Array<ICategory['id']>) {
+    this.logger.debug('Load RU categories from API');
+    const apiCategories = await this.retrieveFromAPI(true, Types.Lang.RU);
+    const apiCategoriesMap = new Map(
+      _.map(apiCategories, (category) => [category.id, category]),
+    );
+
+    this.logger.debug(
+      'Build intercept loaded RU categories from API with saved in DB categories',
+    );
+    const { removed, intersection } = this.dataUtilHelper.getDiff(categoryIds, [
+      ...apiCategoriesMap.keys(),
+    ]);
+
+    if (!_.isEmpty(removed)) {
+      throw new HttpException(
+        {
+          message: 'Not Found Categories returned from Microtron API',
+          categories: removed,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return _.map(intersection, (categoryId) =>
+      apiCategoriesMap.get(categoryId),
+    );
+  }
+
   private async retrieveFromDB(): Promise<ConstantDocument | null> {
     const categories = await this.constantModel
       .findOne({ name: ConstantEntities.CATEGORIES })
@@ -122,9 +151,16 @@ export class MicrotronCategoriesService {
     this.logger.debug('Receive categories in array view');
     const categories = categoriesData.categories;
 
+    // DATA
     this.logger.debug('Write categories data in file');
     await Data.SelectedCategories.write(categories);
 
+    this.logger.debug('Write RU categories data in file');
+    await Data.SelectedRUCategories.write(
+      await this.retrieveRUFromAPI(_.map(categories, 'id')),
+    );
+
+    // DB
     const categoriesJSON = JSON.stringify(categories);
 
     const savedCategories = await this.retrieveFromDB();
@@ -190,46 +226,22 @@ export class MicrotronCategoriesService {
   public async getSavedRUTranslate(
     tree: boolean,
   ): Promise<Array<ICategory | ICategoriesTree>> {
-    this.logger.debug('Load categories from DB');
-
-    const dbCategoriesData = await this.retrieveFromDB();
-    if (!dbCategoriesData) {
-      throw new HttpException(
-        'No saved categories in DB',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const dbCategories: ICategory[] = JSON.parse(
-      dbCategoriesData.toObject().value,
-    );
-    const dbCategoryIds = _.map(dbCategories, 'id');
-
-    this.logger.debug('Load RU categories from API');
-    const apiCategories = await this.retrieveFromAPI(false, Types.Lang.RU);
-
-    this.logger.debug(
-      'Build intercept loaded RU categories from API with saved in DB categories',
-    );
-    const apiCategoriesIntercept = _.filter(apiCategories, (category) =>
-      dbCategoryIds.includes(category.id),
-    );
+    this.logger.debug('Load RU categories from file');
+    const ruCategories = await Data.SelectedRUCategories.read();
 
     if (tree) {
       this.logger.debug('Build and return RU categories tree');
-      return MicrotronAPI.Category.buildCategoriesTree(apiCategoriesIntercept);
+      return MicrotronAPI.Category.buildCategoriesTree(ruCategories);
     }
 
-    return apiCategoriesIntercept;
+    return ruCategories;
   }
 
   public async getFullCategoriesInfo(): Promise<
     ITranslatedCategoryInConstant[]
   > {
     const uaCategories = (await this.getSaved(false)) as ICategoryInConstant[];
-    const ruCategories = (await this.getSavedRUTranslate(
-      false,
-    )) as ICategoryInConstant[];
+    const ruCategories = (await this.getSavedRUTranslate(false)) as ICategory[];
 
     const ruCategoriesMap = new Map(
       _.map(ruCategories, (ruCategory) => [ruCategory.id, ruCategory]),
