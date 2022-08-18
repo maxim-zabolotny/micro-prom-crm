@@ -2,6 +2,7 @@ import * as path from 'path';
 import { promises as fs } from 'fs';
 import { ICategory } from '@lib/microtron/core/category/ICategorie';
 import { IUserSeed } from '@common/interfaces/user';
+import { ICategoryInConstant } from '@common/interfaces/category';
 
 export namespace Data {
   export namespace SelectedCategories {
@@ -9,12 +10,12 @@ export namespace Data {
     export const filePathDist = path.join(__dirname, fileName);
     export const filePathSRC = filePathDist.replace('dist', 'src');
 
-    export async function read(): Promise<ICategory[]> {
+    export async function read(): Promise<ICategoryInConstant[]> {
       const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
       return JSON.parse(data);
     }
 
-    export async function write(categories: ICategory[]) {
+    export async function write(categories: ICategoryInConstant[]) {
       const data = JSON.stringify(categories, null, 2);
       await fs.writeFile(filePathSRC, data, { encoding: 'utf-8' });
     }
