@@ -73,15 +73,20 @@ export class MicrotronCategoriesService {
     this.logger.debug(
       'Build intercept loaded RU categories from API with saved in DB categories',
     );
-    const { removed, intersection } = this.dataUtilHelper.getDiff(categoryIds, [
+    const { intersection } = this.dataUtilHelper.getDiff(categoryIds, [
       ...apiCategoriesMap.keys(),
     ]);
 
-    if (!_.isEmpty(removed)) {
+    if (intersection.length !== categoryIds.length) {
+      const expectedCategories = _.filter(
+        apiCategories,
+        (category) => !_.includes(categoryIds, category.id),
+      );
+
       throw new HttpException(
         {
           message: 'Not Found Categories returned from Microtron API',
-          categories: removed,
+          categories: expectedCategories,
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -152,13 +157,13 @@ export class MicrotronCategoriesService {
     const categories = categoriesData.categories;
 
     // DATA
-    this.logger.debug('Write categories data in file');
-    await Data.SelectedCategories.write(categories);
-
     this.logger.debug('Write RU categories data in file');
     await Data.SelectedRUCategories.write(
       await this.retrieveRUFromAPI(_.map(categories, 'id')),
     );
+
+    this.logger.debug('Write categories data in file');
+    await Data.SelectedCategories.write(categories);
 
     // DB
     const categoriesJSON = JSON.stringify(categories);
