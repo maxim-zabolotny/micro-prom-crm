@@ -735,6 +735,11 @@ export class SyncLocalService {
 
   // MAIN PART - CATEGORIES + PRODUCTS
   public async syncCourse() {
+    const result = {
+      updatedCategories: [],
+      updatedProducts: [],
+    };
+
     const course = await this.microtronCoursesService.getCoursesByAPI(true);
     this.logger.debug('Loaded new Course:', {
       course,
@@ -758,14 +763,8 @@ export class SyncLocalService {
       this.logger.debug(
         'Categories is empty. Nothing for update. Return empty result',
       );
-      return {
-        updatedCategories: [],
-        updatedProducts: [],
-      };
+      return result;
     }
-
-    const allUpdatedCategories: CategoryDocument[] = [];
-    const allUpdatedProducts: ProductDocument[] = [];
 
     for (const category of categories) {
       const updatedCategory = await this.updateCategoriesInDB([
@@ -778,29 +777,31 @@ export class SyncLocalService {
           },
         ],
       ]);
-      allUpdatedCategories.push(...updatedCategory);
+      result.updatedCategories.push(...updatedCategory);
 
       const productsToUpdate = await this.getProductsToUpdateByCategories(
         updatedCategory,
       );
       if (!_.isEmpty(productsToUpdate)) {
         const updatedProducts = await this.updateProductsInDB(productsToUpdate);
-        allUpdatedProducts.push(...updatedProducts);
+        result.updatedProducts.push(...updatedProducts);
       }
     }
 
     this.logger.debug('Result of sync Course:', {
-      updatedCategoriesCount: allUpdatedCategories.length,
-      updatedProductsCount: allUpdatedProducts.length,
+      updatedCategoriesCount: result.updatedCategories.length,
+      updatedProductsCount: result.updatedProducts.length,
     });
 
-    return {
-      updatedCategories: allUpdatedCategories,
-      updatedProducts: allUpdatedProducts,
-    };
+    return result;
   }
 
   public async syncMarkup() {
+    const result = {
+      updatedCategories: [],
+      updatedProducts: [],
+    };
+
     const { categoriesToUpdate } = await this.getChangeCategoriesActions(
       false,
       true,
@@ -808,38 +809,29 @@ export class SyncLocalService {
     );
     if (_.isEmpty(categoriesToUpdate)) {
       this.logger.debug('Categories to update is empty. Return empty result');
-      return {
-        updatedCategories: [],
-        updatedProducts: [],
-      };
+      return result;
     }
-
-    const allUpdatedCategories: CategoryDocument[] = [];
-    const allUpdatedProducts: ProductDocument[] = [];
 
     for (const categoryToUpdate of categoriesToUpdate) {
       const updatedCategory = await this.updateCategoriesInDB([
         categoryToUpdate,
       ]);
-      allUpdatedCategories.push(...updatedCategory);
+      result.updatedCategories.push(...updatedCategory);
 
       const productsToUpdate = await this.getProductsToUpdateByCategories(
         updatedCategory,
       );
       if (!_.isEmpty(productsToUpdate)) {
         const updatedProducts = await this.updateProductsInDB(productsToUpdate);
-        allUpdatedProducts.push(...updatedProducts);
+        result.updatedProducts.push(...updatedProducts);
       }
     }
 
     this.logger.debug('Result of sync Markup:', {
-      updatedCategoriesCount: allUpdatedCategories.length,
-      updatedProductsCount: allUpdatedProducts.length,
+      updatedCategoriesCount: result.updatedCategories.length,
+      updatedProductsCount: result.updatedProducts.length,
     });
 
-    return {
-      updatedCategories: allUpdatedCategories,
-      updatedProducts: allUpdatedProducts,
-    };
+    return result;
   }
 }

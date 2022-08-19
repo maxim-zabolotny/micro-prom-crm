@@ -49,6 +49,7 @@ export class CrmCategoriesService {
   }
 
   public async getCountOfNewCategoriesInDB() {
+    // todo: use promTableLine
     return this.categoryModel.count({ syncAt: undefined }).exec();
   }
 
@@ -271,7 +272,7 @@ export class CrmCategoriesService {
         .exec();
 
       this.logger.debug('Process update Categories with higher table line:', {
-        categories: categoriesWithHigherTableLine,
+        categories: categoriesWithHigherTableLine.length,
       });
 
       await Promise.all(
