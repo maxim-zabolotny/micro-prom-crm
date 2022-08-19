@@ -53,10 +53,10 @@ export class SyncLocalController {
     return this.syncLocalService.syncMarkup();
   }
 
-  @Get('/sync-categories-with-products')
+  @Get('/actualize-categories')
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async syncCategoriesWithProducts() {
-    return this.syncLocalService.syncCategoriesWithProducts();
+    return this.syncLocalService.actualizeCategories();
   }
 }
