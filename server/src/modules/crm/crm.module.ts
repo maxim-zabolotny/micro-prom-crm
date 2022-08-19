@@ -9,6 +9,9 @@ import { DataGenerateHelper } from '@common/helpers';
 import { Product, ProductSchema } from '@schemas/product';
 import { CrmProductsService } from './products/products.service';
 import { CrmProductsController } from './products/products.controller';
+import { Integration, IntegrationSchema } from '@schemas/integration';
+import { CrmIntegrationsController } from './integrations/integrations.controller';
+import { CrmIntegrationsService } from './integrations/integrations.service';
 
 @Module({
   imports: [
@@ -24,14 +27,31 @@ import { CrmProductsController } from './products/products.controller';
         schema: ProductSchema,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: Integration.name,
+        schema: IntegrationSchema,
+      },
+    ]),
   ],
-  controllers: [CrmController, CrmCategoriesController, CrmProductsController],
+  controllers: [
+    CrmController,
+    CrmCategoriesController,
+    CrmProductsController,
+    CrmIntegrationsController,
+  ],
   providers: [
     DataGenerateHelper,
     CrmService,
     CrmCategoriesService,
     CrmProductsService,
+    CrmIntegrationsService,
   ],
-  exports: [CrmService, CrmCategoriesService, CrmProductsService],
+  exports: [
+    CrmService,
+    CrmCategoriesService,
+    CrmProductsService,
+    CrmIntegrationsService,
+  ],
 })
 export class CrmModule {}
