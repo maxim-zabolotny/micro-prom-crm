@@ -2,6 +2,10 @@ import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
 import { Category } from '@schemas/category';
 import { Types as MicrotronTypes } from '@lib/microtron';
+import {
+  ProductSync,
+  ProductSyncSchema,
+} from '@schemas/product/product-sync.schema';
 
 export type ProductDocument = Product & Document;
 
@@ -73,17 +77,8 @@ export class Product {
   @Prop({ type: Boolean, required: true })
   available: boolean;
 
-  @Prop({ type: Boolean, required: true, default: false })
-  sync: boolean;
-
-  @Prop({ type: Date })
-  syncAt?: Date;
-
-  @Prop({ type: Boolean, required: true, default: false })
-  deleted: boolean;
-
-  @Prop({ type: Number })
-  promTableLine?: number;
+  @Prop({ type: ProductSyncSchema, required: true })
+  sync: ProductSync;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'categories', required: true })
   category: Category;
