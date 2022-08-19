@@ -238,38 +238,29 @@ export class CrmCategoriesService {
       .exec();
 
     if (removedCategory.sync.tableLine) {
-      const categoriesWithHigherTableLine = await this.categoryModel
-        .find({
-          'sync.tableLine': {
-            $gt: removedCategory.sync.tableLine,
+      const { matchedCount, modifiedCount } = await this.categoryModel
+        .updateMany(
+          {
+            'sync.tableLine': {
+              $gt: removedCategory.sync.tableLine,
+            },
           },
-        })
-        .select({
-          _id: 1,
-          'sync.tableLine': 1,
-        })
-        .exec();
-
-      this.logger.debug('Process update Categories with higher table line:', {
-        categories: categoriesWithHigherTableLine.length,
-      });
-
-      await Promise.all(
-        _.map(categoriesWithHigherTableLine, async (category) => {
-          await this.categoryModel
-            .updateOne(
-              {
-                _id: category._id,
-              },
-              {
-                $set: {
-                  'sync.tableLine': category.sync.tableLine - 1,
+          [
+            {
+              $set: {
+                'sync.tableLine': {
+                  $subtract: ['$sync.tableLine', 1],
                 },
               },
-            )
-            .exec();
-        }),
-      );
+            },
+          ],
+        )
+        .exec();
+
+      this.logger.debug('Updated Categories with higher table line:', {
+        matchedCount,
+        modifiedCount,
+      });
     }
 
     this.logger.debug('Category removed:', {
