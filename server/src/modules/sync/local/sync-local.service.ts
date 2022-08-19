@@ -1,21 +1,11 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Model, Types } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { MicrotronCoursesService } from '../../microtron/courses/courses.service';
 import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
 import { ITranslatedCategoryInConstant } from '@common/interfaces/category';
-import {
-  Integration,
-  IntegrationCompany,
-  IntegrationDocument,
-} from '@schemas/integration';
-import {
-  CrmCategoriesService,
-  TAddCategory,
-  TUpdateCategory,
-} from '../../crm/categories/categories.service';
+import { CrmCategoriesService } from '../../crm/categories/categories.service';
 import { CategoryDocument } from '@schemas/category';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TArray } from '@custom-types';
@@ -27,10 +17,15 @@ import {
 } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
+import { CrmIntegrationsService } from '../../crm/integrations/integrations.service';
+import {
+  TAddCategoryToDB,
+  TUpdateCategoryInDB,
+} from '../../crm/categories/types';
 
 export interface IChangeCategoriesActions {
   categoriesToAdd: ITranslatedCategoryInConstant[];
-  categoriesToUpdate: Array<TArray.Pair<CategoryDocument, TUpdateCategory>>;
+  categoriesToUpdate: Array<TArray.Pair<Types.ObjectId, TUpdateCategoryInDB>>;
   categoriesToRemove: CategoryDocument[];
 }
 
@@ -63,31 +58,14 @@ export class SyncLocalService {
     private microtronProductsService: MicrotronProductsService,
     private crmCategoriesService: CrmCategoriesService,
     private crmProductsService: CrmProductsService,
+    private crmIntegrationsService: CrmIntegrationsService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
-    @InjectModel(Integration.name)
-    private integrationModel: Model<IntegrationDocument>,
   ) {}
 
-  // UTILITIES PART
-  public async getMicrotronIntegration() {
-    this.logger.debug('Load Microtron Integration from DB');
-
-    const microtronIntegration = await this.integrationModel
-      .findOne({ company: IntegrationCompany.Microtron })
-      .exec();
-    if (!microtronIntegration) {
-      throw new HttpException(
-        'No saved microtron integration in DB',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    return microtronIntegration;
-  }
-
+  // UTILITIES PART - CATEGORIES
   public async addCategoriesToDB(
-    data: Pick<TAddCategory, 'course' | 'integrationId'>,
+    data: Pick<TAddCategoryToDB, 'course' | 'integrationId'>,
     categories: ITranslatedCategoryInConstant[],
   ) {
     const { course, integrationId } = data;
@@ -98,7 +76,7 @@ export class SyncLocalService {
 
     const addedCategoryIds: Types.ObjectId[] = [];
     for (const category of categories) {
-      const addedCategory = await this.crmCategoriesService.addCategoryToDB({
+      const addedCategory = await this.crmCategoriesService.addCategory({
         ...category,
         course,
         integrationId,
@@ -110,7 +88,7 @@ export class SyncLocalService {
       count: addedCategoryIds.length,
     });
 
-    return this.crmCategoriesService.getCategoriesByIdsFromDB(addedCategoryIds);
+    return this.crmCategoriesService.getCategoriesByIds(addedCategoryIds);
   }
 
   public async updateCategoriesInDB(
@@ -123,8 +101,10 @@ export class SyncLocalService {
 
     const updatedCategories: CategoryDocument[] = [];
     for (const [category, data] of categoriesWithData) {
-      const updatedCategory =
-        await this.crmCategoriesService.updateCategoryInDB(category._id, data);
+      const updatedCategory = await this.crmCategoriesService.updateCategory(
+        category._id,
+        data,
+      );
       updatedCategories.push(updatedCategory);
     }
 
@@ -146,8 +126,9 @@ export class SyncLocalService {
 
     const deletedCategories: CategoryDocument[] = [];
     for (const category of categories) {
-      const deletedCategory =
-        await this.crmCategoriesService.deleteCategoryFromDB(category._id);
+      const deletedCategory = await this.crmCategoriesService.deleteCategory(
+        category._id,
+      );
       deletedCategories.push(deletedCategory);
     }
 
@@ -176,8 +157,10 @@ export class SyncLocalService {
       _.map(categoriesFromConstant, (category) => [category.id, category]),
     );
 
-    const categoriesFromDB =
-      await this.crmCategoriesService.getAllCategoriesFromDB();
+    const categoriesFromDB = await this.crmCategoriesService
+      .getModel()
+      .find()
+      .exec();
     const categoriesFromDBMap = new Map(
       _.map(categoriesFromDB, (category) => [category.microtronId, category]),
     );
@@ -227,11 +210,10 @@ export class SyncLocalService {
             if (isEqual) return null;
 
             return [
-              categoryFromDB,
+              categoryFromDB._id,
               {
                 ..._.pick(categoryFromConstant, ['markup']),
-                sync: true,
-                syncAt: new Date(),
+                'sync.localAt': new Date(),
               },
             ];
           }),
@@ -288,7 +270,8 @@ export class SyncLocalService {
     const { categoriesToAdd, categoriesToUpdate, categoriesToRemove } = data;
 
     if (!_.isEmpty(categoriesToAdd)) {
-      const microtronIntegration = await this.getMicrotronIntegration();
+      const microtronIntegration =
+        await this.crmIntegrationsService.getMicrotronIntegration();
       const course = await this.microtronCoursesService.getCoursesByAPI(false);
 
       result.added = await this.addCategoriesToDB(
@@ -311,6 +294,7 @@ export class SyncLocalService {
     return result;
   }
 
+  // UTILITIES PART - PRODUCTS
   public async addProductsToDB(
     data: Pick<TAddProduct, 'category'>,
     products: IProductFullInfo[],
@@ -618,7 +602,8 @@ export class SyncLocalService {
 
   // MAIN PART - CATEGORIES
   public async loadAllCategoriesToDB() {
-    const microtronIntegration = await this.getMicrotronIntegration();
+    const microtronIntegration =
+      await this.crmIntegrationsService.getMicrotronIntegration();
     const course = await this.microtronCoursesService.getCoursesByAPI(false);
 
     const categories =
@@ -663,7 +648,7 @@ export class SyncLocalService {
   public async loadAllProductsToDB() {
     this.logger.debug('Load All Categories from DB');
 
-    const categories = await this.crmCategoriesService.getAllCategoriesFromDB();
+    const categories = await this.crmCategoriesService.getModel().find().exec();
     this.logger.debug('Loaded Categories from DB:', {
       count: categories.length,
     });
@@ -769,11 +754,10 @@ export class SyncLocalService {
     for (const category of categories) {
       const updatedCategory = await this.updateCategoriesInDB([
         [
-          category,
+          category._id,
           {
             course: course.bank,
-            sync: true,
-            syncAt: new Date(),
+            'sync.localAt': new Date(),
           },
         ],
       ]);

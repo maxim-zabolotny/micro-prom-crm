@@ -45,7 +45,7 @@ export class LoadAllCategoriesConsumer {
 
     await this.unionLogger(job, 'Start loading categories to Google Sheet');
     const { addedRowsCount, updatedCategories, newCategoriesCount, success } =
-      await this.syncPromService.loadAllNewCategoriesToSheet();
+      await this.syncPromService.loadAllCategoriesToSheet();
 
     return {
       newCategoriesCount,

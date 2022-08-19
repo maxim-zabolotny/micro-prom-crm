@@ -22,7 +22,7 @@ export class SyncPromController {
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async loadAllCategories() {
-    return this.syncPromService.loadAllNewCategoriesToSheet();
+    return this.syncPromService.loadAllCategoriesToSheet();
   }
 
   @Get('/reload-all-categories')

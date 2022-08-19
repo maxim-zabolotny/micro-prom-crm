@@ -5,17 +5,8 @@ import * as _ from 'lodash';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { DataGenerateHelper } from '@common/helpers';
-import { ITranslatedCategoryInConstant } from '@common/interfaces/category';
 import { Product, ProductDocument } from '@schemas/product';
-
-export type TAddCategory = ITranslatedCategoryInConstant & {
-  course: number;
-  integrationId: Types.ObjectId;
-};
-
-export type TUpdateCategory = Partial<
-  Pick<Category, 'course' | 'markup' | 'promTableLine' | 'sync' | 'syncAt'>
->;
+import { TAddCategoryToDB, TUpdateCategoryInDB } from './types';
 
 @Injectable()
 export class CrmCategoriesService {
@@ -32,32 +23,17 @@ export class CrmCategoriesService {
     return this.categoryModel;
   }
 
-  public async getCountOfAllCategoriesInDB() {
-    return this.categoryModel.count().exec();
+  public async getCategoriesForLoadToSheet() {
+    const categories = await this.categoryModel
+      .find({ 'sync.loaded': false })
+      .exec();
+    return {
+      categories,
+      count: categories.length,
+    };
   }
 
-  public async getAllCategoriesFromDB() {
-    return this.categoryModel.find().exec();
-  }
-
-  public async getCountOfNotSyncedCategoriesInDB() {
-    return this.categoryModel.count({ sync: false }).exec();
-  }
-
-  public async getNotSyncedCategoriesFromDB() {
-    return this.categoryModel.find({ sync: false }).exec();
-  }
-
-  public async getCountOfNewCategoriesInDB() {
-    // todo: use promTableLine
-    return this.categoryModel.count({ syncAt: undefined }).exec();
-  }
-
-  public async getNewCategoriesFromDB() {
-    return this.categoryModel.find({ syncAt: undefined }).exec();
-  }
-
-  public async getCategoriesByIdsFromDB(categoryIds: Types.ObjectId[]) {
+  public async getCategoriesByIds(categoryIds: Types.ObjectId[]) {
     if (_.isEmpty(categoryIds)) return [];
 
     return this.categoryModel
@@ -123,7 +99,7 @@ export class CrmCategoriesService {
       .exec();
   }
 
-  public async addCategoryToDB(categoryData: TAddCategory) {
+  public async addCategory(categoryData: TAddCategoryToDB) {
     const parentMicrotronId =
       categoryData.parentId !== '0' ? categoryData.parentId : undefined;
 
@@ -162,6 +138,9 @@ export class CrmCategoriesService {
       translate: {
         name: categoryData.ruName,
       },
+      sync: {
+        localAt: new Date(),
+      },
       parent: parent?._id,
       microtronId: categoryData.id,
       parentMicrotronId: parentMicrotronId,
@@ -196,30 +175,9 @@ export class CrmCategoriesService {
     return category;
   }
 
-  public async updateAllCategoriesInDB(data: Partial<Category>) {
-    this.logger.debug('Process update all Categories:', {
-      data,
-    });
-
-    const updateResult = await this.categoryModel
-      .updateMany(
-        {},
-        {
-          $set: data,
-        },
-      )
-      .exec();
-
-    this.logger.debug('Categories update result:', {
-      ...updateResult,
-    });
-
-    return updateResult;
-  }
-
-  public async updateCategoryInDB(
+  public async updateCategory(
     categoryId: Types.ObjectId,
-    data: TUpdateCategory,
+    data: TUpdateCategoryInDB,
   ) {
     this.logger.debug('Process update Category:', {
       categoryId,
@@ -247,7 +205,28 @@ export class CrmCategoriesService {
     return updatedCategory;
   }
 
-  public async deleteCategoryFromDB(categoryId: Types.ObjectId) {
+  public async updateAllCategories(data: Partial<TUpdateCategoryInDB>) {
+    this.logger.debug('Process update all Categories:', {
+      data,
+    });
+
+    const updateResult = await this.categoryModel
+      .updateMany(
+        {},
+        {
+          $set: data,
+        },
+      )
+      .exec();
+
+    this.logger.debug('Categories update result:', {
+      ...updateResult,
+    });
+
+    return updateResult;
+  }
+
+  public async deleteCategory(categoryId: Types.ObjectId) {
     this.logger.debug('Process delete Category:', {
       categoryId,
     });
@@ -258,16 +237,16 @@ export class CrmCategoriesService {
       })
       .exec();
 
-    if (removedCategory.promTableLine) {
+    if (removedCategory.sync.tableLine) {
       const categoriesWithHigherTableLine = await this.categoryModel
         .find({
-          promTableLine: {
-            $gt: removedCategory.promTableLine,
+          'sync.tableLine': {
+            $gt: removedCategory.sync.tableLine,
           },
         })
         .select({
           _id: 1,
-          promTableLine: 1,
+          'sync.tableLine': 1,
         })
         .exec();
 
@@ -284,7 +263,7 @@ export class CrmCategoriesService {
               },
               {
                 $set: {
-                  promTableLine: category.promTableLine - 1,
+                  'sync.tableLine': category.sync.tableLine - 1,
                 },
               },
             )

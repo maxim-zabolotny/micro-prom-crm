@@ -1,8 +1,7 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Model, Types } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { Category, CategoryDocument } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
 import { SpreadsheetService } from '../../spreadsheet/spreadsheet.service';
@@ -13,7 +12,7 @@ import { CrmProductsService } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 import { PromProductsService } from '../../prom/products/products.service';
 import { Product as PromProduct } from '@lib/prom';
-
+import { SyncLocalService } from '../local/sync-local.service';
 import SPEC_CELLS_VIEW_TYPE = AppConstants.Google.Sheet.SPEC_CELLS_VIEW_TYPE;
 
 export interface ILoadCategoriesToSheetResult {
@@ -52,34 +51,12 @@ export class SyncPromService {
     private crmCategoriesService: CrmCategoriesService,
     private crmProductsService: CrmProductsService,
     private promProductsService: PromProductsService,
+    private syncLocalService: SyncLocalService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
-    @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
   ) {}
 
-  // UTILITIES PART
-  private mapEntityFields(
-    mapRecord: Array<[string, string, (v: unknown) => string]>,
-    mapDefaultRecord: Array<[string, string]>,
-    entity: Record<string, any>,
-  ) {
-    const entityFields = _.map(
-      mapRecord,
-      ([keyInTable, keyInEntity, converter]) => {
-        return [keyInTable, converter(_.get(entity, keyInEntity))];
-      },
-    );
-
-    const entityDefaultFields = _.map(
-      mapDefaultRecord,
-      ([keyInTable, defaultValue]) => {
-        return [keyInTable, defaultValue];
-      },
-    );
-
-    return Object.fromEntries([...entityFields, ...entityDefaultFields]);
-  }
-
+  // DEPRECATE
   public async getDeletedCategoriesFromDB(idKey = 'Ідентифікатор_групи') {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
@@ -92,7 +69,8 @@ export class SyncPromService {
     this.logger.debug(
       'Load Category ids from DB by Category ids from Google Sheet',
     );
-    const categories = await this.categoryModel
+    const categories = await this.crmCategoriesService
+      .getModel()
       .find({
         _id: { $in: categoryIdsInSheet },
       })
@@ -115,7 +93,53 @@ export class SyncPromService {
     return _.filter(allRows, (row) => _.includes(removedIds, row[idKey]));
   }
 
-  public async addCategoriesToSheet(categories: Category[]) {
+  public async deleteCategoriesFromSheet(categories: GoogleSpreadsheetRow[]) {
+    const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
+
+    this.logger.debug('Remove Categories from Google Sheet', {
+      count: categories.length,
+    });
+
+    const removedCategoriesFromSheet = await this.spreadsheetService.removeRows(
+      categoriesSheet,
+      categories,
+    );
+    this.logger.debug('Removed Categories from Google Sheet:', {
+      categories: _.map(removedCategoriesFromSheet, (category) => ({
+        id: category['Ідентифікатор_групи'],
+        name: category['Назва_групи'],
+      })),
+      count: removedCategoriesFromSheet.length,
+    });
+
+    return removedCategoriesFromSheet;
+  }
+
+  // UTILITIES PART - GENERAL
+  private mapEntityFields(
+    mapRecord: Array<[string, string, (v: unknown) => string]>,
+    mapDefaultRecord: Array<[string, string]>,
+    entity: Record<string, any>,
+  ) {
+    const entityFields = _.map(
+      mapRecord,
+      ([keyInTable, keyInEntity, converter]) => {
+        return [keyInTable, converter(_.get(entity, keyInEntity))];
+      },
+    );
+
+    const entityDefaultFields = _.map(
+      mapDefaultRecord,
+      ([keyInTable, defaultValue]) => {
+        return [keyInTable, defaultValue];
+      },
+    );
+
+    return Object.fromEntries([...entityFields, ...entityDefaultFields]);
+  }
+
+  // UTILITIES PART - CATEGORIES
+  public async loadCategoriesToSheet(categories: Category[]) {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
     this.logger.debug('Build bulk rows for Google Sheet');
@@ -142,9 +166,9 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async addAndSyncCategoriesWithSheet(categories: Category[]) {
+  public async addCategoriesToSheet(categories: Category[]) {
     // ADD TO SHEET
-    const addedRows = await this.addCategoriesToSheet(categories);
+    const addedRows = await this.loadCategoriesToSheet(categories);
 
     // UPDATE IN DB
     this.logger.debug('Update Categories in DB:', {
@@ -152,22 +176,16 @@ export class SyncPromService {
       count: categories.length,
     });
 
-    const updatedCategories = await Promise.all(
-      _.map(addedRows, async (row) => {
-        return this.crmCategoriesService.updateCategoryInDB(
-          new Types.ObjectId(row['Ідентифікатор_групи']),
-          {
-            sync: true,
-            syncAt: new Date(),
-            promTableLine: row.rowIndex,
-          },
-        );
-      }),
+    const updatedCategories = await this.syncLocalService.updateCategoriesInDB(
+      _.map(addedRows, (row) => [
+        new Types.ObjectId(row['Ідентифікатор_групи']),
+        {
+          'sync.loaded': true,
+          'sync.lastLoadedAt': new Date(),
+          'sync.tableLine': row.rowIndex,
+        },
+      ]),
     );
-    this.logger.debug('Updated Categories in DB:', {
-      ids: _.map(updatedCategories, '_id'),
-      count: updatedCategories.length,
-    });
 
     return {
       addedRows,
@@ -175,28 +193,7 @@ export class SyncPromService {
     };
   }
 
-  public async deleteCategoriesFromSheet(categories: GoogleSpreadsheetRow[]) {
-    const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
-
-    this.logger.debug('Remove Categories from Google Sheet', {
-      count: categories.length,
-    });
-
-    const removedCategoriesFromSheet = await this.spreadsheetService.removeRows(
-      categoriesSheet,
-      categories,
-    );
-    this.logger.debug('Removed Categories from Google Sheet:', {
-      categories: _.map(removedCategoriesFromSheet, (category) => ({
-        id: category['Ідентифікатор_групи'],
-        name: category['Назва_групи'],
-      })),
-      count: removedCategoriesFromSheet.length,
-    });
-
-    return removedCategoriesFromSheet;
-  }
-
+  // UTILITIES PART - PRODUCTS
   public async addProductsToSheet(
     data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
   ) {
@@ -505,8 +502,11 @@ export class SyncPromService {
     };
   }
 
+  // TODO:
+  public async removeProductsFromProm() {}
+
   // MAIN PART - CATEGORIES
-  public async loadAllNewCategoriesToSheet() {
+  public async loadAllCategoriesToSheet() {
     const result: ILoadCategoriesToSheetResult = {
       newCategoriesCount: 0,
       addedRowsCount: 0,
@@ -514,8 +514,12 @@ export class SyncPromService {
       success: true,
     };
 
-    const count = await this.crmCategoriesService.getCountOfNewCategoriesInDB();
-    this.logger.debug('New Categories count in DB', { count });
+    const { count, categories } =
+      await this.crmCategoriesService.getCategoriesForLoadToSheet();
+    this.logger.debug('Categories for loading to Google Sheet in DB', {
+      count,
+      size: categories.length,
+    });
     if (count === 0) {
       return result;
     }
@@ -523,16 +527,10 @@ export class SyncPromService {
     // RESULT
     result.newCategoriesCount = count;
 
-    this.logger.debug('Load new Categories from DB');
-
-    const categories = await this.crmCategoriesService.getNewCategoriesFromDB();
-    this.logger.debug('Loaded new Categories:', {
-      count: categories.length,
-    });
-
     // ADD TO SHEET
-    const { addedRows, updatedCategories } =
-      await this.addAndSyncCategoriesWithSheet(categories);
+    const { addedRows, updatedCategories } = await this.addCategoriesToSheet(
+      categories,
+    );
 
     // RESULT
     result.addedRowsCount = addedRows.length;
@@ -563,11 +561,11 @@ export class SyncPromService {
     );
 
     this.logger.debug('Update all Categories in DB');
-    await this.crmCategoriesService.updateAllCategoriesInDB({
-      syncAt: null,
+    await this.crmCategoriesService.updateAllCategories({
+      'sync.loaded': false,
     });
 
-    return this.loadAllNewCategoriesToSheet();
+    return this.loadAllCategoriesToSheet();
   }
 
   // MAIN PART - PRODUCTS
