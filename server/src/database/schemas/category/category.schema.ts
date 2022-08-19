@@ -1,6 +1,10 @@
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
 import { Integration } from '@schemas/integration';
+import {
+  CategorySync,
+  CategorySyncSchema,
+} from '@schemas/category/category-sync.schema';
 
 export type CategoryDocument = Category & Document;
 
@@ -26,14 +30,8 @@ export class Category {
   })
   translate: TCategoryTranslate;
 
-  @Prop({ type: Boolean, required: true, default: false })
-  sync: boolean;
-
-  @Prop({ type: Date })
-  syncAt?: Date;
-
-  @Prop({ type: Number })
-  promTableLine?: number;
+  @Prop({ type: CategorySyncSchema, required: true })
+  sync: CategorySync;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'categories' })
   parent?: Category;
