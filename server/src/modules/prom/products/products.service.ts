@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import PromAPI, { Product as PromProduct, Product } from '@lib/prom';
+import PromAPI, { LibErrors, Product as PromProduct, Product } from '@lib/prom';
 import { AppConstants } from '../../../app.constants';
 
 @Injectable()
@@ -26,9 +26,19 @@ export class PromProductsService {
     data: PromProduct.IPostProductsEditByExternalIdBody[],
   ): Promise<PromProduct.TPostProductsEditByExternalIdResponse> {
     this.logger.debug('Edit products by API');
-    const editeResult = await this.productAPI.editByExternalId(data);
 
-    return editeResult;
+    try {
+      const editeResult = await this.productAPI.editByExternalId(data);
+      return editeResult;
+    } catch (err: unknown) {
+      const isProductEditError =
+        err['type'] === LibErrors.APIErrorType.ProductEdit;
+      if (err instanceof LibErrors.PromAPIError && isProductEditError) {
+        return err.data;
+      }
+
+      throw err;
+    }
   }
 
   public async importSheet() {
