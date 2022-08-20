@@ -159,7 +159,7 @@ export interface IPostProductsImportUrlBody {
   force_update: boolean;
   only_available?: boolean;
   mark_missing_product_as?: MarkMissingProductAs;
-  updated_fields?: ProductUpdatedFields;
+  updated_fields?: ProductUpdatedFields[];
 }
 
 // RESPONSE
