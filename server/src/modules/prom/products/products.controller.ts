@@ -20,4 +20,10 @@ export class PromProductsController {
   async getList() {
     return this.promProductsService.getList();
   }
+
+  @Get('/import-sheet')
+  @HttpCode(200)
+  async importSheet() {
+    return this.promProductsService.importSheet();
+  }
 }

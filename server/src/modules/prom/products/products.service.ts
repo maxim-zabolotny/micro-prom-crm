@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import PromAPI, { Product as PromProduct } from '@lib/prom';
+import PromAPI, { Product as PromProduct, Product } from '@lib/prom';
+import { AppConstants } from '../../../app.constants';
 
 @Injectable()
 export class PromProductsService {
@@ -28,5 +29,32 @@ export class PromProductsService {
     const editeResult = await this.productAPI.editByExternalId(data);
 
     return editeResult;
+  }
+
+  public async importSheet() {
+    this.logger.debug('Import Google Sheet to Prom');
+
+    const result = await this.productAPI.importUrl({
+      url: AppConstants.Google.Sheet.SHARE_URL,
+      mark_missing_product_as: Product.MarkMissingProductAs.Deleted,
+      force_update: true,
+      only_available: false,
+      updated_fields: [
+        Product.ProductUpdatedFields.Name,
+        Product.ProductUpdatedFields.Sku,
+        Product.ProductUpdatedFields.Price,
+        Product.ProductUpdatedFields.ImagesUrls,
+        Product.ProductUpdatedFields.Presence,
+        Product.ProductUpdatedFields.QuantityInStock,
+        Product.ProductUpdatedFields.Description,
+        Product.ProductUpdatedFields.Group,
+        Product.ProductUpdatedFields.Keywords,
+        Product.ProductUpdatedFields.Attributes,
+      ],
+    });
+
+    this.logger.debug('Import Google Sheet to Prom result:', result);
+
+    return result;
   }
 }
