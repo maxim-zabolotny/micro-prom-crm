@@ -39,6 +39,13 @@ export class SyncLocalController {
     return this.syncLocalService.loadAllProductsByCategoryToDB(microtronId);
   }
 
+  @Get('/actualize-all-products')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async actualizeAllProducts() {
+    return this.syncLocalService.actualizeAllProducts();
+  }
+
   @Get('/actualize-products-by-category')
   @HttpCode(200)
   @Auth(UserRole.Admin)

@@ -776,6 +776,31 @@ export class SyncLocalService {
     return result;
   }
 
+  public async actualizeAllProducts() {
+    this.logger.debug('Load All Categories from DB');
+
+    const categories = await this.crmCategoriesService.getModel().find().exec();
+    this.logger.debug('Loaded Categories from DB:', {
+      count: categories.length,
+    });
+
+    const changeProductsActions = await this.getChangeProductsActions(
+      categories,
+      true,
+      true,
+      true,
+    );
+    const result = await this.makeProductsChangeActions(changeProductsActions);
+
+    this.logger.debug('Result of actualize All Products:', {
+      addedProducts: result.added.length,
+      updatedProducts: result.updated.length,
+      removedProducts: result.removed.length,
+    });
+
+    return result;
+  }
+
   // MAIN PART - CATEGORIES + PRODUCTS
   public async syncCourse() {
     const result = {
