@@ -251,8 +251,15 @@ export class SyncLocalService {
   public async makeCategoriesChangeActions(
     data: Partial<IChangeCategoriesActions>,
   ) {
+    const result: ISyncCategoriesResult = {
+      added: [],
+      updated: [],
+      removed: [],
+    };
+
     if (_.every(Object.values(data), (ids) => _.isEmpty(ids))) {
-      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
+      this.logger.debug('Nothing for make Categories changes');
+      return result;
     }
 
     this.logger.debug('Sync Categories changes with DB:', {
@@ -260,12 +267,6 @@ export class SyncLocalService {
       update: data.categoriesToUpdate.length,
       remove: data.categoriesToRemove.length,
     });
-
-    const result: ISyncCategoriesResult = {
-      added: [],
-      updated: [],
-      removed: [],
-    };
 
     const { categoriesToAdd, categoriesToUpdate, categoriesToRemove } = data;
 
@@ -585,20 +586,21 @@ export class SyncLocalService {
   public async makeProductsChangeActions(
     data: Partial<IChangeProductsActions>,
   ) {
+    const result: ISyncProductsResult = {
+      added: [],
+      updated: [],
+      removed: [],
+    };
+
     if (_.every(Object.values(data), (ids) => _.isEmpty(ids))) {
-      throw new HttpException('Nothing for to do', HttpStatus.BAD_REQUEST);
+      this.logger.debug('Nothing for make Products changes');
+      return result;
     }
 
     this.logger.debug('Sync Products changes with DB:', {
       add: data.productsToAdd.length,
       update: data.productsToUpdate.length,
     });
-
-    const result: ISyncProductsResult = {
-      added: [],
-      updated: [],
-      removed: [],
-    };
 
     const { productsToAdd, productsToUpdate, productsToRemove } = data;
 
