@@ -50,7 +50,7 @@ export class CrmProductsService {
 
     return {
       rawPrice: Number(rawPrice.toFixed(3)),
-      ourPrice: Math.round(Number(ourPrice.toFixed(3))),
+      ourPrice: Math.ceil(Number(ourPrice.toFixed(3))),
     };
   }
 
