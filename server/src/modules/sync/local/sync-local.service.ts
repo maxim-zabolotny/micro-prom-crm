@@ -10,11 +10,7 @@ import { CategoryDocument } from '@schemas/category';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TArray } from '@custom-types';
 import { MicrotronProductsService } from '../../microtron/products/products.service';
-import {
-  CrmProductsService,
-  TAddProduct,
-  TUpdateProduct,
-} from '../../crm/products/products.service';
+import { CrmProductsService } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
 import { CrmIntegrationsService } from '../../crm/integrations/integrations.service';
@@ -22,6 +18,8 @@ import {
   TAddCategoryToDB,
   TUpdateCategoryInDB,
 } from '../../crm/categories/types';
+import { TAddProductToDB } from '../../crm/products/types/add-product-to-db.type';
+import { TUpdateProductInDB } from '../../crm/products/types/update-product-in-db.type';
 
 export interface IChangeCategoriesActions {
   categoriesToAdd: ITranslatedCategoryInConstant[];
@@ -37,14 +35,16 @@ export interface ISyncCategoriesResult {
 
 export interface IChangeProductsActions {
   productsToAdd: Array<
-    TArray.Pair<Pick<TAddProduct, 'category'>, IProductFullInfo[]>
+    TArray.Pair<Pick<TAddProductToDB, 'category'>, IProductFullInfo[]>
   >;
-  productsToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>>;
+  productsToUpdate: Array<TArray.Pair<Types.ObjectId, TUpdateProductInDB>>;
+  productsToRemove: ProductDocument[];
 }
 
 export interface ISyncProductsResult {
   added: ProductDocument[];
   updated: ProductDocument[];
+  removed: ProductDocument[];
 }
 
 @Injectable()
@@ -296,7 +296,7 @@ export class SyncLocalService {
 
   // UTILITIES PART - PRODUCTS
   public async addProductsToDB(
-    data: Pick<TAddProduct, 'category'>,
+    data: Pick<TAddProductToDB, 'category'>,
     products: IProductFullInfo[],
   ) {
     const { category } = data;
@@ -307,7 +307,7 @@ export class SyncLocalService {
 
     const addedProducts: ProductDocument[] = [];
     for (const product of products) {
-      const addedProduct = await this.crmProductsService.addProductToDB({
+      const addedProduct = await this.crmProductsService.addProduct({
         ...product,
         category,
       });
@@ -331,7 +331,7 @@ export class SyncLocalService {
 
     const updatedProducts: ProductDocument[] = [];
     for (const [product, data] of productsWithData) {
-      const updatedProduct = await this.crmProductsService.updateProductInDB(
+      const updatedProduct = await this.crmProductsService.updateProduct(
         product._id,
         data,
       );
@@ -346,6 +346,30 @@ export class SyncLocalService {
     return updatedProducts;
   }
 
+  public async deleteProductsFromDB(
+    products: Array<Pick<ProductDocument, '_id'>>,
+  ) {
+    this.logger.debug('Start removing Products from DB', {
+      ids: _.map(products, '_id'),
+      count: products.length,
+    });
+
+    const deletedProducts: ProductDocument[] = [];
+    for (const product of products) {
+      const deletedProduct = await this.crmProductsService.deleteProduct(
+        product._id,
+      );
+      deletedProducts.push(deletedProduct);
+    }
+
+    this.logger.debug('Removed Products from DB:', {
+      ids: _.map(deletedProducts, '_id'),
+      count: deletedProducts.length,
+    });
+
+    return deletedProducts;
+  }
+
   public async getProductsToUpdateByCategories(
     categories: Array<Pick<CategoryDocument, '_id' | 'course' | 'markup'>>,
   ) {
@@ -354,8 +378,7 @@ export class SyncLocalService {
         _.pick(category, ['_id', 'course', 'markup']),
       ),
     });
-    const productToUpdate: Array<TArray.Pair<ProductDocument, TUpdateProduct>> =
-      [];
+    const productToUpdate: IChangeProductsActions['productsToUpdate'] = [];
 
     let allProductsCount = 0;
     let allExcludedProductsFromUpdateCount = 0;
@@ -364,7 +387,7 @@ export class SyncLocalService {
         categoryId: category._id,
       });
       const productsByCategory =
-        await this.crmProductsService.getProductsByCategoryFromDB(category._id);
+        await this.crmProductsService.getProductsByCategories([category._id]);
 
       const productsToUpdateByCategory = _.chain(productsByCategory)
         .filter((product) => {
@@ -378,27 +401,29 @@ export class SyncLocalService {
         })
         .map((product) => {
           return [
-            product,
+            product._id,
             {
               category: _.pick(category, ['course', 'markup']),
-              sync: false,
+              'sync.localAt': new Date(),
+              'sync.prom': false,
             },
-          ] as TArray.Pair<ProductDocument, TUpdateProduct>;
+          ] as TArray.Pair<Types.ObjectId, TUpdateProductInDB>;
         })
         .value();
       productToUpdate.push(...productsToUpdateByCategory);
 
       const excludedProductsFromUpdateCount =
         productsByCategory.length - productsToUpdateByCategory.length;
+
+      allProductsCount += productsByCategory.length;
+      allExcludedProductsFromUpdateCount += excludedProductsFromUpdateCount;
+
       this.logger.debug('Search Products to update result:', {
         categoryId: category._id,
         productsByCategoryCount: productsByCategory.length,
         productsToUpdateByCategoryCount: productsToUpdateByCategory.length,
         excludedProductsToUpdateCount: excludedProductsFromUpdateCount,
       });
-
-      allProductsCount += productsByCategory.length;
-      allExcludedProductsFromUpdateCount += excludedProductsFromUpdateCount;
     }
 
     this.logger.debug('Products to update result:', {
@@ -421,6 +446,7 @@ export class SyncLocalService {
     const result: IChangeProductsActions = {
       productsToAdd: [],
       productsToUpdate: [],
+      productsToRemove: [],
     };
 
     const productsFromAPI =
@@ -441,7 +467,7 @@ export class SyncLocalService {
       this.logger.debug('Load Products by Category from DB');
 
       const productsFromDB =
-        await this.crmProductsService.getProductsByCategoryFromDB(category._id);
+        await this.crmProductsService.getProductsByCategories([category._id]);
       const productsFromDBMap = new Map(
         _.map(productsFromDB, (product) => [product.microtronId, product]),
       );
@@ -510,19 +536,19 @@ export class SyncLocalService {
                   ourPrice: productFromDB.ourPrice,
                 },
               );
-              if (isEqual && !productFromDB.deleted) return null;
+              if (isEqual) return null;
 
               return [
-                productFromDB,
+                productFromDB._id,
                 {
                   category,
                   originalPrice: price,
                   originalPriceCurrency: currency,
                   quantity: quantity,
-                  deleted: false,
-                  sync: false,
+                  'sync.localAt': new Date(),
+                  'sync.prom': false,
                 },
-              ] as TArray.Pair<ProductDocument, TUpdateProduct>;
+              ] as TArray.Pair<Types.ObjectId, TUpdateProductInDB>;
             }),
           );
 
@@ -538,23 +564,15 @@ export class SyncLocalService {
 
       if (remove) {
         if (!_.isEmpty(removedProductIds)) {
-          const productsToMarkDeleted = _.map(
-            removedProductIds,
-            (productId) =>
-              [
-                productsFromDBMap.get(productId),
-                {
-                  sync: false,
-                  deleted: true,
-                },
-              ] as TArray.Pair<ProductDocument, TUpdateProduct>,
+          const productsToRemove = _.map(removedProductIds, (productId) =>
+            productsFromDBMap.get(productId),
           );
 
-          this.logger.debug('Found Products to make as deleted in DB:', {
-            count: productsToMarkDeleted.length,
+          this.logger.debug('Found Products to remove from DB:', {
+            count: productsToRemove.length,
           });
 
-          result.productsToUpdate.push(...productsToMarkDeleted);
+          result.productsToRemove.push(...productsToRemove);
         } else {
           this.logger.debug('Not found deleted Products between DB and API');
         }
@@ -579,9 +597,10 @@ export class SyncLocalService {
     const result: ISyncProductsResult = {
       added: [],
       updated: [],
+      removed: [],
     };
 
-    const { productsToAdd, productsToUpdate } = data;
+    const { productsToAdd, productsToUpdate, productsToRemove } = data;
 
     if (!_.isEmpty(productsToAdd)) {
       for (const [{ category }, productsWithFullInfo] of productsToAdd) {
@@ -595,6 +614,10 @@ export class SyncLocalService {
 
     if (!_.isEmpty(productsToUpdate)) {
       result.updated = await this.updateProductsInDB(productsToUpdate);
+    }
+
+    if (!_.isEmpty(productsToRemove)) {
+      result.removed = await this.deleteProductsFromDB(productsToRemove);
     }
 
     return result;
@@ -696,8 +719,10 @@ export class SyncLocalService {
           productsLeft: Math.max(0, allProductsCount - loadedProducts.length),
         });
 
-        this.logger.log('Sleep 2s');
-        await this.timeHelper.sleep(2000);
+        if (addedProducts.length >= 20) {
+          this.logger.log('Sleep 2s');
+          await this.timeHelper.sleep(2000);
+        }
       } else {
         this.logger.debug('Empty Category processed:', {
           id: category._id,
@@ -752,7 +777,8 @@ export class SyncLocalService {
     }
 
     for (const category of categories) {
-      const updatedCategory = await this.updateCategoriesInDB([
+      // single category but in array view
+      const updatedCategories = await this.updateCategoriesInDB([
         [
           category._id,
           {
@@ -761,10 +787,10 @@ export class SyncLocalService {
           },
         ],
       ]);
-      result.updatedCategories.push(...updatedCategory);
+      result.updatedCategories.push(...updatedCategories);
 
       const productsToUpdate = await this.getProductsToUpdateByCategories(
-        updatedCategory,
+        updatedCategories,
       );
       if (!_.isEmpty(productsToUpdate)) {
         const updatedProducts = await this.updateProductsInDB(productsToUpdate);
@@ -797,13 +823,14 @@ export class SyncLocalService {
     }
 
     for (const categoryToUpdate of categoriesToUpdate) {
-      const updatedCategory = await this.updateCategoriesInDB([
+      // single category but in array view
+      const updatedCategories = await this.updateCategoriesInDB([
         categoryToUpdate,
       ]);
-      result.updatedCategories.push(...updatedCategory);
+      result.updatedCategories.push(...updatedCategories);
 
       const productsToUpdate = await this.getProductsToUpdateByCategories(
-        updatedCategory,
+        updatedCategories,
       );
       if (!_.isEmpty(productsToUpdate)) {
         const updatedProducts = await this.updateProductsInDB(productsToUpdate);

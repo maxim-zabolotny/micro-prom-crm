@@ -47,7 +47,7 @@ export class LoadProductsByCategoryConsumer {
 
     await this.unionLogger(job, 'Start loading products to Google Sheet');
     const { addedRowsCount, updatedProducts, newProductsCount, success } =
-      await this.syncPromService.loadAllNewProductsByCategoryToSheet(
+      await this.syncPromService.loadAllProductsByCategoryToSheet(
         job.data.categoryId,
       );
 

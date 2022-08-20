@@ -36,7 +36,7 @@ export class SyncPromController {
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async loadAllProducts() {
-    return this.syncPromService.loadAllNewProductsToSheet();
+    return this.syncPromService.loadAllProductsToSheet();
   }
 
   @Get('/reload-all-products')
@@ -50,8 +50,6 @@ export class SyncPromController {
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async loadProductsByCategory(@Query('microtronId') microtronId: string) {
-    return this.syncPromService.loadAllNewProductsByCategoryToSheet(
-      microtronId,
-    );
+    return this.syncPromService.loadAllProductsByCategoryToSheet(microtronId);
   }
 }

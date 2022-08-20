@@ -9,26 +9,9 @@ import { IProductFullInfo } from '@common/interfaces/product';
 import { Category, CategoryDocument } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
 import { Types as MicrotronTypes } from '@lib/microtron';
+import { TAddProductToDB } from './types/add-product-to-db.type';
+import { TUpdateProductInDB } from './types/update-product-in-db.type';
 import ProductConstants = AppConstants.Prom.Sheet.Product;
-
-export type TAddProduct = Omit<IProductFullInfo, 'categoryId'> & {
-  category: Pick<CategoryDocument, '_id' | 'microtronId' | 'course' | 'markup'>;
-};
-
-export type TUpdateProduct = Partial<
-  Pick<
-    Product,
-    | 'originalPrice'
-    | 'originalPriceCurrency'
-    | 'quantity'
-    | 'promTableLine'
-    | 'sync'
-    | 'syncAt'
-    | 'deleted'
-  > & {
-    category: Pick<Category, 'course' | 'markup'>;
-  }
->;
 
 @Injectable()
 export class CrmProductsService {
@@ -40,10 +23,7 @@ export class CrmProductsService {
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
-  public getModel() {
-    return this.productModel;
-  }
-
+  // UTILITIES
   public getProductPrice(product: Pick<IProductFullInfo, 'price' | 'price_s'>) {
     return _.isNumber(product.price) ? product.price : product.price_s;
   }
@@ -81,43 +61,69 @@ export class CrmProductsService {
     return Number(siteMarkup.toFixed(3));
   }
 
-  public async getAllProductsFromDB() {
+  // MAIN
+  public getModel() {
+    return this.productModel;
+  }
+
+  public async getAllProducts() {
     return this.productModel.find().exec();
   }
 
-  public async getCountOfNotSyncedProductsInDB() {
-    return this.productModel.count({ sync: false }).exec();
+  public async getProductsByCategories(categoryIds: Types.ObjectId[]) {
+    return this.productModel.find({ category: { $in: categoryIds } }).exec();
   }
 
-  public async getAllNotSyncedProductsFromDB() {
-    return this.productModel.find({ sync: false }).exec();
-  }
-
-  public async getCountOfNewProductsInDB() {
-    return this.productModel.count({ syncAt: undefined }).exec();
-  }
-
-  public async getAllNewProductsFromDB() {
-    return this.productModel.find({ syncAt: undefined }).exec();
-  }
-
-  public async getProductsByCategoryFromDB(categoryId: Types.ObjectId) {
-    return this.productModel.find({ category: categoryId }).exec();
-  }
-
-  public async getCountOfNewProductsByCategoryInDB(categoryId: Types.ObjectId) {
-    return this.productModel
-      .count({ category: categoryId, syncAt: undefined })
+  public async getProductsForLoadToSheet() {
+    const products: Array<
+      Omit<ProductDocument, 'category'> & {
+        category: Pick<CategoryDocument, '_id' | 'promId'>;
+      }
+    > = await this.productModel
+      .aggregate([
+        {
+          $match: { 'sync.loaded': false },
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  promId: 1,
+                },
+              },
+            ],
+            as: 'category',
+          },
+        },
+        {
+          $unwind: '$category',
+        },
+      ])
       .exec();
+
+    return {
+      products,
+      count: products.length,
+    };
   }
 
-  public async getNewProductsByCategoryFromDB(categoryId: Types.ObjectId) {
-    return this.productModel
-      .find({ category: categoryId, syncAt: undefined })
+  public async getProductsForLoadToSheetByCategory(categoryId: Types.ObjectId) {
+    const products = await this.productModel
+      .find({ category: categoryId, 'sync.loaded': false })
       .exec();
+
+    return {
+      products,
+      count: products.length,
+    };
   }
 
-  public async addProductToDB(productData: TAddProduct) {
+  public async addProduct(productData: TAddProductToDB) {
     this.logger.debug('Process add Product:', {
       id: productData.id,
       name: productData.name,
@@ -188,6 +194,9 @@ export class CrmProductsService {
       category: category._id,
       microtronId: productData.id,
       promId: this.dataGenerateHelper.randomNumber(1, 9, 19),
+      sync: {
+        localAt: new Date(),
+      },
     });
     await product.save();
 
@@ -198,9 +207,9 @@ export class CrmProductsService {
     return product;
   }
 
-  public async updateProductInDB(
+  public async updateProduct(
     productId: Types.ObjectId,
-    data: TUpdateProduct,
+    data: TUpdateProductInDB,
   ) {
     this.logger.debug('Process update Product:', {
       productId,
@@ -213,11 +222,11 @@ export class CrmProductsService {
       throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
     }
 
-    const dataForUpdate: Partial<Product> = _.pick(data, [
-      'promTableLine',
-      'sync',
-      'syncAt',
-      'deleted',
+    const dataForUpdate: Partial<Product & TUpdateProductInDB> = _.omit(data, [
+      'quantity',
+      'originalPrice',
+      'originalPriceCurrency',
+      'category',
     ]);
 
     if ('quantity' in data) {
@@ -235,7 +244,7 @@ export class CrmProductsService {
     if (
       'originalPrice' in data ||
       'originalPriceCurrency' in data ||
-      data.category
+      'category' in data
     ) {
       if (!data.category) {
         throw new HttpException('Category is required', HttpStatus.BAD_REQUEST);
@@ -262,8 +271,18 @@ export class CrmProductsService {
       dataForUpdate.siteMarkup = siteMarkup;
 
       this.logger.debug('Change Product price', {
-        old: _.pick(oldProduct, ['originalPrice', 'ourPrice', 'siteMarkup']),
-        new: _.pick(dataForUpdate, ['originalPrice', 'ourPrice', 'siteMarkup']),
+        old: _.pick(oldProduct, [
+          'originalPrice',
+          'originalPriceCurrency',
+          'ourPrice',
+          'siteMarkup',
+        ]),
+        new: _.pick(dataForUpdate, [
+          'originalPrice',
+          'originalPriceCurrency',
+          'ourPrice',
+          'siteMarkup',
+        ]),
       });
     }
 
@@ -288,7 +307,7 @@ export class CrmProductsService {
     return updatedProduct;
   }
 
-  public async updateAllProductsInDB(data: Partial<Product>) {
+  public async updateAllProducts(data: Partial<TUpdateProductInDB>) {
     this.logger.debug('Process update all Products:', {
       data,
     });
@@ -307,5 +326,49 @@ export class CrmProductsService {
     });
 
     return updateResult;
+  }
+
+  public async deleteProduct(productId: Types.ObjectId) {
+    this.logger.debug('Process delete Product:', {
+      productId,
+    });
+
+    const removedProduct = await this.productModel
+      .findOneAndDelete({
+        _id: productId,
+      })
+      .exec();
+
+    if (removedProduct.sync.tableLine) {
+      const { matchedCount, modifiedCount } = await this.productModel
+        .updateMany(
+          {
+            'sync.tableLine': {
+              $gt: removedProduct.sync.tableLine,
+            },
+          },
+          [
+            {
+              $set: {
+                'sync.tableLine': {
+                  $subtract: ['$sync.tableLine', 1],
+                },
+              },
+            },
+          ],
+        )
+        .exec();
+
+      this.logger.debug('Updated Products with higher table line:', {
+        matchedCount,
+        modifiedCount,
+      });
+    }
+
+    this.logger.debug('Product removed:', {
+      productId,
+    });
+
+    return removedProduct;
   }
 }

@@ -13,6 +13,7 @@ import { ProductDocument } from '@schemas/product';
 import { PromProductsService } from '../../prom/products/products.service';
 import { Product as PromProduct } from '@lib/prom';
 import { SyncLocalService } from '../local/sync-local.service';
+import { TObject } from '@custom-types';
 import SPEC_CELLS_VIEW_TYPE = AppConstants.Google.Sheet.SPEC_CELLS_VIEW_TYPE;
 
 export interface ILoadCategoriesToSheetResult {
@@ -38,7 +39,7 @@ export type TEditPromProduct = Required<
 
 export type TUpdateProductInProm = Pick<
   ProductDocument,
-  '_id' | 'ourPrice' | 'quantity' | 'available' | 'deleted'
+  '_id' | 'ourPrice' | 'quantity' | 'available'
 >;
 
 @Injectable()
@@ -139,7 +140,7 @@ export class SyncPromService {
   }
 
   // UTILITIES PART - CATEGORIES
-  public async loadCategoriesToSheet(categories: Category[]) {
+  public async addCategoriesToSheet(categories: Category[]) {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
     this.logger.debug('Build bulk rows for Google Sheet');
@@ -166,9 +167,9 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async addCategoriesToSheet(categories: Category[]) {
+  public async syncCategoriesWithSheet(categories: Category[]) {
     // ADD TO SHEET
-    const addedRows = await this.loadCategoriesToSheet(categories);
+    const addedRows = await this.addCategoriesToSheet(categories);
 
     // UPDATE IN DB
     this.logger.debug('Update Categories in DB:', {
@@ -194,61 +195,8 @@ export class SyncPromService {
   }
 
   // UTILITIES PART - PRODUCTS
-  public async addProductsToSheet(
-    data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
-  ) {
-    const productsSheet = this.spreadsheetService.getProductsSheet();
-
-    // RENAME CELLS
-    await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
-      SPEC_CELLS_VIEW_TYPE.Increment,
-    );
-
-    // ROWS
-    this.logger.debug('Build bulk rows for Google Sheet');
-    const bulkRows = _.flattenDeep(
-      _.map(data, ({ products, promGroupNumber }) => {
-        return _.map(products, (product) =>
-          this.mapEntityFields(
-            AppConstants.Prom.Sheet.Product.FieldsMapping,
-            AppConstants.Prom.Sheet.Product.FieldsMappingDefaults,
-            {
-              ...product.toObject(),
-              promGroupNumber,
-            },
-          ),
-        );
-      }),
-    );
-
-    this.logger.debug('Add rows with Products to Google Sheet:', {
-      count: bulkRows.length,
-    });
-
-    const addedRows = await this.spreadsheetService.addRows(
-      productsSheet,
-      bulkRows,
-    );
-    this.logger.debug('Added rows to Google Sheet:', {
-      count: addedRows.length,
-    });
-
-    // CELLS
-    await this.addProductsSpecificationsToSheetCells(
-      _.flattenDeep(_.map(data, 'products')),
-      addedRows,
-    );
-
-    // RENAME CELLS
-    await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
-      SPEC_CELLS_VIEW_TYPE.Default,
-    );
-
-    return addedRows;
-  }
-
-  public async addProductsSpecificationsToSheetCells(
-    products: ProductDocument[],
+  public async addProductsSpecificationsToSheet(
+    products: Array<Omit<ProductDocument, 'category'>>,
     rows: GoogleSpreadsheetRow[],
     chunkSize = 1700,
   ) {
@@ -379,44 +327,122 @@ export class SyncPromService {
     });
   }
 
-  public async addAndSyncProductsWithSheet(
-    data: Array<{ products: ProductDocument[]; promGroupNumber: number }>,
+  public async addProductsToSheet(
+    products: Array<
+      Omit<ProductDocument, 'category'> & {
+        category: Pick<CategoryDocument, '_id' | 'promId'>;
+      }
+    >,
   ) {
-    const allProducts = _.flattenDeep(_.map(data, 'products'));
+    const productsSheet = this.spreadsheetService.getProductsSheet();
 
+    // RENAME CELLS
+    await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
+      SPEC_CELLS_VIEW_TYPE.Increment,
+    );
+
+    // ROWS
+    this.logger.debug('Build bulk rows for Google Sheet');
+    const bulkRows = _.map(products, (product) =>
+      this.mapEntityFields(
+        AppConstants.Prom.Sheet.Product.FieldsMapping,
+        AppConstants.Prom.Sheet.Product.FieldsMappingDefaults,
+        product,
+      ),
+    );
+
+    this.logger.debug('Add rows with Products to Google Sheet:', {
+      count: bulkRows.length,
+    });
+
+    const addedRows = await this.spreadsheetService.addRows(
+      productsSheet,
+      bulkRows,
+    );
+    this.logger.debug('Added rows to Google Sheet:', {
+      count: addedRows.length,
+    });
+
+    // CELLS
+    await this.addProductsSpecificationsToSheet(
+      _.map(products, (product) => _.omit(product, ['category'])),
+      addedRows,
+    );
+
+    // RENAME CELLS
+    await this.spreadsheetService.changeSpecCellsViewTypeInSheet(
+      SPEC_CELLS_VIEW_TYPE.Default,
+    );
+
+    return addedRows;
+  }
+
+  public async syncProductsWithSheet(
+    products: Array<
+      Omit<ProductDocument, 'category'> & {
+        category: Pick<CategoryDocument, '_id' | 'promId'>;
+      }
+    >,
+  ) {
     const productsByPromIdMap = new Map(
-      _.map(allProducts, (product) => [String(product.promId), product]),
+      _.map(products, (product) => [String(product.promId), product]),
     );
 
     // ADD TO SHEET
-    const addedRows = await this.addProductsToSheet(data);
+    const addedRows = await this.addProductsToSheet(products);
 
     // UPDATE IN DB
     this.logger.debug('Update Products in DB:', {
-      ids: _.map(allProducts, '_id'),
-      count: allProducts.length,
+      ids: _.map(products, '_id'),
+      count: products.length,
     });
 
-    const updatedProducts = await Promise.all(
-      _.map(addedRows, async (row) => {
-        return this.crmProductsService.updateProductInDB(
-          productsByPromIdMap.get(row['Код_товару'])._id,
-          {
-            sync: true,
-            syncAt: new Date(),
-            promTableLine: row.rowIndex,
-          },
-        );
-      }),
+    const updatedProducts = await this.syncLocalService.updateProductsInDB(
+      _.map(addedRows, (row) => [
+        productsByPromIdMap.get(row['Код_товару'])._id,
+        {
+          'sync.loaded': true,
+          'sync.lastLoadedAt': new Date(),
+          'sync.prom': true,
+          'sync.lastPromAt': new Date(),
+          'sync.tableLine': row.rowIndex,
+        },
+      ]),
     );
-    this.logger.debug('Updated Products in DB:', {
-      ids: _.map(updatedProducts, '_id'),
-      count: updatedProducts.length,
-    });
 
     return {
       addedRows,
       updatedProducts,
+    };
+  }
+
+  // UTILITIES PART - PROM + PRODUCTS
+  public async processEditProductsInProm(
+    productIds: Types.ObjectId[],
+    bulkData: Array<TObject.MakeRequired<Partial<TEditPromProduct>, 'id'>>,
+  ) {
+    const { processed_ids, errors } = await this.promProductsService.edit(
+      bulkData,
+    );
+
+    const processedIds = processed_ids;
+    const unprocessedIds = _.difference(
+      _.map(productIds, (productId) => productId.toString()),
+      processedIds,
+    );
+
+    this.logger.debug('Update Products in Prom result:', {
+      errors,
+      processedIds,
+      unprocessedIds,
+      count: processedIds.length,
+    });
+
+    return {
+      errors,
+      processedIds,
+      unprocessedIds,
+      productIds,
     };
   }
 
@@ -430,9 +456,7 @@ export class SyncPromService {
         presence: product.available
           ? PromProduct.ProductPresence.Available
           : PromProduct.ProductPresence.NotAvailable,
-        status: product.deleted
-          ? PromProduct.ProductStatus.NotOnDisplay
-          : PromProduct.ProductStatus.OnDisplay,
+        status: PromProduct.ProductStatus.OnDisplay,
       };
     });
 
@@ -440,36 +464,17 @@ export class SyncPromService {
       count: bulkData.length,
     });
 
-    const { processed_ids, errors } = await this.promProductsService.edit(
-      bulkData as PromProduct.IPostProductsEditByExternalIdBody[],
+    const result = await this.processEditProductsInProm(
+      _.map(products, '_id'),
+      bulkData,
     );
 
-    const processedIds = processed_ids;
-    const unProcessedIds = _.difference(
-      _.map(products, (product) => product._id.toString()),
-      processedIds,
-    );
-
-    this.logger.debug('Update Products in Prom result:', {
-      errors,
-      processedIds,
-      unProcessedIds,
-      count: processedIds.length,
-    });
-
-    return {
-      errors,
-      processedIds,
-      unProcessedIds,
-      products,
-    };
+    return result;
   }
 
-  public async updateAndSyncProductsWithProm(
-    products: Array<TUpdateProductInProm>,
-  ) {
+  public async syncProductsWithProm(products: Array<TUpdateProductInProm>) {
     // UPDATE IN PROM
-    const { processedIds, unProcessedIds, errors } =
+    const { processedIds, unprocessedIds, errors } =
       await this.updateProductsInProm(products);
 
     // UPDATE IN DB
@@ -478,32 +483,44 @@ export class SyncPromService {
       count: processedIds.length,
     });
 
-    const updatedProducts = await Promise.all(
-      _.map(processedIds, async (productId) => {
-        return this.crmProductsService.updateProductInDB(
-          new Types.ObjectId(productId),
-          {
-            sync: true,
-            syncAt: new Date(),
-          },
-        );
-      }),
+    const updatedProducts = await this.syncLocalService.updateProductsInDB(
+      _.map(processedIds, (productId) => [
+        new Types.ObjectId(productId),
+        {
+          'sync.prom': true,
+          'sync.lastPromAt': new Date(),
+        },
+      ]),
     );
-    this.logger.debug('Updated Products in DB:', {
-      ids: _.map(updatedProducts, '_id'),
-      count: updatedProducts.length,
-    });
 
     return {
       processedIds,
-      unProcessedIds,
+      unprocessedIds,
       errors,
       updatedProducts,
     };
   }
 
-  // TODO:
-  public async removeProductsFromProm() {}
+  public async removeProductsFromProm(productIds: Types.ObjectId[]) {
+    this.logger.debug('Build bulk data for Prom');
+    const bulkData: Array<Pick<TEditPromProduct, 'id' | 'status'>> = _.map(
+      productIds,
+      (productId) => {
+        return {
+          id: productId.toString(),
+          status: PromProduct.ProductStatus.Deleted,
+        };
+      },
+    );
+
+    this.logger.debug('Remove Products from Prom:', {
+      count: bulkData.length,
+    });
+
+    const result = await this.processEditProductsInProm(productIds, bulkData);
+
+    return result;
+  }
 
   // MAIN PART - CATEGORIES
   public async loadAllCategoriesToSheet() {
@@ -516,10 +533,12 @@ export class SyncPromService {
 
     const { count, categories } =
       await this.crmCategoriesService.getCategoriesForLoadToSheet();
-    this.logger.debug('Categories for loading to Google Sheet in DB', {
+
+    this.logger.debug('Categories for loading to Google Sheet in DB:', {
       count,
       size: categories.length,
     });
+
     if (count === 0) {
       return result;
     }
@@ -528,7 +547,7 @@ export class SyncPromService {
     result.newCategoriesCount = count;
 
     // ADD TO SHEET
-    const { addedRows, updatedCategories } = await this.addCategoriesToSheet(
+    const { addedRows, updatedCategories } = await this.syncCategoriesWithSheet(
       categories,
     );
 
@@ -569,7 +588,7 @@ export class SyncPromService {
   }
 
   // MAIN PART - PRODUCTS
-  public async loadAllNewProductsByCategoryToSheet(microtronId: string) {
+  public async loadAllProductsByCategoryToSheet(microtronId: string) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
     const category = await this.crmCategoriesService.getCategoryByMicrotronId(
@@ -592,11 +611,16 @@ export class SyncPromService {
       success: true,
     };
 
-    const count =
-      await this.crmProductsService.getCountOfNewProductsByCategoryInDB(
+    const { count, products } =
+      await this.crmProductsService.getProductsForLoadToSheetByCategory(
         category._id,
       );
-    this.logger.debug('New Products count in DB', { count });
+
+    this.logger.debug('Products for loading to Google Sheet in DB:', {
+      count,
+      size: products.length,
+    });
+
     if (count === 0) {
       return result;
     }
@@ -604,24 +628,13 @@ export class SyncPromService {
     // RESULT
     result.newProductsCount = count;
 
-    this.logger.debug('Load new Products from DB');
-
-    const products =
-      await this.crmProductsService.getNewProductsByCategoryFromDB(
-        category._id,
-      );
-    this.logger.debug('Loaded new Products:', {
-      count: products.length,
-    });
-
     // ADD TO SHEET
-    const { addedRows, updatedProducts } =
-      await this.addAndSyncProductsWithSheet([
-        {
-          products,
-          promGroupNumber: category.promId,
-        },
-      ]);
+    const { addedRows, updatedProducts } = await this.syncProductsWithSheet(
+      _.map(products, (product) => ({
+        ...product.toObject(),
+        category,
+      })),
+    );
 
     // RESULT
     result.addedRowsCount = addedRows.length;
@@ -641,7 +654,7 @@ export class SyncPromService {
     };
   }
 
-  public async loadAllNewProductsToSheet() {
+  public async loadAllProductsToSheet() {
     const result: ILoadProductsToSheetResult = {
       newProductsCount: 0,
       addedRowsCount: 0,
@@ -649,8 +662,14 @@ export class SyncPromService {
       success: true,
     };
 
-    const count = await this.crmProductsService.getCountOfNewProductsInDB();
-    this.logger.debug('New Products count in DB', { count });
+    const { count, products } =
+      await this.crmProductsService.getProductsForLoadToSheet();
+
+    this.logger.debug('Products for loading to Google Sheet in DB:', {
+      count,
+      size: products.length,
+    });
+
     if (count === 0) {
       return result;
     }
@@ -658,32 +677,10 @@ export class SyncPromService {
     // RESULT
     result.newProductsCount = count;
 
-    this.logger.debug('Load new Products from DB');
-
-    const products = await this.crmProductsService
-      .getModel()
-      .find({ syncAt: undefined })
-      .populate('category', '', this.crmCategoriesService.getModel())
-      .exec();
-    const groupedProductsByCategory = _.groupBy(
-      products,
-      (product) => product.category.promId,
-    );
-    this.logger.debug('Loaded new Products:', {
-      count: products.length,
-    });
-
     // ADD TO SHEET
-    const { addedRows, updatedProducts } =
-      await this.addAndSyncProductsWithSheet(
-        _.map(
-          Object.entries(groupedProductsByCategory),
-          ([promGroupNumber, products]) => ({
-            products,
-            promGroupNumber: Number(promGroupNumber),
-          }),
-        ),
-      );
+    const { addedRows, updatedProducts } = await this.syncProductsWithSheet(
+      products,
+    );
 
     // RESULT
     result.addedRowsCount = addedRows.length;
@@ -714,10 +711,10 @@ export class SyncPromService {
     );
 
     this.logger.debug('Update all Products in DB');
-    await this.crmProductsService.updateAllProductsInDB({
-      syncAt: null,
+    await this.crmProductsService.updateAllProducts({
+      'sync.loaded': false,
     });
 
-    return this.loadAllNewProductsToSheet();
+    return this.loadAllProductsToSheet();
   }
 }

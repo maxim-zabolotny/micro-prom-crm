@@ -18,6 +18,6 @@ export class CrmProductsController {
   @Get('/all')
   @HttpCode(200)
   async getAllProducts() {
-    return this.crmProductsService.getAllProductsFromDB();
+    return this.crmProductsService.getAllProducts();
   }
 }
