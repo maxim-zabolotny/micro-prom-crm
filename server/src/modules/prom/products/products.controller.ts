@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   HttpCode,
+  ParseIntPipe,
+  Query,
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
@@ -25,5 +27,14 @@ export class PromProductsController {
   @HttpCode(200)
   async importSheet() {
     return this.promProductsService.importSheet();
+  }
+
+  @Get('/import-status')
+  @HttpCode(200)
+  async getImportStatus(
+    @Query('importId', ParseIntPipe)
+    importId: number,
+  ) {
+    return this.promProductsService.getImportStatus(importId);
   }
 }
