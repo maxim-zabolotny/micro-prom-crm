@@ -1,0 +1,34 @@
+
+--------------------------------------------------
+Categories: 
+  Local:
+    + load-all-categories
+    + sync-course
+    + sync-markup
+    + actualize-categories
+     
+  Prom:
+    + load-all-categories
+    + reload-all-categories
+     
+--------------------------------------------------
+Products: 
+  Local:
+    + load-products-by-category
+    + load-all-products
+    - actualize-all-products
+    + actualize-products-by-category
+     
+  Prom:
+    + load-products-by-category
+    + load-all-products
+    + reload-all-products
+    + test (updateProductsInProm)
+    + test (removeProductsFromProm)
+    
+--------------------------------------------------    
+CRM: 
+  Products: 
+    + list
+    + import-sheet
+    + import-status    
