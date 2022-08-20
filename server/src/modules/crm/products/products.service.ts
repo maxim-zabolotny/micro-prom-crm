@@ -123,6 +123,30 @@ export class CrmProductsService {
     };
   }
 
+  public async getProductsForSyncWithProm(options?: {
+    categories?: Types.ObjectId[];
+    products?: Types.ObjectId[];
+  }) {
+    const searchOptions = {
+      'sync.loaded': true,
+      'sync.prom': false,
+    };
+
+    if (options?.categories) {
+      searchOptions['category'] = {
+        $in: options.categories,
+      };
+    }
+
+    if (options?.products) {
+      searchOptions['_id'] = {
+        $in: options.products,
+      };
+    }
+
+    return this.productModel.find(searchOptions).exec();
+  }
+
   public async addProduct(productData: TAddProductToDB) {
     this.logger.debug('Process add Product:', {
       id: productData.id,
