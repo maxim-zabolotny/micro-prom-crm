@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   ParseIntPipe,
+  Post,
   Query,
   UseFilters,
   UseInterceptors,
@@ -23,8 +24,8 @@ export class PromProductsController {
     return this.promProductsService.getList();
   }
 
-  @Get('/import-sheet')
-  @HttpCode(200)
+  @Post('/import-sheet')
+  @HttpCode(201)
   async importSheet() {
     return this.promProductsService.importSheet();
   }
