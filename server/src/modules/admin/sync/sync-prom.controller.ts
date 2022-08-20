@@ -10,10 +10,10 @@ import { LoggingInterceptor } from '@common/interceptors';
 import { UserRole } from '@schemas/user';
 import { Auth } from '@common/decorators';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
-import { MongoExceptionFilter } from '@common/filters';
+import { MongoExceptionFilter, PromExceptionFilter } from '@common/filters';
 
 @Controller('/admin/sync/prom')
-@UseFilters(MongoExceptionFilter)
+@UseFilters(MongoExceptionFilter, PromExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
 export class SyncPromController {
   constructor(private readonly syncPromService: SyncPromService) {}
