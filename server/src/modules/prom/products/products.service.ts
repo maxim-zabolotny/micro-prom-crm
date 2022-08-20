@@ -58,7 +58,7 @@ export class PromProductsService {
     return result;
   }
 
-  public async getImportStatus(importId: number) {
+  public async getImportStatus(importId: string) {
     this.logger.debug('Get Import status:', { importId });
 
     const result = await this.productAPI.getImportStatus(importId);

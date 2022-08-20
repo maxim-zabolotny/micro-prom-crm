@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   HttpCode,
-  ParseIntPipe,
   Post,
   Query,
   UseFilters,
@@ -33,8 +32,8 @@ export class PromProductsController {
   @Get('/import-status')
   @HttpCode(200)
   async getImportStatus(
-    @Query('importId', ParseIntPipe)
-    importId: number,
+    @Query('importId')
+    importId: string,
   ) {
     return this.promProductsService.getImportStatus(importId);
   }
