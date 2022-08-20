@@ -9,6 +9,6 @@ export declare class Product extends Request {
     edit(data: IPostProductsEditBody[]): Promise<TPostProductsEditResponse>;
     editByExternalId(data: IPostProductsEditByExternalIdBody[]): Promise<TPostProductsEditByExternalIdResponse>;
     importUrl(data: IPostProductsImportUrlBody): Promise<TPostProductsImportUrlResponse>;
-    getImportStatus(importId: number): Promise<TGetProductsImportStatusResponse>;
+    getImportStatus(importId: string): Promise<TGetProductsImportStatusResponse>;
     static readonly BASE_PATH = "products";
 }
