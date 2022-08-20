@@ -57,6 +57,6 @@ export class SyncLocalController {
   @HttpCode(200)
   @Auth(UserRole.Admin)
   async syncCategoriesWithProducts() {
-    // return this.syncLocalService.actualizeCategories();
+    return this.syncLocalService.actualizeCategories();
   }
 }

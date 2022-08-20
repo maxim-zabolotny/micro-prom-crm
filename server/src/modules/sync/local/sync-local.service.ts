@@ -272,7 +272,7 @@ export class SyncLocalService {
     if (!_.isEmpty(categoriesToAdd)) {
       const microtronIntegration =
         await this.crmIntegrationsService.getMicrotronIntegration();
-      const course = await this.microtronCoursesService.getCoursesByAPI(false);
+      const course = await this.microtronCoursesService.getCoursesByAPI(true);
 
       result.added = await this.addCategoriesToDB(
         {
@@ -627,7 +627,7 @@ export class SyncLocalService {
   public async loadAllCategoriesToDB() {
     const microtronIntegration =
       await this.crmIntegrationsService.getMicrotronIntegration();
-    const course = await this.microtronCoursesService.getCoursesByAPI(false);
+    const course = await this.microtronCoursesService.getCoursesByAPI(true);
 
     const categories =
       await this.microtronCategoriesService.getFullCategoriesInfo();
@@ -841,6 +841,95 @@ export class SyncLocalService {
     this.logger.debug('Result of sync Markup:', {
       updatedCategoriesCount: result.updatedCategories.length,
       updatedProductsCount: result.updatedProducts.length,
+    });
+
+    return result;
+  }
+
+  public async actualizeCategories() {
+    const result = {
+      addedCategories: [],
+      removedCategories: [],
+      addedProducts: [],
+      removedProducts: [],
+    };
+
+    const { categoriesToAdd, categoriesToRemove } =
+      await this.getChangeCategoriesActions(true, false, true);
+    if (_.isEmpty(categoriesToAdd) && _.isEmpty(categoriesToRemove)) {
+      this.logger.debug(
+        'Categories to add and remove is empty. Return empty result',
+      );
+      return result;
+    }
+
+    if (!_.isEmpty(categoriesToAdd)) {
+      this.logger.debug('Process add Categories:', {
+        count: categoriesToAdd.length,
+      });
+
+      const microtronIntegration =
+        await this.crmIntegrationsService.getMicrotronIntegration();
+      const course = await this.microtronCoursesService.getCoursesByAPI(true);
+
+      for (const categoryToAdd of categoriesToAdd) {
+        const addedCategories = await this.addCategoriesToDB(
+          {
+            course: course.bank,
+            integrationId: microtronIntegration._id,
+          },
+          [categoryToAdd],
+        );
+
+        // RESULT
+        result.addedCategories.push(...addedCategories);
+
+        const changeProductsActions = await this.getChangeProductsActions(
+          addedCategories,
+          true,
+          false,
+          false,
+        );
+        const { added } = await this.makeProductsChangeActions(
+          changeProductsActions,
+        );
+
+        // RESULT
+        result.addedProducts.push(...added);
+      }
+    }
+
+    if (!_.isEmpty(categoriesToRemove)) {
+      this.logger.debug('Process remove Categories:', {
+        count: categoriesToAdd.length,
+      });
+
+      for (const categoryToRemove of categoriesToRemove) {
+        const removedCategories = await this.deleteCategoriesFromDB([
+          categoryToRemove,
+        ]);
+
+        // RESULT
+        result.removedCategories.push(...removedCategories);
+
+        const productsByCategory =
+          await this.crmProductsService.getProductsByCategories([
+            categoryToRemove._id,
+          ]);
+        const removedProducts = await this.deleteProductsFromDB(
+          productsByCategory,
+        );
+
+        // RESULT
+        result.removedProducts.push(...removedProducts);
+      }
+    }
+
+    this.logger.debug('Result of actualize Categories:', {
+      addedCategories: result.addedCategories.length,
+      removedCategories: result.removedCategories.length,
+      addedProducts: result.addedProducts.length,
+      removedProducts: result.removedProducts.length,
     });
 
     return result;
