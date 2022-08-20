@@ -717,4 +717,7 @@ export class SyncPromService {
 
     return this.loadAllProductsToSheet();
   }
+
+  // TESTING
+  public async test() {}
 }

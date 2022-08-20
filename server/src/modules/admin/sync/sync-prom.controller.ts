@@ -52,4 +52,11 @@ export class SyncPromController {
   async loadProductsByCategory(@Query('microtronId') microtronId: string) {
     return this.syncPromService.loadAllProductsByCategoryToSheet(microtronId);
   }
+
+  @Get('/test')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async test() {
+    return this.syncPromService.test();
+  }
 }
