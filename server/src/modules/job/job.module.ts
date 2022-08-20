@@ -15,6 +15,7 @@ import {
 } from './consumers';
 import { JobBoardService } from './board/job-board.service';
 import { SyncModule } from '../sync/sync.module';
+import { JobStaticService } from './static/job-static.service';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -72,7 +73,7 @@ const consumers = [
       },
     }),
   ],
-  providers: [...consumers, JobBoardService],
+  providers: [...consumers, JobBoardService, JobStaticService],
   exports: [BullModule, JobBoardService, ...consumers],
 })
 export class JobModule implements NestModule {
