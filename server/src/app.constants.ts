@@ -16,6 +16,9 @@ export namespace AppConstants {
       export const EXEC_URL =
         'https://script.google.com/macros/s/AKfycbwgq7LKfhJgfUYGDhyeco5mRLB7xduWkIOrO-nB9KSTp8ycmeNfB9wEU6acWrPw4eyZ0Q/exec';
 
+      export const SHARE_URL =
+        'http://docs.google.com/spreadsheets/d/1SzMijwhuMnJTjNoRqiFTHPXM9y7TdgkJCqMVsuATBY0/edit?usp=sharing';
+
       export enum SPEC_CELLS_VIEW_TYPE {
         Increment = 'increment',
         Default = 'default',
