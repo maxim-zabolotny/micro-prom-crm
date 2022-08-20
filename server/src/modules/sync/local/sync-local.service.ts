@@ -743,6 +743,39 @@ export class SyncLocalService {
     return loadedProducts;
   }
 
+  public async actualizeProductsByCategory(microtronId: string) {
+    this.logger.debug('Load Category from DB:', { microtronId });
+
+    const category = await this.crmCategoriesService.getCategoryByMicrotronId(
+      microtronId,
+    );
+    if (!category) {
+      throw new HttpException(
+        {
+          microtronId,
+          message: 'Category not found in DB',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const changeProductsActions = await this.getChangeProductsActions(
+      [category],
+      true,
+      true,
+      true,
+    );
+    const result = await this.makeProductsChangeActions(changeProductsActions);
+
+    this.logger.debug('Result of actualize Products by Category:', {
+      addedProducts: result.added.length,
+      updatedProducts: result.updated.length,
+      removedProducts: result.removed.length,
+    });
+
+    return result;
+  }
+
   // MAIN PART - CATEGORIES + PRODUCTS
   public async syncCourse() {
     const result = {

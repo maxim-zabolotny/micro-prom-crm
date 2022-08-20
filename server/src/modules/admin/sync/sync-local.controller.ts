@@ -39,6 +39,13 @@ export class SyncLocalController {
     return this.syncLocalService.loadAllProductsByCategoryToDB(microtronId);
   }
 
+  @Get('/actualize-products-by-category')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async actualizeProductsByCategory(@Query('microtronId') microtronId: string) {
+    return this.syncLocalService.actualizeProductsByCategory(microtronId);
+  }
+
   @Get('/sync-course')
   @HttpCode(200)
   @Auth(UserRole.Admin)
@@ -56,7 +63,7 @@ export class SyncLocalController {
   @Get('/actualize-categories')
   @HttpCode(200)
   @Auth(UserRole.Admin)
-  async syncCategoriesWithProducts() {
+  async actualizeCategories() {
     return this.syncLocalService.actualizeCategories();
   }
 }
