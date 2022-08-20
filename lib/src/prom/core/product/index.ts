@@ -140,7 +140,7 @@ export class Product extends Request {
     return body;
   }
 
-  public async getImportStatus(importId: number): Promise<TGetProductsImportStatusResponse> {
+  public async getImportStatus(importId: string): Promise<TGetProductsImportStatusResponse> {
     const { body } = await this.makeRequest<{}, {}, TGetProductsImportStatusResponse>(
       HttpMethods.Get,
       this.buildUrl(`import/status/${importId}`),
