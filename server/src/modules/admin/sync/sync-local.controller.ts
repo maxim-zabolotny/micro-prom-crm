@@ -73,4 +73,11 @@ export class SyncLocalController {
   async actualizeCategories() {
     return this.syncLocalService.actualizeCategories();
   }
+
+  @Get('/test')
+  @HttpCode(200)
+  @Auth(UserRole.Admin)
+  async test() {
+    return this.syncLocalService.test();
+  }
 }

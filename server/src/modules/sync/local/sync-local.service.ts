@@ -992,4 +992,7 @@ export class SyncLocalService {
 
     return result;
   }
+
+  // TESTING
+  public async test() {}
 }
