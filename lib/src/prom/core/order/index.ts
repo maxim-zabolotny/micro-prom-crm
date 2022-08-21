@@ -64,11 +64,11 @@ export class Order extends Request {
     const queryParams = { ...params };
 
     if (date_to) {
-      queryParams.date_to = _.isDate(date_to) ? date_to.toString() : date_to;
+      queryParams.date_to = _.isDate(date_to) ? date_to.toISOString() : date_to;
     }
 
     if (date_from) {
-      queryParams.date_from = _.isDate(date_from) ? date_from.toString() : date_from;
+      queryParams.date_from = _.isDate(date_from) ? date_from.toISOString() : date_from;
     }
 
     const { body } = await this.makeRequest<{}, IGetOrdersListQueryParams, TGetOrdersListResponse>(
