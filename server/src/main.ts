@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 
 process.env.UV_THREADPOOL_SIZE = '8';
+process.env.TZ = 'Europe/Kiev';
 
 async function bootstrap() {
   // INIT
