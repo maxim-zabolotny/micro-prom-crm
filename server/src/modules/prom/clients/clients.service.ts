@@ -13,4 +13,21 @@ export class PromClientsService {
       token: configService.get('tokens.prom'),
     });
   }
+
+  public async search(query: string) {
+    this.logger.debug('Search clients by query:', {
+      query,
+    });
+
+    const { clients } = await this.clientsAPI.getList({
+      search_term: query,
+      limit: 20,
+    });
+
+    this.logger.debug('Found clients:', {
+      count: clients.length,
+    });
+
+    return clients;
+  }
 }
