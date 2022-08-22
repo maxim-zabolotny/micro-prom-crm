@@ -44,6 +44,15 @@ export class NotificationBotService {
       message += `\n\n${detailsMessage}\n${detailsDescription}`;
     }
 
+    if (!_.isEmpty(data.jsonObject)) {
+      const objectMessage = MarkdownHelper.italic('Обьект: ');
+
+      const json = JSON.stringify(data.jsonObject, null, 2);
+      const jsonMessage = '```json\n' + json + '\n```';
+
+      message += `\n\n${objectMessage}\n${jsonMessage}`;
+    }
+
     return message;
   }
 
