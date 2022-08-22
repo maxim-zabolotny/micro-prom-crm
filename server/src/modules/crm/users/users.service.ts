@@ -19,7 +19,7 @@ export class CrmUsersService {
   }
 
   public async getUserByRole(role: UserRole) {
-    return this.userModel.find({ role }).exec();
+    return this.userModel.findOne({ role }).exec();
   }
 
   public async getAllUsers() {
