@@ -12,6 +12,8 @@ import {
   loadAllProductsName,
   LoadProductsByCategoryConsumer,
   loadProductsByCategoryName,
+  SyncCategoriesConsumer,
+  syncCategoriesName,
 } from './consumers';
 import { JobBoardService } from './board/job-board.service';
 import { SyncModule } from '../sync/sync.module';
@@ -26,6 +28,7 @@ const consumers = [
   LoadAllCategoriesConsumer,
   LoadProductsByCategoryConsumer,
   LoadAllProductsConsumer,
+  SyncCategoriesConsumer,
 ];
 
 @Global()
@@ -70,6 +73,13 @@ const consumers = [
       defaultJobOptions: {
         attempts: 3,
         timeout: ms('2h'),
+      },
+    }),
+    BullModule.registerQueue({
+      name: syncCategoriesName,
+      defaultJobOptions: {
+        attempts: 3,
+        timeout: ms('10m'),
       },
     }),
   ],
