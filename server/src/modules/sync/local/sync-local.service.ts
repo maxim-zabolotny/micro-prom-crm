@@ -13,13 +13,15 @@ import { MicrotronProductsService } from '../../microtron/products/products.serv
 import { CrmProductsService } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
-import { CrmIntegrationsService } from '../../crm/integrations/integrations.service';
 import {
   TAddCategoryToDB,
   TUpdateCategoryInDB,
 } from '../../crm/categories/types';
 import { TAddProductToDB } from '../../crm/products/types/add-product-to-db.type';
 import { TUpdateProductInDB } from '../../crm/products/types/update-product-in-db.type';
+import { InjectModel } from '@nestjs/mongoose';
+import { Integration } from '@schemas/integration';
+import { IntegrationModel } from '@schemas/integration/integration.schema';
 
 export interface IChangeCategoriesActions {
   categoriesToAdd: ITranslatedCategoryInConstant[];
@@ -58,9 +60,10 @@ export class SyncLocalService {
     private microtronProductsService: MicrotronProductsService,
     private crmCategoriesService: CrmCategoriesService,
     private crmProductsService: CrmProductsService,
-    private crmIntegrationsService: CrmIntegrationsService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
+    @InjectModel(Integration.name)
+    private integrationModel: IntegrationModel,
   ) {}
 
   // UTILITIES PART - CATEGORIES
@@ -272,7 +275,7 @@ export class SyncLocalService {
 
     if (!_.isEmpty(categoriesToAdd)) {
       const microtronIntegration =
-        await this.crmIntegrationsService.getMicrotronIntegration();
+        await this.integrationModel.getMicrotronIntegration();
       const course = await this.microtronCoursesService.getCoursesByAPI(true);
 
       result.added = await this.addCategoriesToDB(
@@ -628,7 +631,7 @@ export class SyncLocalService {
   // MAIN PART - CATEGORIES
   public async loadAllCategoriesToDB() {
     const microtronIntegration =
-      await this.crmIntegrationsService.getMicrotronIntegration();
+      await this.integrationModel.getMicrotronIntegration();
     const course = await this.microtronCoursesService.getCoursesByAPI(true);
 
     const categories =
@@ -929,7 +932,7 @@ export class SyncLocalService {
       });
 
       const microtronIntegration =
-        await this.crmIntegrationsService.getMicrotronIntegration();
+        await this.integrationModel.getMicrotronIntegration();
       const course = await this.microtronCoursesService.getCoursesByAPI(true);
 
       for (const categoryToAdd of categoriesToAdd) {

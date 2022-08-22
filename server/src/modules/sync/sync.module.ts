@@ -6,9 +6,21 @@ import { SyncPromService } from './prom/sync-prom.service';
 import { SyncLocalService } from './local/sync-local.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { PromModule } from '../prom/prom.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Integration, IntegrationSchema } from '@schemas/integration';
 
 @Module({
-  imports: [MicrotronModule, PromModule, CrmModule],
+  imports: [
+    MicrotronModule,
+    PromModule,
+    CrmModule,
+    MongooseModule.forFeature([
+      {
+        name: Integration.name,
+        schema: IntegrationSchema,
+      },
+    ]),
+  ],
   providers: [
     TimeHelper,
     DataUtilsHelper,
