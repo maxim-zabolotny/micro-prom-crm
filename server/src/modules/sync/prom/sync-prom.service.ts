@@ -473,6 +473,15 @@ export class SyncPromService {
   }
 
   public async syncProductsWithProm(products: Array<TUpdateProductInProm>) {
+    if (_.isEmpty(products)) {
+      return {
+        processedIds: [],
+        unprocessedIds: [],
+        errors: {},
+        updatedProducts: [],
+      };
+    }
+
     // UPDATE IN PROM
     const { processedIds, unprocessedIds, errors } =
       await this.updateProductsInProm(products);
@@ -502,6 +511,15 @@ export class SyncPromService {
   }
 
   public async removeProductsFromProm(productIds: Types.ObjectId[]) {
+    if (_.isEmpty(productIds)) {
+      return {
+        errors: {},
+        processedIds: [],
+        unprocessedIds: [],
+        productIds: [],
+      };
+    }
+
     this.logger.debug('Build bulk data for Prom');
     const bulkData: Array<Pick<TEditPromProduct, 'id' | 'status'>> = _.map(
       productIds,
