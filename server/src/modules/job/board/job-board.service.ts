@@ -9,10 +9,12 @@ import {
   loadAllCategoriesName,
   loadAllProductsName,
   loadProductsByCategoryName,
+  syncCategoriesName,
   TAudioProcessorQueue,
   TLoadAllCategoriesProcessorQueue,
   TLoadAllProductsProcessorQueue,
   TLoadProductsByCategoryProcessorQueue,
+  TSyncCategoriesProcessorQueue,
 } from '../consumers';
 
 @Injectable()
@@ -33,6 +35,8 @@ export class JobBoardService {
     private loadProductsByCategoryQueue: TLoadProductsByCategoryProcessorQueue,
     @InjectQueue(loadAllProductsName)
     private loadAllProductsQueue: TLoadAllProductsProcessorQueue,
+    @InjectQueue(syncCategoriesName)
+    private syncCategoriesQueue: TSyncCategoriesProcessorQueue,
   ) {
     this.serverAdapter.setBasePath(this.basePath);
     this.serverAdapter.setErrorHandler((err) => {
@@ -49,6 +53,7 @@ export class JobBoardService {
         new BullAdapter(this.loadAllCategoriesQueue),
         new BullAdapter(this.loadProductsByCategoryQueue),
         new BullAdapter(this.loadAllProductsQueue),
+        new BullAdapter(this.syncCategoriesQueue),
       ],
       serverAdapter: this.serverAdapter,
     });
@@ -91,6 +96,15 @@ export class JobBoardService {
 
   public async addLoadAllProducts() {
     const job = await this.loadAllProductsQueue.add();
+    return {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    };
+  }
+
+  public async addSyncCategories() {
+    const job = await this.syncCategoriesQueue.add();
     return {
       id: job.id,
       name: job.queue.name,

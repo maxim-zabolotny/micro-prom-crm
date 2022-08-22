@@ -36,4 +36,10 @@ export class JobBoardController {
   addLoadAllProductsJob() {
     return this.jobBoardService.addLoadAllProducts();
   }
+
+  @Post('/test-sync-categories')
+  @HttpCode(201)
+  addSyncCategories() {
+    return this.jobBoardService.addSyncCategories();
+  }
 }
