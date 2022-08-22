@@ -9,7 +9,6 @@ import { DataGenerateHelper } from '@common/helpers';
 import { Product, ProductSchema } from '@schemas/product';
 import { CrmProductsService } from './products/products.service';
 import { CrmProductsController } from './products/products.controller';
-import { Integration, IntegrationSchema } from '@schemas/integration';
 import { CrmIntegrationsController } from './integrations/integrations.controller';
 import { CrmIntegrationsService } from './integrations/integrations.service';
 import { User, UserSchema } from '@schemas/user';
@@ -34,12 +33,6 @@ import { CrmUsersService } from './users/users.service';
       {
         name: Product.name,
         schema: ProductSchema,
-      },
-    ]),
-    MongooseModule.forFeature([
-      {
-        name: Integration.name,
-        schema: IntegrationSchema,
       },
     ]),
   ],
