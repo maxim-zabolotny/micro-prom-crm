@@ -1,4 +1,12 @@
-export { Category, CategorySchema, CategoryDocument } from './category.schema';
+export {
+  Category,
+  CategorySchema,
+  CategoryDocument,
+  CategoryModel,
+  TCategoryTranslate,
+  TAddCategoryToDB,
+  TUpdateCategoryInDB,
+} from './category.schema';
 export {
   CategorySync,
   CategorySyncSchema,

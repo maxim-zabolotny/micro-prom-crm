@@ -1,16 +1,47 @@
+import * as _ from 'lodash';
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes } from 'mongoose';
+import {
+  Document,
+  Model,
+  SchemaTypes,
+  Types,
+  UpdateWriteOpResult,
+} from 'mongoose';
 import { Integration } from '@schemas/integration';
 import {
   CategorySync,
   CategorySyncSchema,
 } from '@schemas/category/category-sync.schema';
+import { Logger } from '@nestjs/common';
+import { ITranslatedCategoryInConstant } from '@common/interfaces/category';
+import { DataGenerateHelper } from '@common/helpers';
 
-export type CategoryDocument = Category & Document;
-
+// TYPES
 export type TCategoryTranslate = Pick<Category, 'name'>;
 
-@Schema({ timestamps: true, collection: 'categories' })
+export type TAddCategoryToDB = ITranslatedCategoryInConstant & {
+  course: number;
+  integrationId: Types.ObjectId;
+};
+
+export type TUpdateCategoryInDB = Partial<
+  Pick<Category, 'course' | 'markup'> & {
+    'sync.localAt': CategorySync['localAt'];
+    'sync.loaded': CategorySync['loaded'];
+    'sync.lastLoadedAt': CategorySync['lastLoadedAt'];
+    'sync.tableLine': CategorySync['tableLine'];
+  }
+>;
+
+// MONGOOSE
+export type CategoryDocument = Category & Document;
+
+export type CategoryModel = Model<CategoryDocument> & TStaticMethods;
+
+@Schema({
+  timestamps: true,
+  collection: 'categories',
+})
 export class Category {
   @Prop({ type: String, required: true })
   name: string;
@@ -53,3 +84,218 @@ export class Category {
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
+
+// CUSTOM TYPES
+type TStaticMethods = {
+  getCategoriesForLoadToSheet: (this: CategoryModel) => Promise<{
+    categories: CategoryDocument[];
+    count: number;
+  }>;
+  getCategoriesByIds: (
+    this: CategoryModel,
+    categoryIds: Types.ObjectId[],
+  ) => Promise<CategoryDocument[]>;
+  getCategoryByMicrotronId: (
+    this: CategoryModel,
+    microtronId: string,
+  ) => Promise<CategoryDocument>;
+  addCategory: (
+    this: CategoryModel,
+    categoryData: TAddCategoryToDB,
+  ) => Promise<CategoryDocument>;
+  updateCategory: (
+    this: CategoryModel,
+    categoryId: Types.ObjectId,
+    data: TUpdateCategoryInDB,
+  ) => Promise<CategoryDocument>;
+  updateAllCategories: (
+    this: CategoryModel,
+    data: Partial<TUpdateCategoryInDB>,
+  ) => Promise<UpdateWriteOpResult>;
+  deleteCategory: (
+    this: CategoryModel,
+    categoryId: Types.ObjectId,
+  ) => Promise<CategoryDocument>;
+};
+
+// STATIC METHODS IMPLEMENTATION
+const categoryLogger = new Logger('CategoryModel');
+const dataGenerateHelper = new DataGenerateHelper();
+
+CategorySchema.statics.getCategoriesForLoadToSheet = async function () {
+  const categories = await this.find({ 'sync.loaded': false }).exec();
+  return {
+    categories,
+    count: categories.length,
+  };
+} as TStaticMethods['getCategoriesForLoadToSheet'];
+
+CategorySchema.statics.getCategoriesByIds = async function (categoryIds) {
+  if (_.isEmpty(categoryIds)) return [];
+
+  return this.find({
+    _id: {
+      $in: categoryIds,
+    },
+  }).exec();
+} as TStaticMethods['getCategoriesByIds'];
+
+CategorySchema.statics.getCategoryByMicrotronId = async function (microtronId) {
+  return this.findOne({ microtronId }).exec();
+} as TStaticMethods['getCategoryByMicrotronId'];
+
+CategorySchema.statics.addCategory = async function (categoryData) {
+  const parentMicrotronId =
+    categoryData.parentId !== '0' ? categoryData.parentId : undefined;
+
+  categoryLogger.debug('Process add Category:', {
+    id: categoryData.id,
+    name: categoryData.name,
+    parentMicrotronId: parentMicrotronId,
+  });
+
+  let parent: CategoryDocument | null = null;
+  if (parentMicrotronId) {
+    categoryLogger.debug('Process find parent Category:', {
+      microtronId: categoryData.parentId,
+    });
+
+    const result = await this.findOne({
+      microtronId: parentMicrotronId,
+    }).exec();
+    if (result) {
+      categoryLogger.debug('Found parent Category:', {
+        id: result._id,
+        name: result.name,
+        microtronId: result.microtronId,
+      });
+
+      parent = result;
+    }
+  }
+
+  const category = new this({
+    name: categoryData.name,
+    markup: categoryData.markup,
+    course: categoryData.course,
+    translate: {
+      name: categoryData.ruName,
+    },
+    sync: {
+      localAt: new Date(),
+    },
+    parent: parent?._id,
+    microtronId: categoryData.id,
+    parentMicrotronId: parentMicrotronId,
+    promId: dataGenerateHelper.randomNumber(1, 9, 8),
+    parentPromId: parent?.promId,
+    integration: categoryData.integrationId,
+  });
+  await category.save();
+
+  const { matchedCount, modifiedCount } = await this.updateMany(
+    {
+      parentMicrotronId: category.microtronId,
+    },
+    {
+      $set: {
+        parent: category._id,
+        parentPromId: category.promId,
+      },
+    },
+  ).exec();
+  categoryLogger.debug('Update Category children result:', {
+    matchedCount,
+    modifiedCount,
+  });
+
+  categoryLogger.debug('Category saved:', {
+    microtronId: categoryData.id,
+  });
+
+  return category;
+} as TStaticMethods['addCategory'];
+
+CategorySchema.statics.updateCategory = async function (categoryId, data) {
+  categoryLogger.debug('Process update Category:', {
+    categoryId,
+    data,
+  });
+
+  const updatedCategory = await this.findOneAndUpdate(
+    {
+      _id: categoryId,
+    },
+    {
+      $set: data,
+    },
+    {
+      returnOriginal: false,
+    },
+  ).exec();
+
+  categoryLogger.debug('Category updated:', {
+    categoryId,
+  });
+
+  return updatedCategory;
+} as TStaticMethods['updateCategory'];
+
+CategorySchema.statics.updateAllCategories = async function (data) {
+  categoryLogger.debug('Process update all Categories:', {
+    data,
+  });
+
+  const updateResult = await this.updateMany(
+    {},
+    {
+      $set: data,
+    },
+  ).exec();
+
+  categoryLogger.debug('Categories update result:', {
+    ...updateResult,
+  });
+
+  return updateResult;
+} as TStaticMethods['updateAllCategories'];
+
+CategorySchema.statics.deleteCategory = async function (categoryId) {
+  categoryLogger.debug('Process delete Category:', {
+    categoryId,
+  });
+
+  const removedCategory = await this.findOneAndDelete({
+    _id: categoryId,
+  }).exec();
+
+  if (removedCategory.sync.tableLine) {
+    const { matchedCount, modifiedCount } = await this.updateMany(
+      {
+        'sync.tableLine': {
+          $gt: removedCategory.sync.tableLine,
+        },
+      },
+      [
+        {
+          $set: {
+            'sync.tableLine': {
+              $subtract: ['$sync.tableLine', 1],
+            },
+          },
+        },
+      ],
+    ).exec();
+
+    categoryLogger.debug('Updated Categories with higher table line:', {
+      matchedCount,
+      modifiedCount,
+    });
+  }
+
+  categoryLogger.debug('Category removed:', {
+    categoryId,
+  });
+
+  return removedCategory;
+} as TStaticMethods['deleteCategory'];
