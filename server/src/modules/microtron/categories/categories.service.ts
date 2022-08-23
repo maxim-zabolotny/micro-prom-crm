@@ -2,12 +2,7 @@ import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import MicrotronAPI, { Category, Types } from '@lib/microtron';
-import {
-  Constant,
-  ConstantDocument,
-  ConstantEntities,
-} from '@schemas/constant';
-import { Model } from 'mongoose';
+import { Constant, ConstantModel } from '@schemas/constant';
 import { InjectModel } from '@nestjs/mongoose';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { Data } from '../../../data';
@@ -34,7 +29,7 @@ export class MicrotronCategoriesService {
   constructor(
     private configService: ConfigService,
     private dataUtilHelper: DataUtilsHelper,
-    @InjectModel(Constant.name) private constantModel: Model<ConstantDocument>,
+    @InjectModel(Constant.name) private constantModel: ConstantModel,
   ) {
     this.categoriesAPI = new MicrotronAPI.Category({
       token: configService.get('tokens.microtron'),
@@ -97,18 +92,6 @@ export class MicrotronCategoriesService {
     );
   }
 
-  private async retrieveFromDB(): Promise<ConstantDocument | null> {
-    const categories = await this.constantModel
-      .findOne({ name: ConstantEntities.CATEGORIES })
-      .exec();
-
-    if (!_.isNull(categories)) {
-      return categories;
-    }
-
-    return null;
-  }
-
   public async getByAPI(
     force: boolean,
     tree: boolean,
@@ -124,32 +107,7 @@ export class MicrotronCategoriesService {
     return categories;
   }
 
-  public async getSaved(
-    tree: boolean,
-  ): Promise<Array<ICategoryInConstant | ICategoryTreeInConstant>> {
-    this.logger.debug('Load categories from DB');
-
-    const categoriesData = await this.retrieveFromDB();
-    if (categoriesData) {
-      const data: ICategoryInConstant[] = JSON.parse(
-        categoriesData.toObject().value,
-      );
-
-      if (tree) {
-        this.logger.debug('Build and return categories tree ');
-        return MicrotronAPI.Category.buildCategoriesTree(
-          data,
-        ) as unknown as ICategoryTreeInConstant[];
-      }
-
-      this.logger.debug('Return categories from DB');
-      return data;
-    }
-
-    this.logger.debug('No saved categories in DB. Return empty array');
-    return [];
-  }
-
+  // TODO: move to CRM
   public async save(
     categoriesData: SaveCategoriesDto,
   ): Promise<{ success: boolean }> {
@@ -167,36 +125,19 @@ export class MicrotronCategoriesService {
 
     // DB
     const categoriesJSON = JSON.stringify(categories);
-
-    const savedCategories = await this.retrieveFromDB();
-    if (savedCategories) {
-      this.logger.debug('Save categories data to exist record in DB');
-
-      savedCategories.value = categoriesJSON;
-      await savedCategories.save();
-
-      return {
-        success: true,
-      };
-    }
-
-    this.logger.debug('Create record in DB with categories data');
-    const categoriesConstant = new this.constantModel({
-      name: ConstantEntities.CATEGORIES,
-      value: categoriesJSON,
-    });
-    await categoriesConstant.save();
+    await this.constantModel.upsertCategories(categoriesJSON);
 
     return {
       success: true,
     };
   }
 
+  // TODO: @deprecate
   public async setMarkup(
     markupCategoryData: SetMarkupDto,
   ): Promise<ICategoryInConstant> {
     this.logger.debug('Load categories from DB');
-    const savedCategories = await this.retrieveFromDB();
+    const savedCategories = await this.constantModel.getCategories();
     if (!savedCategories) {
       throw new HttpException(
         'No saved categories in DB',
@@ -204,9 +145,8 @@ export class MicrotronCategoriesService {
       );
     }
 
-    const dbCategories: ICategoryInConstant[] = JSON.parse(
-      savedCategories.toObject().value,
-    );
+    const dbCategories =
+      this.constantModel.getParsedCategories(savedCategories);
 
     const category = _.find(
       dbCategories,
@@ -226,6 +166,30 @@ export class MicrotronCategoriesService {
     await Data.SelectedCategories.write(dbCategories);
 
     return category;
+  }
+
+  public async getSaved(
+    tree: boolean,
+  ): Promise<Array<ICategoryInConstant | ICategoryTreeInConstant>> {
+    this.logger.debug('Load categories from DB');
+
+    const categoriesData = await this.constantModel.getCategories();
+    if (categoriesData) {
+      const data = this.constantModel.getParsedCategories(categoriesData);
+
+      if (tree) {
+        this.logger.debug('Build and return categories tree ');
+        return MicrotronAPI.Category.buildCategoriesTree(
+          data,
+        ) as unknown as ICategoryTreeInConstant[];
+      }
+
+      this.logger.debug('Return categories from DB');
+      return data;
+    }
+
+    this.logger.debug('No saved categories in DB. Return empty array');
+    return [];
   }
 
   public async getSavedRUTranslate(
