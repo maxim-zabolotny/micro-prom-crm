@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Model } from 'mongoose';
 import { ConstantEntities } from '@schemas/constant/constant-entities.enum';
 import * as _ from 'lodash';
+import { ICategoryInConstant } from '@common/interfaces/category';
 
 // MONGOOSE
 export type ConstantDocument = Constant & Document;
@@ -26,17 +27,54 @@ export const ConstantSchema = SchemaFactory.createForClass(Constant);
 
 // CUSTOM TYPES
 type TStaticMethods = {
+  // UTILITIES
+  getParsedCategories: (
+    this: ConstantModel,
+    value: string | ConstantDocument,
+  ) => ICategoryInConstant[];
+  // MAIN
   getCategories: (this: ConstantModel) => Promise<ConstantDocument | null>;
+  upsertCategories: (
+    this: ConstantModel,
+    value: string,
+  ) => Promise<ConstantDocument>;
 };
 
+// UTILITIES
+ConstantSchema.statics.getParsedCategories = function (entity) {
+  if (typeof entity === 'string') return JSON.parse(entity);
+
+  return JSON.parse(entity.value);
+} as TStaticMethods['getParsedCategories'];
+
+// MAIN
 ConstantSchema.statics.getCategories = async function () {
-  const categories = await this.findOne({
+  const constant = await this.findOne({
     name: ConstantEntities.CATEGORIES,
   }).exec();
 
-  if (!_.isNull(categories)) {
-    return categories;
+  if (!_.isNull(constant)) {
+    return constant;
   }
 
   return null;
 } as TStaticMethods['getCategories'];
+
+ConstantSchema.statics.upsertCategories = async function (value) {
+  const constant = await this.findOneAndUpdate(
+    {
+      name: ConstantEntities.CATEGORIES,
+    },
+    {
+      $set: {
+        value,
+      },
+    },
+    {
+      upsert: true,
+      new: true,
+    },
+  );
+
+  return constant;
+} as TStaticMethods['upsertCategories'];
