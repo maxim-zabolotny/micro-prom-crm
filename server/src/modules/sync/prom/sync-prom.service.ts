@@ -2,11 +2,10 @@ import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Types } from 'mongoose';
-import { Category, CategoryDocument } from '@schemas/category';
+import { Category, CategoryDocument, CategoryModel } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
 import { SpreadsheetService } from '../../spreadsheet/spreadsheet.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
-import { CrmCategoriesService } from '../../crm/categories/categories.service';
 import { GoogleSpreadsheetRow, WorksheetGridRange } from 'google-spreadsheet';
 import { CrmProductsService } from '../../crm/products/products.service';
 import { ProductDocument } from '@schemas/product';
@@ -14,6 +13,7 @@ import { PromProductsService } from '../../prom/products/products.service';
 import { Product as PromProduct } from '@lib/prom';
 import { SyncLocalService } from '../local/sync-local.service';
 import { TObject } from '@custom-types';
+import { InjectModel } from '@nestjs/mongoose';
 import SPEC_CELLS_VIEW_TYPE = AppConstants.Google.Sheet.SPEC_CELLS_VIEW_TYPE;
 
 export interface ILoadCategoriesToSheetResult {
@@ -49,12 +49,13 @@ export class SyncPromService {
   constructor(
     private configService: ConfigService,
     private spreadsheetService: SpreadsheetService,
-    private crmCategoriesService: CrmCategoriesService,
     private crmProductsService: CrmProductsService,
     private promProductsService: PromProductsService,
     private syncLocalService: SyncLocalService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
+    @InjectModel(Category.name)
+    private categoryModel: CategoryModel,
   ) {}
 
   // DEPRECATE
@@ -70,8 +71,7 @@ export class SyncPromService {
     this.logger.debug(
       'Load Category ids from DB by Category ids from Google Sheet',
     );
-    const categories = await this.crmCategoriesService
-      .getModel()
+    const categories = await this.categoryModel
       .find({
         _id: { $in: categoryIdsInSheet },
       })
@@ -550,7 +550,7 @@ export class SyncPromService {
     };
 
     const { count, categories } =
-      await this.crmCategoriesService.getCategoriesForLoadToSheet();
+      await this.categoryModel.getCategoriesForLoadToSheet();
 
     this.logger.debug('Categories for loading to Google Sheet in DB:', {
       count,
@@ -598,7 +598,7 @@ export class SyncPromService {
     );
 
     this.logger.debug('Update all Categories in DB');
-    await this.crmCategoriesService.updateAllCategories({
+    await this.categoryModel.updateAllCategories({
       'sync.loaded': false,
     });
 
@@ -609,7 +609,7 @@ export class SyncPromService {
   public async loadAllProductsByCategoryToSheet(microtronId: string) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
-    const category = await this.crmCategoriesService.getCategoryByMicrotronId(
+    const category = await this.categoryModel.getCategoryByMicrotronId(
       microtronId,
     );
     if (!category) {

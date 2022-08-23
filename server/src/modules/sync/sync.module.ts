@@ -8,6 +8,7 @@ import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { PromModule } from '../prom/prom.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Integration, IntegrationSchema } from '@schemas/integration';
+import { Category, CategorySchema } from '@schemas/category';
 
 @Module({
   imports: [
@@ -18,6 +19,12 @@ import { Integration, IntegrationSchema } from '@schemas/integration';
       {
         name: Integration.name,
         schema: IntegrationSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: Category.name,
+        schema: CategorySchema,
       },
     ]),
   ],
