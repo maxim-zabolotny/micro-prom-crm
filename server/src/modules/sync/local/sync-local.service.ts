@@ -20,8 +20,7 @@ import {
 import { TAddProductToDB } from '../../crm/products/types/add-product-to-db.type';
 import { TUpdateProductInDB } from '../../crm/products/types/update-product-in-db.type';
 import { InjectModel } from '@nestjs/mongoose';
-import { Integration } from '@schemas/integration';
-import { IntegrationModel } from '@schemas/integration/integration.schema';
+import { Integration, IntegrationModel } from '@schemas/integration';
 
 export interface IChangeCategoriesActions {
   categoriesToAdd: ITranslatedCategoryInConstant[];

@@ -3,13 +3,6 @@ import { Document, Model } from 'mongoose';
 import { IntegrationCompany } from '@schemas/integration/integration-company.enum';
 import { HttpException, HttpStatus, Logger } from '@nestjs/common';
 
-// CUSTOM TYPES
-type TStaticMethods = {
-  getMicrotronIntegration: (
-    this: IntegrationModel,
-  ) => Promise<IntegrationDocument>;
-};
-
 // MONGOOSE
 export type IntegrationDocument = Integration & Document;
 
@@ -27,6 +20,13 @@ export class Integration {
 }
 
 export const IntegrationSchema = SchemaFactory.createForClass(Integration);
+
+// CUSTOM TYPES
+type TStaticMethods = {
+  getMicrotronIntegration: (
+    this: IntegrationModel,
+  ) => Promise<IntegrationDocument>;
+};
 
 // STATIC METHODS IMPLEMENTATION
 const integrationLogger = new Logger('ConstantModel');
