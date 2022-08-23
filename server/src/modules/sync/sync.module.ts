@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SyncService } from './sync.service';
 import { MicrotronModule } from '../microtron/microtron.module';
-import { CrmModule } from '../crm/crm.module';
 import { SyncPromService } from './prom/sync-prom.service';
 import { SyncLocalService } from './local/sync-local.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
@@ -15,7 +14,6 @@ import { Product, ProductSchema } from '@schemas/product';
   imports: [
     MicrotronModule,
     PromModule,
-    CrmModule,
     MongooseModule.forFeature([
       {
         name: Integration.name,

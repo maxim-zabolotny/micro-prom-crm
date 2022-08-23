@@ -18,7 +18,6 @@ import {
 import { JobBoardService } from './board/job-board.service';
 import { SyncModule } from '../sync/sync.module';
 import { JobStaticService } from './static/job-static.service';
-import { CrmModule } from '../crm/crm.module';
 import { TelegramModule } from '../telegram/telegram.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@schemas/user';
@@ -39,7 +38,6 @@ const consumers = [
 @Module({
   imports: [
     SyncModule,
-    CrmModule,
     TelegramModule,
     MongooseModule.forFeature([
       {
