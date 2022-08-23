@@ -11,9 +11,9 @@ import { CrmProductsService } from './products/products.service';
 import { CrmProductsController } from './products/products.controller';
 import { CrmIntegrationsController } from './integrations/integrations.controller';
 import { CrmIntegrationsService } from './integrations/integrations.service';
-import { User, UserSchema } from '@schemas/user';
 import { CrmUsersController } from './users/users.controller';
 import { CrmUsersService } from './users/users.service';
+import { User, UserSchema } from '@schemas/user';
 
 @Module({
   imports: [

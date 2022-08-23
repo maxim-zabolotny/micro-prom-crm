@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Model } from 'mongoose';
+import { User, UserModel } from '@schemas/user';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserRole } from '@schemas/user';
 
 @Injectable()
 export class CrmUsersService {
@@ -10,31 +9,11 @@ export class CrmUsersService {
 
   constructor(
     private configService: ConfigService,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name) private userModel: UserModel,
   ) {}
 
   // MAIN
-  public getModel() {
-    return this.userModel;
-  }
-
-  public async getUserByRole(role: UserRole) {
-    return this.userModel.findOne({ role }).exec();
-  }
-
   public async getAllUsers() {
-    return this.userModel.find().exec();
-  }
-
-  public async getAdmin() {
-    return this.getUserByRole(UserRole.Admin);
-  }
-
-  public async getProvider() {
-    return this.getUserByRole(UserRole.Provider);
-  }
-
-  public async getSales() {
-    return this.getUserByRole(UserRole.Sales);
+    return this.userModel.getAllUsers();
   }
 }

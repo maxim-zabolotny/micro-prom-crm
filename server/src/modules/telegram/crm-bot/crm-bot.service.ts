@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '@schemas/user';
-import { Model } from 'mongoose';
+import { User, UserDocument, UserModel } from '@schemas/user';
 import { TTelegramUser } from '../common/types';
 import { TelegrafException } from 'nestjs-telegraf';
 import { MarkdownHelper } from '../common/helpers';
@@ -12,7 +11,7 @@ import { NgrokService } from '../../ngrok/ngrok.service';
 @Injectable()
 export class CrmBotService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name) private userModel: UserModel,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
     private readonly ngrokService: NgrokService,
@@ -21,11 +20,7 @@ export class CrmBotService {
   private async getUserByTelegramId(
     telegramId: TTelegramUser['telegramId'],
   ): Promise<UserDocument> {
-    const user = await this.userModel
-      .findOne({
-        telegramId,
-      })
-      .exec();
+    const user = await this.userModel.getByTelegram(telegramId);
     if (!user) {
       throw new TelegrafException('User not found!');
     }

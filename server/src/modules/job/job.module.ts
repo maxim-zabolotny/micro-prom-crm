@@ -20,6 +20,8 @@ import { SyncModule } from '../sync/sync.module';
 import { JobStaticService } from './static/job-static.service';
 import { CrmModule } from '../crm/crm.module';
 import { TelegramModule } from '../telegram/telegram.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from '@schemas/user';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -39,6 +41,12 @@ const consumers = [
     SyncModule,
     CrmModule,
     TelegramModule,
+    MongooseModule.forFeature([
+      {
+        name: User.name,
+        schema: UserSchema,
+      },
+    ]),
     BullModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
         return {

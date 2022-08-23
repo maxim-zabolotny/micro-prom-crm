@@ -13,6 +13,8 @@ import { SyncLocalService } from '../../sync/local/sync-local.service';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
 import { CrmUsersService } from '../../crm/users/users.service';
+import { User, UserModel } from '@schemas/user';
+import { InjectModel } from '@nestjs/mongoose';
 
 export type TSyncCategoriesProcessorData = void;
 export type TSyncCategoriesProcessorQueue = Queue<TSyncCategoriesProcessorData>;
@@ -28,6 +30,7 @@ export class SyncCategoriesConsumer {
     private readonly syncPromService: SyncPromService,
     private readonly notificationBotService: NotificationBotService,
     private readonly crmUsersService: CrmUsersService,
+    @InjectModel(User.name) private userModel: UserModel,
   ) {}
 
   private getReadableQueueName() {
@@ -49,7 +52,7 @@ export class SyncCategoriesConsumer {
   }
 
   private async notifyAdmin(title: string, obj: Record<string, unknown>) {
-    const admin = await this.crmUsersService.getAdmin();
+    const admin = await this.userModel.getAdmin();
     await this.notificationBotService.send({
       to: String(admin.telegramId),
       title: title,

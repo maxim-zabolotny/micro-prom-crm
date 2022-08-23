@@ -1,2 +1,2 @@
-export { User, UserSchema, UserDocument } from './user.schema';
+export { User, UserSchema, UserDocument, UserModel } from './user.schema';
 export { UserRole } from './user-role.enum';
