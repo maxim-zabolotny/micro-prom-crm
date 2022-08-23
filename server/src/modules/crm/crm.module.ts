@@ -44,12 +44,5 @@ import { User, UserSchema } from '@schemas/user';
     CrmIntegrationsService,
     CrmUsersService,
   ],
-  exports: [
-    CrmService,
-    CrmCategoriesService,
-    CrmProductsService,
-    CrmIntegrationsService,
-    CrmUsersService,
-  ],
 })
 export class CrmModule {}

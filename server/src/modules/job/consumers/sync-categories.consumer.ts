@@ -12,7 +12,6 @@ import { Logger } from '@nestjs/common';
 import { SyncLocalService } from '../../sync/local/sync-local.service';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
-import { CrmUsersService } from '../../crm/users/users.service';
 import { User, UserModel } from '@schemas/user';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -29,7 +28,6 @@ export class SyncCategoriesConsumer {
     private readonly syncLocalService: SyncLocalService,
     private readonly syncPromService: SyncPromService,
     private readonly notificationBotService: NotificationBotService,
-    private readonly crmUsersService: CrmUsersService,
     @InjectModel(User.name) private userModel: UserModel,
   ) {}
 
