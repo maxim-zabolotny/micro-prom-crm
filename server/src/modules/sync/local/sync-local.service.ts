@@ -15,11 +15,14 @@ import {
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { TArray } from '@custom-types';
 import { MicrotronProductsService } from '../../microtron/products/products.service';
-import { CrmProductsService } from '../../crm/products/products.service';
-import { ProductDocument } from '@schemas/product';
+import {
+  Product,
+  ProductDocument,
+  ProductModel,
+  TAddProductToDB,
+  TUpdateProductInDB,
+} from '@schemas/product';
 import { IProductFullInfo } from '@common/interfaces/product';
-import { TAddProductToDB } from '../../crm/products/types/add-product-to-db.type';
-import { TUpdateProductInDB } from '../../crm/products/types/update-product-in-db.type';
 import { InjectModel } from '@nestjs/mongoose';
 import { Integration, IntegrationModel } from '@schemas/integration';
 
@@ -58,13 +61,14 @@ export class SyncLocalService {
     private microtronCoursesService: MicrotronCoursesService,
     private microtronCategoriesService: MicrotronCategoriesService,
     private microtronProductsService: MicrotronProductsService,
-    private crmProductsService: CrmProductsService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
     @InjectModel(Integration.name)
     private integrationModel: IntegrationModel,
     @InjectModel(Category.name)
     private categoryModel: CategoryModel,
+    @InjectModel(Product.name)
+    private productModel: ProductModel,
   ) {}
 
   // UTILITIES PART - CATEGORIES
@@ -309,7 +313,7 @@ export class SyncLocalService {
 
     const addedProducts: ProductDocument[] = [];
     for (const product of products) {
-      const addedProduct = await this.crmProductsService.addProduct({
+      const addedProduct = await this.productModel.addProduct({
         ...product,
         category,
       });
@@ -333,7 +337,7 @@ export class SyncLocalService {
 
     const updatedProducts: ProductDocument[] = [];
     for (const [product, data] of productsWithData) {
-      const updatedProduct = await this.crmProductsService.updateProduct(
+      const updatedProduct = await this.productModel.updateProduct(
         product._id,
         data,
       );
@@ -358,9 +362,7 @@ export class SyncLocalService {
 
     const deletedProducts: ProductDocument[] = [];
     for (const product of products) {
-      const deletedProduct = await this.crmProductsService.deleteProduct(
-        product._id,
-      );
+      const deletedProduct = await this.productModel.deleteProduct(product._id);
       deletedProducts.push(deletedProduct);
     }
 
@@ -389,11 +391,11 @@ export class SyncLocalService {
         categoryId: category._id,
       });
       const productsByCategory =
-        await this.crmProductsService.getProductsByCategories([category._id]);
+        await this.productModel.getProductsByCategories([category._id]);
 
       const productsToUpdateByCategory = _.chain(productsByCategory)
         .filter((product) => {
-          const { ourPrice } = this.crmProductsService.calculateProductPrice(
+          const { ourPrice } = this.productModel.calculateProductPrice(
             product.originalPrice,
             product.originalPriceCurrency,
             category,
@@ -468,8 +470,9 @@ export class SyncLocalService {
 
       this.logger.debug('Load Products by Category from DB');
 
-      const productsFromDB =
-        await this.crmProductsService.getProductsByCategories([category._id]);
+      const productsFromDB = await this.productModel.getProductsByCategories([
+        category._id,
+      ]);
       const productsFromDBMap = new Map(
         _.map(productsFromDB, (product) => [product.microtronId, product]),
       );
@@ -511,18 +514,16 @@ export class SyncLocalService {
                 productsFromAPIByCategoryMap.get(productId);
               const productFromDB = productsFromDBMap.get(productId);
 
-              const price =
-                this.crmProductsService.getProductPrice(productFromAPI);
+              const price = this.productModel.getProductPrice(productFromAPI);
               const quantity =
-                this.crmProductsService.getProductQuantity(productFromAPI);
+                this.productModel.getProductQuantity(productFromAPI);
 
               const currency = productFromAPI.currency;
-              const { ourPrice } =
-                this.crmProductsService.calculateProductPrice(
-                  price,
-                  currency,
-                  category,
-                );
+              const { ourPrice } = this.productModel.calculateProductPrice(
+                price,
+                currency,
+                category,
+              );
 
               const isEqual = _.isEqual(
                 {
@@ -973,7 +974,7 @@ export class SyncLocalService {
         result.removedCategories.push(...removedCategories);
 
         const productsByCategory =
-          await this.crmProductsService.getProductsByCategories([
+          await this.productModel.getProductsByCategories([
             categoryToRemove._id,
           ]);
         const removedProducts = await this.deleteProductsFromDB(

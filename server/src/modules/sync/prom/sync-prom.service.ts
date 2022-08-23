@@ -7,8 +7,7 @@ import { AppConstants } from '../../../app.constants';
 import { SpreadsheetService } from '../../spreadsheet/spreadsheet.service';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import { GoogleSpreadsheetRow, WorksheetGridRange } from 'google-spreadsheet';
-import { CrmProductsService } from '../../crm/products/products.service';
-import { ProductDocument } from '@schemas/product';
+import { Product, ProductDocument, ProductModel } from '@schemas/product';
 import { PromProductsService } from '../../prom/products/products.service';
 import { Product as PromProduct } from '@lib/prom';
 import { SyncLocalService } from '../local/sync-local.service';
@@ -49,13 +48,14 @@ export class SyncPromService {
   constructor(
     private configService: ConfigService,
     private spreadsheetService: SpreadsheetService,
-    private crmProductsService: CrmProductsService,
     private promProductsService: PromProductsService,
     private syncLocalService: SyncLocalService,
     private dataUtilsHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
     @InjectModel(Category.name)
     private categoryModel: CategoryModel,
+    @InjectModel(Product.name)
+    private productModel: ProductModel,
   ) {}
 
   // DEPRECATE
@@ -630,9 +630,7 @@ export class SyncPromService {
     };
 
     const { count, products } =
-      await this.crmProductsService.getProductsForLoadToSheetByCategory(
-        category._id,
-      );
+      await this.productModel.getProductsForLoadToSheetByCategory(category._id);
 
     this.logger.debug('Products for loading to Google Sheet in DB:', {
       count,
@@ -681,7 +679,7 @@ export class SyncPromService {
     };
 
     const { count, products } =
-      await this.crmProductsService.getProductsForLoadToSheet();
+      await this.productModel.getProductsForLoadToSheet();
 
     this.logger.debug('Products for loading to Google Sheet in DB:', {
       count,
@@ -729,7 +727,7 @@ export class SyncPromService {
     );
 
     this.logger.debug('Update all Products in DB');
-    await this.crmProductsService.updateAllProducts({
+    await this.productModel.updateAllProducts({
       'sync.loaded': false,
     });
 

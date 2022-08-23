@@ -9,6 +9,7 @@ import { PromModule } from '../prom/prom.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Integration, IntegrationSchema } from '@schemas/integration';
 import { Category, CategorySchema } from '@schemas/category';
+import { Product, ProductSchema } from '@schemas/product';
 
 @Module({
   imports: [
@@ -25,6 +26,12 @@ import { Category, CategorySchema } from '@schemas/category';
       {
         name: Category.name,
         schema: CategorySchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: Product.name,
+        schema: ProductSchema,
       },
     ]),
   ],
