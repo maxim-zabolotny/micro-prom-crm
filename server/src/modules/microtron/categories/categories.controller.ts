@@ -13,7 +13,7 @@ import {
 import { MicrotronCategoriesService } from './categories.service';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { MicrotronExceptionFilter } from '@common/filters';
-import { Auth, TimeoutLimit } from '@common/decorators';
+import { Auth, DisableEndpoint, TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
 import { UserRole } from '@schemas/user';
 import { SetMarkupDto } from './dto/set-markup.dto';
@@ -54,6 +54,7 @@ export class MicrotronCategoriesController {
   @Put('/set-markup')
   @HttpCode(201)
   @Auth(UserRole.Provider, UserRole.Admin)
+  @DisableEndpoint()
   setMarkup(@Body() markupCategoryData: SetMarkupDto) {
     return this.microtronCategoriesService.setMarkup(markupCategoryData);
   }

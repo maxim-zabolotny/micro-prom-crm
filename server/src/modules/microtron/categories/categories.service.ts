@@ -132,7 +132,7 @@ export class MicrotronCategoriesService {
     };
   }
 
-  // TODO: @deprecate
+  /** @deprecated */
   public async setMarkup(
     markupCategoryData: SetMarkupDto,
   ): Promise<ICategoryInConstant> {
