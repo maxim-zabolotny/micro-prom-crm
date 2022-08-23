@@ -1,4 +1,12 @@
-export { Product, ProductSchema, ProductDocument } from './product.schema';
+export {
+  Product,
+  ProductSchema,
+  ProductDocument,
+  ProductModel,
+  TProductTranslate,
+  TAddProductToDB,
+  TUpdateProductInDB,
+} from './product.schema';
 export {
   ProductSync,
   ProductSyncSchema,

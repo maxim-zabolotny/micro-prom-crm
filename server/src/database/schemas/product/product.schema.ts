@@ -1,15 +1,47 @@
+import * as _ from 'lodash';
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes } from 'mongoose';
-import { Category } from '@schemas/category';
+import {
+  Document,
+  Model,
+  SchemaTypes,
+  Types,
+  UpdateWriteOpResult,
+} from 'mongoose';
+import { Category, CategoryDocument } from '@schemas/category';
 import { Types as MicrotronTypes } from '@lib/microtron';
 import {
   ProductSync,
   ProductSyncSchema,
 } from '@schemas/product/product-sync.schema';
+import { HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { DataGenerateHelper } from '@common/helpers';
+import { IProductFullInfo } from '@common/interfaces/product';
+import { AppConstants } from '../../../app.constants';
 
+// TYPES
+export type TProductTranslate = Pick<Product, 'name' | 'description'>;
+
+export type TAddProductToDB = Omit<IProductFullInfo, 'categoryId'> & {
+  category: Pick<CategoryDocument, '_id' | 'microtronId' | 'course' | 'markup'>;
+};
+
+export type TUpdateProductInDB = Partial<
+  Pick<Product, 'originalPrice' | 'originalPriceCurrency' | 'quantity'> & {
+    'sync.localAt': ProductSync['localAt'];
+    'sync.prom': ProductSync['prom'];
+    'sync.lastPromAt': ProductSync['lastPromAt'];
+    'sync.loaded': ProductSync['loaded'];
+    'sync.lastLoadedAt': ProductSync['lastLoadedAt'];
+    'sync.tableLine': ProductSync['tableLine'];
+  } & {
+    category: Pick<Category, 'course' | 'markup'>;
+  }
+>;
+
+// MONGOOSE
 export type ProductDocument = Product & Document;
 
-export type TProductTranslate = Pick<Product, 'name' | 'description'>;
+export type ProductModel = Model<ProductDocument> & TStaticMethods;
 
 @Schema({ timestamps: true, collection: 'products' })
 export class Product {
@@ -91,3 +123,480 @@ export class Product {
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
+
+// CUSTOM TYPES
+type TStaticMethods = {
+  // UTILITIES
+  getProductPrice: (
+    this: ProductModel,
+    product: Pick<IProductFullInfo, 'price' | 'price_s'>,
+  ) => number;
+  getProductQuantity: (
+    this: ProductModel,
+    product: Pick<IProductFullInfo, 'quantity' | 'quantity_s'>,
+  ) => number;
+  calculateProductPrice: (
+    this: ProductModel,
+    originalPrice: number,
+    currency: MicrotronTypes.Currency,
+    category: Pick<Category, 'course' | 'markup'>,
+  ) => { rawPrice: number; ourPrice: number };
+  calculateSiteProductMarkup: (
+    this: ProductModel,
+    rawPrice: number,
+    sitePrice: number,
+  ) => number;
+  // MAIN
+  getAllProducts: (this: ProductModel) => Promise<ProductDocument[]>;
+  getProductsByCategories: (
+    this: ProductModel,
+    categoryIds: Types.ObjectId[],
+  ) => Promise<ProductDocument[]>;
+  getCategoriesWithProductsCount: (
+    this: ProductModel,
+  ) => Promise<Array<CategoryDocument & { productsCount: number }>>;
+  getProductsForLoadToSheet: (this: ProductModel) => Promise<{
+    products: Array<
+      Omit<ProductDocument, 'category'> & {
+        category: Pick<CategoryDocument, '_id' | 'promId'>;
+      }
+    >;
+    count: number;
+  }>;
+  getProductsForLoadToSheetByCategory: (
+    this: ProductModel,
+    categoryId: Types.ObjectId,
+  ) => Promise<{
+    products: ProductDocument[];
+    count: number;
+  }>;
+  getProductsForSyncWithProm: (
+    this: ProductModel,
+    options?: {
+      categories?: Types.ObjectId[];
+      products?: Types.ObjectId[];
+    },
+  ) => Promise<ProductDocument[]>;
+  addProduct: (
+    this: ProductModel,
+    productData: TAddProductToDB,
+  ) => Promise<ProductDocument>;
+  updateProduct: (
+    this: ProductModel,
+    productId: Types.ObjectId,
+    data: TUpdateProductInDB,
+  ) => Promise<ProductDocument>;
+  updateAllProducts: (
+    this: ProductModel,
+    data: Partial<TUpdateProductInDB>,
+  ) => Promise<UpdateWriteOpResult>;
+  deleteProduct: (
+    this: ProductModel,
+    productId: Types.ObjectId,
+  ) => Promise<ProductDocument>;
+};
+
+// STATIC METHODS IMPLEMENTATION
+const productLogger = new Logger('ProductModel');
+const dataGenerateHelper = new DataGenerateHelper();
+
+// UTILITIES
+ProductSchema.statics.getProductPrice = function (product) {
+  return _.isNumber(product.price) ? product.price : product.price_s;
+} as TStaticMethods['getProductPrice'];
+
+ProductSchema.statics.getProductQuantity = function (product) {
+  return _.isNumber(product.quantity) ? product.quantity : product.quantity_s;
+} as TStaticMethods['getProductQuantity'];
+
+ProductSchema.statics.calculateProductPrice = function (
+  originalPrice,
+  currency,
+  category,
+) {
+  const course = currency === MicrotronTypes.Currency.UAH ? 1 : category.course;
+
+  const rawPrice = originalPrice * course;
+  const onePercentFromRawPrice = rawPrice / 100;
+
+  const markupAmount = onePercentFromRawPrice * category.markup;
+  const ourPrice = rawPrice + markupAmount;
+
+  return {
+    rawPrice: Number(rawPrice.toFixed(3)),
+    ourPrice: Math.ceil(Number(ourPrice.toFixed(3))),
+  };
+} as TStaticMethods['calculateProductPrice'];
+
+ProductSchema.statics.calculateSiteProductMarkup = function (
+  rawPrice,
+  sitePrice,
+) {
+  const onePercentFromRawPrice = rawPrice / 100;
+  const siteMarkup = (sitePrice - rawPrice) / onePercentFromRawPrice;
+
+  return Number(siteMarkup.toFixed(3));
+} as TStaticMethods['calculateSiteProductMarkup'];
+
+// MAIN
+ProductSchema.statics.getAllProducts = async function () {
+  return this.find().exec();
+} as TStaticMethods['getAllProducts'];
+
+ProductSchema.statics.getProductsByCategories = async function (categoryIds) {
+  return this.find({ category: { $in: categoryIds } }).exec();
+} as TStaticMethods['getProductsByCategories'];
+
+ProductSchema.statics.getCategoriesWithProductsCount = async function () {
+  // return this.categoryModel
+  //   .aggregate([
+  //     {
+  //       $lookup: {
+  //         from: 'products',
+  //         localField: '_id',
+  //         foreignField: 'category',
+  //         pipeline: [{ $project: { _id: 1 } }],
+  //         as: 'products',
+  //       },
+  //     },
+  //     { $set: { productsCount: { $size: '$products' } } },
+  //     { $unset: ['products'] },
+  //     { $sort: { productsCount: -1 } },
+  //   ])
+  //   .exec();
+
+  // faster than category version
+  return this.aggregate([
+    {
+      $group: {
+        _id: '$category',
+        productsCount: { $sum: 1 },
+      },
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'categories',
+      },
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [{ $arrayElemAt: ['$categories', 0] }, '$$ROOT'],
+        },
+      },
+    },
+    { $unset: 'categories' },
+    { $sort: { productsCount: -1 } },
+  ]).exec();
+} as TStaticMethods['getCategoriesWithProductsCount'];
+
+ProductSchema.statics.getProductsForLoadToSheet = async function () {
+  const products = await this.aggregate([
+    {
+      $match: { 'sync.loaded': false },
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              promId: 1,
+            },
+          },
+        ],
+        as: 'category',
+      },
+    },
+    {
+      $unwind: '$category',
+    },
+  ]).exec();
+
+  return {
+    products,
+    count: products.length,
+  };
+} as TStaticMethods['getProductsForLoadToSheet'];
+
+ProductSchema.statics.getProductsForLoadToSheetByCategory = async function (
+  categoryId,
+) {
+  const products = await this.find({
+    category: categoryId,
+    'sync.loaded': false,
+  }).exec();
+
+  return {
+    products,
+    count: products.length,
+  };
+} as TStaticMethods['getProductsForLoadToSheetByCategory'];
+
+ProductSchema.statics.getProductsForSyncWithProm = async function (options) {
+  const searchOptions = {
+    'sync.loaded': true,
+    'sync.prom': false,
+  };
+
+  if (options?.categories) {
+    searchOptions['category'] = {
+      $in: options.categories,
+    };
+  }
+
+  if (options?.products) {
+    searchOptions['_id'] = {
+      $in: options.products,
+    };
+  }
+
+  return this.find(searchOptions).exec();
+} as TStaticMethods['getProductsForSyncWithProm'];
+
+ProductSchema.statics.addProduct = async function (productData) {
+  const ProductConstants = AppConstants.Prom.Sheet.Product;
+
+  productLogger.debug('Process add Product:', {
+    id: productData.id,
+    name: productData.name,
+    categoryMicrotronId: productData.category.microtronId,
+  });
+
+  const { parse, translate, category } = productData;
+
+  const price = this.getProductPrice(productData);
+  const quantity = this.getProductQuantity(productData);
+
+  const available = quantity > 0;
+
+  const { rawPrice, ourPrice } = this.calculateProductPrice(
+    price,
+    productData.currency,
+    category,
+  );
+  const siteMarkup = this.calculateSiteProductMarkup(
+    rawPrice,
+    parse.cost.price,
+  );
+
+  // SPEC PART
+  const specifications = _.reduce(
+    parse.specifications,
+    (acc, value, key) => {
+      acc[String(key)] = String(value);
+      return acc;
+    },
+    {},
+  );
+
+  if (
+    productData.warranty > 0 &&
+    !specifications[ProductConstants.SpecialSpecificationKeys.GuaranteeTerm]
+  ) {
+    specifications[
+      ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
+    ] = `${productData.warranty}`;
+  }
+
+  if (!specifications[ProductConstants.SpecialSpecificationKeys.State]) {
+    specifications[ProductConstants.SpecialSpecificationKeys.State] = parse.new
+      ? 'Новое'
+      : 'Б/У';
+  }
+  // END SPEC PART
+
+  const product = new this({
+    name: productData.name,
+    description: parse.description,
+    translate: translate,
+    brand: productData.brand,
+    specifications: specifications,
+    sitePrice: parse.cost.price,
+    siteMarkup: siteMarkup,
+    originalPrice: price,
+    originalPriceCurrency: productData.currency,
+    ourPrice: ourPrice,
+    quantity: quantity,
+    warranty: productData.warranty,
+    vendorCode: productData.vendorCode,
+    UKTZED: productData.UKTZED,
+    url: productData.url,
+    images: productData.images,
+    new: parse.new,
+    available: available,
+    category: category._id,
+    microtronId: productData.id,
+    promId: dataGenerateHelper.randomNumber(1, 9, 19),
+    sync: {
+      localAt: new Date(),
+    },
+  });
+  await product.save();
+
+  productLogger.debug('Product saved:', {
+    microtronId: productData.id,
+  });
+
+  return product;
+} as TStaticMethods['addProduct'];
+
+ProductSchema.statics.updateProduct = async function (productId, data) {
+  productLogger.debug('Process update Product:', {
+    productId,
+    data,
+  });
+
+  productLogger.debug('Load old product version');
+  const oldProduct = await this.findById(productId).exec();
+  if (!oldProduct) {
+    throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+  }
+
+  const dataForUpdate: Partial<Product & TUpdateProductInDB> = _.omit(data, [
+    'quantity',
+    'originalPrice',
+    'originalPriceCurrency',
+    'category',
+  ]);
+
+  if ('quantity' in data) {
+    const quantity = Math.max(data.quantity, 0);
+
+    dataForUpdate.quantity = quantity;
+    dataForUpdate.available = quantity > 0;
+
+    productLogger.debug('Change Product quantity and available', {
+      old: _.pick(oldProduct, ['quantity', 'available']),
+      new: _.pick(dataForUpdate, ['quantity', 'available']),
+    });
+  }
+
+  if (
+    'originalPrice' in data ||
+    'originalPriceCurrency' in data ||
+    'category' in data
+  ) {
+    if (!data.category) {
+      throw new HttpException('Category is required', HttpStatus.BAD_REQUEST);
+    }
+
+    const category = data.category;
+    const originalPrice = data.originalPrice ?? oldProduct.originalPrice;
+    const originalPriceCurrency =
+      data.originalPriceCurrency ?? oldProduct.originalPriceCurrency;
+
+    const { rawPrice, ourPrice } = this.calculateProductPrice(
+      originalPrice,
+      originalPriceCurrency,
+      category,
+    );
+    const siteMarkup = this.calculateSiteProductMarkup(
+      rawPrice,
+      oldProduct.sitePrice,
+    );
+
+    dataForUpdate.originalPrice = originalPrice;
+    dataForUpdate.originalPriceCurrency = originalPriceCurrency;
+    dataForUpdate.ourPrice = ourPrice;
+    dataForUpdate.siteMarkup = siteMarkup;
+
+    productLogger.debug('Change Product price', {
+      old: _.pick(oldProduct, [
+        'originalPrice',
+        'originalPriceCurrency',
+        'ourPrice',
+        'siteMarkup',
+      ]),
+      new: _.pick(dataForUpdate, [
+        'originalPrice',
+        'originalPriceCurrency',
+        'ourPrice',
+        'siteMarkup',
+      ]),
+    });
+  }
+
+  const updatedProduct = await this.findOneAndUpdate(
+    {
+      _id: productId,
+    },
+    {
+      $set: dataForUpdate,
+    },
+    {
+      returnOriginal: false,
+    },
+  ).exec();
+
+  productLogger.debug('Product updated:', {
+    id: productId,
+  });
+
+  return updatedProduct;
+} as TStaticMethods['updateProduct'];
+
+ProductSchema.statics.updateAllProducts = async function (data) {
+  productLogger.debug('Process update all Products:', {
+    data,
+  });
+
+  const updateResult = await this.updateMany(
+    {},
+    {
+      $set: data,
+    },
+  ).exec();
+
+  productLogger.debug('Products update result:', {
+    ...updateResult,
+  });
+
+  return updateResult;
+} as TStaticMethods['updateAllProducts'];
+
+ProductSchema.statics.deleteProduct = async function (productId) {
+  productLogger.debug('Process delete Product:', {
+    productId,
+  });
+
+  const removedProduct = await this.findOneAndDelete({
+    _id: productId,
+  }).exec();
+
+  if (removedProduct.sync.tableLine) {
+    const { matchedCount, modifiedCount } = await this.updateMany(
+      {
+        'sync.tableLine': {
+          $gt: removedProduct.sync.tableLine,
+        },
+      },
+      [
+        {
+          $set: {
+            'sync.tableLine': {
+              $subtract: ['$sync.tableLine', 1],
+            },
+          },
+        },
+      ],
+    ).exec();
+
+    productLogger.debug('Updated Products with higher table line:', {
+      matchedCount,
+      modifiedCount,
+    });
+  }
+
+  productLogger.debug('Product removed:', {
+    productId,
+  });
+
+  return removedProduct;
+} as TStaticMethods['deleteProduct'];
