@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClientSession } from 'mongodb';
 import { Types } from 'mongoose';
 import { MicrotronCoursesService } from '../../microtron/courses/courses.service';
 import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
@@ -75,6 +76,7 @@ export class SyncLocalService {
   public async addCategoriesToDB(
     data: Pick<TAddCategoryToDB, 'course' | 'integrationId'>,
     categories: ITranslatedCategoryInConstant[],
+    session?: ClientSession | null,
   ) {
     const { course, integrationId } = data;
 
@@ -84,11 +86,14 @@ export class SyncLocalService {
 
     const addedCategoryIds: Types.ObjectId[] = [];
     for (const category of categories) {
-      const addedCategory = await this.categoryModel.addCategory({
-        ...category,
-        course,
-        integrationId,
-      });
+      const addedCategory = await this.categoryModel.addCategory(
+        {
+          ...category,
+          course,
+          integrationId,
+        },
+        session,
+      );
       addedCategoryIds.push(addedCategory._id);
     }
 
@@ -96,11 +101,12 @@ export class SyncLocalService {
       count: addedCategoryIds.length,
     });
 
-    return this.categoryModel.getCategoriesByIds(addedCategoryIds);
+    return this.categoryModel.getCategoriesByIds(addedCategoryIds, session);
   }
 
   public async updateCategoriesInDB(
     categoriesWithData: IChangeCategoriesActions['categoriesToUpdate'],
+    session?: ClientSession | null,
   ) {
     this.logger.debug('Update Categories in DB:', {
       ids: _.map(categoriesWithData, (categoryData) => categoryData[0]._id),
@@ -112,6 +118,7 @@ export class SyncLocalService {
       const updatedCategory = await this.categoryModel.updateCategory(
         category._id,
         data,
+        session,
       );
       updatedCategories.push(updatedCategory);
     }
@@ -126,6 +133,7 @@ export class SyncLocalService {
 
   public async deleteCategoriesFromDB(
     categories: Array<Pick<CategoryDocument, '_id'>>,
+    session?: ClientSession | null,
   ) {
     this.logger.debug('Start removing Categories from DB', {
       ids: _.map(categories, '_id'),
@@ -136,6 +144,7 @@ export class SyncLocalService {
     for (const category of categories) {
       const deletedCategory = await this.categoryModel.deleteCategory(
         category._id,
+        session,
       );
       deletedCategories.push(deletedCategory);
     }
@@ -152,6 +161,7 @@ export class SyncLocalService {
     add = true,
     update = true,
     remove = true,
+    session?: ClientSession | null,
   ) {
     const result: IChangeCategoriesActions = {
       categoriesToAdd: [],
@@ -165,7 +175,7 @@ export class SyncLocalService {
       _.map(categoriesFromConstant, (category) => [category.id, category]),
     );
 
-    const categoriesFromDB = await this.categoryModel.find().exec();
+    const categoriesFromDB = await this.categoryModel.getAllCategories(session);
     const categoriesFromDBMap = new Map(
       _.map(categoriesFromDB, (category) => [category.microtronId, category]),
     );
@@ -255,6 +265,7 @@ export class SyncLocalService {
 
   public async makeCategoriesChangeActions(
     data: Partial<IChangeCategoriesActions>,
+    session?: ClientSession | null,
   ) {
     const result: ISyncCategoriesResult = {
       added: [],
@@ -286,15 +297,22 @@ export class SyncLocalService {
           integrationId: microtronIntegration._id,
         },
         categoriesToAdd,
+        session,
       );
     }
 
     if (!_.isEmpty(categoriesToUpdate)) {
-      result.updated = await this.updateCategoriesInDB(categoriesToUpdate);
+      result.updated = await this.updateCategoriesInDB(
+        categoriesToUpdate,
+        session,
+      );
     }
 
     if (!_.isEmpty(categoriesToRemove)) {
-      result.removed = await this.deleteCategoriesFromDB(categoriesToRemove);
+      result.removed = await this.deleteCategoriesFromDB(
+        categoriesToRemove,
+        session,
+      );
     }
 
     return result;
@@ -304,6 +322,7 @@ export class SyncLocalService {
   public async addProductsToDB(
     data: Pick<TAddProductToDB, 'category'>,
     products: IProductFullInfo[],
+    session?: ClientSession | null,
   ) {
     const { category } = data;
 
@@ -313,10 +332,13 @@ export class SyncLocalService {
 
     const addedProducts: ProductDocument[] = [];
     for (const product of products) {
-      const addedProduct = await this.productModel.addProduct({
-        ...product,
-        category,
-      });
+      const addedProduct = await this.productModel.addProduct(
+        {
+          ...product,
+          category,
+        },
+        session,
+      );
       addedProducts.push(addedProduct);
     }
 
@@ -329,6 +351,7 @@ export class SyncLocalService {
 
   public async updateProductsInDB(
     productsWithData: IChangeProductsActions['productsToUpdate'],
+    session?: ClientSession | null,
   ) {
     this.logger.debug('Update Products in DB:', {
       ids: _.map(productsWithData, (productData) => productData[0]._id),
@@ -340,6 +363,7 @@ export class SyncLocalService {
       const updatedProduct = await this.productModel.updateProduct(
         product._id,
         data,
+        session,
       );
       updatedProducts.push(updatedProduct);
     }
@@ -354,6 +378,7 @@ export class SyncLocalService {
 
   public async deleteProductsFromDB(
     products: Array<Pick<ProductDocument, '_id'>>,
+    session?: ClientSession | null,
   ) {
     this.logger.debug('Start removing Products from DB', {
       ids: _.map(products, '_id'),
@@ -362,7 +387,10 @@ export class SyncLocalService {
 
     const deletedProducts: ProductDocument[] = [];
     for (const product of products) {
-      const deletedProduct = await this.productModel.deleteProduct(product._id);
+      const deletedProduct = await this.productModel.deleteProduct(
+        product._id,
+        session,
+      );
       deletedProducts.push(deletedProduct);
     }
 
@@ -376,6 +404,7 @@ export class SyncLocalService {
 
   public async getProductsToUpdateByCategories(
     categories: Array<Pick<CategoryDocument, '_id' | 'course' | 'markup'>>,
+    session?: ClientSession | null,
   ) {
     this.logger.debug('Get Products for Update by Categories:', {
       categories: _.map(categories, (category) =>
@@ -391,7 +420,10 @@ export class SyncLocalService {
         categoryId: category._id,
       });
       const productsByCategory =
-        await this.productModel.getProductsByCategories([category._id]);
+        await this.productModel.getProductsByCategories(
+          [category._id],
+          session,
+        );
 
       const productsToUpdateByCategory = _.chain(productsByCategory)
         .filter((product) => {
@@ -446,6 +478,7 @@ export class SyncLocalService {
     add = true,
     update = true,
     remove = true,
+    session?: ClientSession | null,
   ) {
     const result: IChangeProductsActions = {
       productsToAdd: [],
@@ -470,9 +503,10 @@ export class SyncLocalService {
 
       this.logger.debug('Load Products by Category from DB');
 
-      const productsFromDB = await this.productModel.getProductsByCategories([
-        category._id,
-      ]);
+      const productsFromDB = await this.productModel.getProductsByCategories(
+        [category._id],
+        session,
+      );
       const productsFromDBMap = new Map(
         _.map(productsFromDB, (product) => [product.microtronId, product]),
       );
@@ -587,6 +621,7 @@ export class SyncLocalService {
 
   public async makeProductsChangeActions(
     data: Partial<IChangeProductsActions>,
+    session?: ClientSession | null,
   ) {
     const result: ISyncProductsResult = {
       added: [],
@@ -611,46 +646,53 @@ export class SyncLocalService {
         const addedProducts = await this.addProductsToDB(
           { category },
           productsWithFullInfo,
+          session,
         );
         result.added.push(...addedProducts);
       }
     }
 
     if (!_.isEmpty(productsToUpdate)) {
-      result.updated = await this.updateProductsInDB(productsToUpdate);
+      result.updated = await this.updateProductsInDB(productsToUpdate, session);
     }
 
     if (!_.isEmpty(productsToRemove)) {
-      result.removed = await this.deleteProductsFromDB(productsToRemove);
+      result.removed = await this.deleteProductsFromDB(
+        productsToRemove,
+        session,
+      );
     }
 
     return result;
   }
 
   // MAIN PART - CATEGORIES
-  public async loadAllCategoriesToDB() {
-    const microtronIntegration =
-      await this.integrationModel.getMicrotronIntegration();
-    const course = await this.microtronCoursesService.getCoursesByAPI(true);
-
+  public async loadAllCategoriesToDB(session?: ClientSession | null) {
     const categories =
       await this.microtronCategoriesService.getFullCategoriesInfo();
 
-    return this.addCategoriesToDB(
+    const { added } = await this.makeCategoriesChangeActions(
       {
-        course: course.bank,
-        integrationId: microtronIntegration._id,
+        categoriesToAdd: categories,
+        categoriesToRemove: [],
+        categoriesToUpdate: [],
       },
-      categories,
+      session,
     );
+
+    return added;
   }
 
   // MAIN PART - PRODUCTS
-  public async loadAllProductsByCategoryToDB(microtronId: string) {
+  public async loadAllProductsByCategoryToDB(
+    microtronId: string,
+    session?: ClientSession | null,
+  ) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
     const category = await this.categoryModel.getCategoryByMicrotronId(
       microtronId,
+      session,
     );
     if (!category) {
       throw new HttpException(
@@ -669,13 +711,13 @@ export class SyncLocalService {
       });
     const productsWithFullInfo = productsWithFullInfoByCategories[microtronId];
 
-    return this.addProductsToDB({ category }, productsWithFullInfo);
+    return this.addProductsToDB({ category }, productsWithFullInfo, session);
   }
 
-  public async loadAllProductsToDB() {
+  public async loadAllProductsToDB(session?: ClientSession | null) {
     this.logger.debug('Load All Categories from DB');
 
-    const categories = await this.categoryModel.find().exec();
+    const categories = await this.categoryModel.getAllCategories(session);
     this.logger.debug('Loaded Categories from DB:', {
       count: categories.length,
     });
@@ -712,6 +754,7 @@ export class SyncLocalService {
         const addedProducts = await this.addProductsToDB(
           { category },
           productsWithFullInfo,
+          session,
         );
         loadedProducts.push(...addedProducts);
 
@@ -747,11 +790,15 @@ export class SyncLocalService {
     return loadedProducts;
   }
 
-  public async actualizeProductsByCategory(microtronId: string) {
+  public async actualizeProductsByCategory(
+    microtronId: string,
+    session?: ClientSession | null,
+  ) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
     const category = await this.categoryModel.getCategoryByMicrotronId(
       microtronId,
+      session,
     );
     if (!category) {
       throw new HttpException(
@@ -768,8 +815,12 @@ export class SyncLocalService {
       true,
       true,
       true,
+      session,
     );
-    const result = await this.makeProductsChangeActions(changeProductsActions);
+    const result = await this.makeProductsChangeActions(
+      changeProductsActions,
+      session,
+    );
 
     this.logger.debug('Result of actualize Products by Category:', {
       addedProducts: result.added.length,
@@ -780,10 +831,10 @@ export class SyncLocalService {
     return result;
   }
 
-  public async actualizeAllProducts() {
+  public async actualizeAllProducts(session?: ClientSession | null) {
     this.logger.debug('Load All Categories from DB');
 
-    const categories = await this.categoryModel.find().exec();
+    const categories = await this.categoryModel.getAllCategories(session);
     this.logger.debug('Loaded Categories from DB:', {
       count: categories.length,
     });
@@ -793,8 +844,12 @@ export class SyncLocalService {
       true,
       true,
       true,
+      session,
     );
-    const result = await this.makeProductsChangeActions(changeProductsActions);
+    const result = await this.makeProductsChangeActions(
+      changeProductsActions,
+      session,
+    );
 
     this.logger.debug('Result of actualize All Products:', {
       addedProducts: result.added.length,
@@ -806,7 +861,7 @@ export class SyncLocalService {
   }
 
   // MAIN PART - CATEGORIES + PRODUCTS
-  public async syncCourse() {
+  public async syncCourse(session?: ClientSession | null) {
     const result = {
       updatedCategories: [],
       updatedProducts: [],
@@ -825,6 +880,7 @@ export class SyncLocalService {
           $ne: course.bank,
         },
       })
+      .session(session)
       .exec();
     this.logger.debug('Loaded Categories with another Course:', {
       count: categories.length,
@@ -839,22 +895,29 @@ export class SyncLocalService {
 
     for (const category of categories) {
       // single category but in array view
-      const updatedCategories = await this.updateCategoriesInDB([
+      const updatedCategories = await this.updateCategoriesInDB(
         [
-          category._id,
-          {
-            course: course.bank,
-            'sync.localAt': new Date(),
-          },
+          [
+            category._id,
+            {
+              course: course.bank,
+              'sync.localAt': new Date(),
+            },
+          ],
         ],
-      ]);
+        session,
+      );
       result.updatedCategories.push(...updatedCategories);
 
       const productsToUpdate = await this.getProductsToUpdateByCategories(
         updatedCategories,
+        session,
       );
       if (!_.isEmpty(productsToUpdate)) {
-        const updatedProducts = await this.updateProductsInDB(productsToUpdate);
+        const updatedProducts = await this.updateProductsInDB(
+          productsToUpdate,
+          session,
+        );
         result.updatedProducts.push(...updatedProducts);
       }
     }
@@ -867,7 +930,7 @@ export class SyncLocalService {
     return result;
   }
 
-  public async syncMarkup() {
+  public async syncMarkup(session?: ClientSession | null) {
     const result = {
       updatedCategories: [],
       updatedProducts: [],
@@ -877,6 +940,7 @@ export class SyncLocalService {
       false,
       true,
       false,
+      session,
     );
     if (_.isEmpty(categoriesToUpdate)) {
       this.logger.debug('Categories to update is empty. Return empty result');
@@ -885,16 +949,21 @@ export class SyncLocalService {
 
     for (const categoryToUpdate of categoriesToUpdate) {
       // single category but in array view
-      const updatedCategories = await this.updateCategoriesInDB([
-        categoryToUpdate,
-      ]);
+      const updatedCategories = await this.updateCategoriesInDB(
+        [categoryToUpdate],
+        session,
+      );
       result.updatedCategories.push(...updatedCategories);
 
       const productsToUpdate = await this.getProductsToUpdateByCategories(
         updatedCategories,
+        session,
       );
       if (!_.isEmpty(productsToUpdate)) {
-        const updatedProducts = await this.updateProductsInDB(productsToUpdate);
+        const updatedProducts = await this.updateProductsInDB(
+          productsToUpdate,
+          session,
+        );
         result.updatedProducts.push(...updatedProducts);
       }
     }
@@ -907,7 +976,7 @@ export class SyncLocalService {
     return result;
   }
 
-  public async actualizeCategories() {
+  public async actualizeCategories(session?: ClientSession | null) {
     const result = {
       addedCategories: [],
       removedCategories: [],
@@ -916,7 +985,7 @@ export class SyncLocalService {
     };
 
     const { categoriesToAdd, categoriesToRemove } =
-      await this.getChangeCategoriesActions(true, false, true);
+      await this.getChangeCategoriesActions(true, false, true, session);
     if (_.isEmpty(categoriesToAdd) && _.isEmpty(categoriesToRemove)) {
       this.logger.debug(
         'Categories to add and remove is empty. Return empty result',
@@ -940,6 +1009,7 @@ export class SyncLocalService {
             integrationId: microtronIntegration._id,
           },
           [categoryToAdd],
+          session,
         );
 
         // RESULT
@@ -950,9 +1020,11 @@ export class SyncLocalService {
           true,
           false,
           false,
+          session,
         );
         const { added } = await this.makeProductsChangeActions(
           changeProductsActions,
+          session,
         );
 
         // RESULT
@@ -966,19 +1038,22 @@ export class SyncLocalService {
       });
 
       for (const categoryToRemove of categoriesToRemove) {
-        const removedCategories = await this.deleteCategoriesFromDB([
-          categoryToRemove,
-        ]);
+        const removedCategories = await this.deleteCategoriesFromDB(
+          [categoryToRemove],
+          session,
+        );
 
         // RESULT
         result.removedCategories.push(...removedCategories);
 
         const productsByCategory =
-          await this.productModel.getProductsByCategories([
-            categoryToRemove._id,
-          ]);
+          await this.productModel.getProductsByCategories(
+            [categoryToRemove._id],
+            session,
+          );
         const removedProducts = await this.deleteProductsFromDB(
           productsByCategory,
+          session,
         );
 
         // RESULT
