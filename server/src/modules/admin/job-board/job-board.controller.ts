@@ -42,4 +42,10 @@ export class JobBoardController {
   addSyncCategories() {
     return this.jobBoardService.addSyncCategories();
   }
+
+  @Post('/test-sync-course')
+  @HttpCode(201)
+  addSyncCourse() {
+    return this.jobBoardService.addSyncCourse();
+  }
 }
