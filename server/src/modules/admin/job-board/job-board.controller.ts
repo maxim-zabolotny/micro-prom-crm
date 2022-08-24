@@ -48,4 +48,10 @@ export class JobBoardController {
   addSyncCourse() {
     return this.jobBoardService.addSyncCourse();
   }
+
+  @Post('/test-init-load-sheet')
+  @HttpCode(201)
+  addInitLoadSheet() {
+    return this.jobBoardService.addInitLoadSheet();
+  }
 }

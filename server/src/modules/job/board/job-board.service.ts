@@ -6,12 +6,14 @@ import { createBullBoard } from '@bull-board/api';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
 import {
   audioProcessorName,
+  initLoadSheetName,
   loadAllCategoriesName,
   loadAllProductsName,
   loadProductsByCategoryName,
   syncCategoriesName,
   syncCourseName,
   TAudioProcessorQueue,
+  TInitLoadSheetProcessorQueue,
   TLoadAllCategoriesProcessorQueue,
   TLoadAllProductsProcessorQueue,
   TLoadProductsByCategoryProcessorQueue,
@@ -41,6 +43,8 @@ export class JobBoardService {
     private syncCategoriesQueue: TSyncCategoriesProcessorQueue,
     @InjectQueue(syncCourseName)
     private syncCourseQueue: TSyncCourseProcessorQueue,
+    @InjectQueue(initLoadSheetName)
+    private initLoadSheetQueue: TInitLoadSheetProcessorQueue,
   ) {
     this.serverAdapter.setBasePath(this.basePath);
     this.serverAdapter.setErrorHandler((err) => {
@@ -59,6 +63,7 @@ export class JobBoardService {
         new BullAdapter(this.loadAllProductsQueue),
         new BullAdapter(this.syncCategoriesQueue),
         new BullAdapter(this.syncCourseQueue),
+        new BullAdapter(this.initLoadSheetQueue),
       ],
       serverAdapter: this.serverAdapter,
     });
@@ -119,6 +124,15 @@ export class JobBoardService {
 
   public async addSyncCourse() {
     const job = await this.syncCourseQueue.add();
+    return {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    };
+  }
+
+  public async addInitLoadSheet() {
+    const job = await this.initLoadSheetQueue.add();
     return {
       id: job.id,
       name: job.queue.name,
