@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import MicrotronAPI, { Category, Types } from '@lib/microtron';
 import { Constant, ConstantModel } from '@schemas/constant';
 import { InjectModel } from '@nestjs/mongoose';
-import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { Data } from '../../../data';
 import { DataUtilsHelper } from '@common/helpers';
 import {
@@ -36,7 +35,7 @@ export class MicrotronCategoriesService {
     });
   }
 
-  private async retrieveFromAPI(
+  public async retrieveFromAPI(
     force: boolean,
     lang: Types.Lang,
   ): Promise<ICategory[]> {
@@ -58,7 +57,7 @@ export class MicrotronCategoriesService {
     return cache;
   }
 
-  private async retrieveRUFromAPI(categoryIds: Array<ICategory['id']>) {
+  public async retrieveRUFromAPI(categoryIds: Array<ICategory['id']>) {
     this.logger.debug('Load RU categories from API');
     const apiCategories = await this.retrieveFromAPI(true, Types.Lang.RU);
     const apiCategoriesMap = new Map(
@@ -105,31 +104,6 @@ export class MicrotronCategoriesService {
     }
 
     return categories;
-  }
-
-  // TODO: move to CRM
-  public async save(
-    categoriesData: SaveCategoriesDto,
-  ): Promise<{ success: boolean }> {
-    this.logger.debug('Receive categories in array view');
-    const categories = categoriesData.categories;
-
-    // DATA
-    this.logger.debug('Write RU categories data in file');
-    await Data.SelectedRUCategories.write(
-      await this.retrieveRUFromAPI(_.map(categories, 'id')),
-    );
-
-    this.logger.debug('Write categories data in file');
-    await Data.SelectedCategories.write(categories);
-
-    // DB
-    const categoriesJSON = JSON.stringify(categories);
-    await this.constantModel.upsertCategories(categoriesJSON);
-
-    return {
-      success: true,
-    };
   }
 
   /** @deprecated */

@@ -11,7 +11,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { MicrotronCategoriesService } from './categories.service';
-import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { MicrotronExceptionFilter } from '@common/filters';
 import { Auth, DisableEndpoint, TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
@@ -42,13 +41,6 @@ export class MicrotronCategoriesController {
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
     return this.microtronCategoriesService.getSaved(tree);
-  }
-
-  @Put('/save')
-  @HttpCode(201)
-  @Auth(UserRole.Provider, UserRole.Admin)
-  save(@Body() categoriesData: SaveCategoriesDto) {
-    return this.microtronCategoriesService.save(categoriesData);
   }
 
   @Put('/set-markup')
