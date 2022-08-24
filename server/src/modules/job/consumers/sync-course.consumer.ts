@@ -59,7 +59,75 @@ export class SyncCourseConsumer {
   }
 
   @Process()
-  async syncCourse(job: Job<TSyncCourseProcessorData>) {}
+  async syncCourse(job: Job<TSyncCourseProcessorData>) {
+    // START
+    await this.unionLogger(job, 'Start sync course');
+
+    // 1. Sync course
+    await this.unionLogger(job, '1. Sync course');
+
+    const { updatedCategories, updatedProducts } =
+      await this.syncLocalService.syncCourse();
+
+    await this.unionLogger(job, '1. Sync course result:', {
+      updatedCategoriesCount: updatedCategories.length,
+      updatedProductsCount: updatedProducts.length,
+    });
+
+    // 2. Prom
+    const productsToUpdateInProm = _.filter(
+      updatedProducts,
+      (product) => product.sync.loaded,
+    );
+
+    await this.unionLogger(job, '2. Prom updates:', {
+      productsToUpdateInPromCount: productsToUpdateInProm.length,
+    });
+
+    const updateInPromResult = await this.syncPromService.syncProductsWithProm(
+      productsToUpdateInProm,
+    );
+
+    await this.unionLogger(job, '2. Prom updates result:', {
+      updateInPromResult,
+    });
+
+    // 3. Notify
+    await this.unionLogger(job, '3. Notify Admin');
+
+    await this.notifyAdmin(this.getReadableQueueName(), {
+      syncCourse: {
+        updatedCategories: updatedCategories.length,
+        updatedProducts: updatedProducts.length,
+      },
+      prom: {
+        update: {
+          processedIds: updateInPromResult.processedIds.length,
+          unprocessedIds: updateInPromResult.unprocessedIds.length,
+          errors: Object.keys(updateInPromResult.errors).length,
+          updatedProducts: updateInPromResult.updatedProducts.length,
+        },
+      },
+    });
+
+    // 4. Result
+    await this.unionLogger(job, '4. Build result');
+
+    const result = {
+      syncCourse: {
+        updatedCategories,
+        updatedProducts,
+      },
+      prom: {
+        update: updateInPromResult,
+      },
+    };
+
+    // END
+    await this.unionLogger(job, 'Complete sync categories');
+
+    return result;
+  }
 
   @OnQueueActive()
   onActive(job: Job) {
