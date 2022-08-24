@@ -6,6 +6,11 @@ import { Constant, ConstantModel } from '@schemas/constant';
 import { SaveCategoriesDto } from './dto/save-categories.dto';
 import { Data } from '../../../data';
 import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
+import { InjectQueue } from '@nestjs/bull';
+import {
+  syncCategoriesName,
+  TSyncCategoriesProcessorQueue,
+} from '../../job/consumers';
 
 @Injectable()
 export class CrmCategoriesService {
@@ -15,6 +20,8 @@ export class CrmCategoriesService {
     private configService: ConfigService,
     private microtronCategoriesService: MicrotronCategoriesService,
     @InjectModel(Constant.name) private constantModel: ConstantModel,
+    @InjectQueue(syncCategoriesName)
+    private syncCategoriesQueue: TSyncCategoriesProcessorQueue,
   ) {}
 
   public async saveToConstant(
@@ -37,6 +44,13 @@ export class CrmCategoriesService {
     // DB
     const categoriesJSON = JSON.stringify(categories);
     await this.constantModel.upsertCategories(categoriesJSON);
+
+    const job = await this.syncCategoriesQueue.add();
+    this.logger.debug('Init sync-categories job:', {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    });
 
     return {
       success: true,
