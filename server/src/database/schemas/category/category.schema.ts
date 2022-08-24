@@ -88,6 +88,10 @@ export const CategorySchema = SchemaFactory.createForClass(Category);
 
 // CUSTOM TYPES
 type TStaticMethods = {
+  getAllCategories: (
+    this: CategoryModel,
+    session?: ClientSession | null,
+  ) => Promise<CategoryDocument[]>;
   getCategoriesForLoadToSheet: (
     this: CategoryModel,
     session?: ClientSession | null,
@@ -131,6 +135,10 @@ type TStaticMethods = {
 // STATIC METHODS IMPLEMENTATION
 const categoryLogger = new Logger('CategoryModel');
 const dataGenerateHelper = new DataGenerateHelper();
+
+CategorySchema.statics.getAllCategories = async function (session) {
+  return this.find().session(session).exec();
+} as TStaticMethods['getAllCategories'];
 
 CategorySchema.statics.getCategoriesForLoadToSheet = async function (session) {
   const categories = await this.find({ 'sync.loaded': false })
