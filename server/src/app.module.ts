@@ -41,6 +41,7 @@ import { PromModule } from './modules/prom/prom.module';
           uri: configService.get('mongo.url'),
           retryAttempts: 3,
           retryDelay: 500,
+          replicaSet: 'rs0',
         };
       },
     }),
