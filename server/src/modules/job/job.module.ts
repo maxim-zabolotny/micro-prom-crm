@@ -25,6 +25,7 @@ import { JobStaticService } from './static/job-static.service';
 import { TelegramModule } from '../telegram/telegram.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@schemas/user';
+import { PromModule } from '../prom/prom.module';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -45,6 +46,7 @@ const consumers = [
   imports: [
     SyncModule,
     TelegramModule,
+    PromModule,
     MongooseModule.forFeature([
       {
         name: User.name,

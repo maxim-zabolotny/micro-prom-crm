@@ -124,7 +124,7 @@ export class SyncCourseConsumer {
     };
 
     // END
-    await this.unionLogger(job, 'Complete sync categories');
+    await this.unionLogger(job, 'Complete sync course');
 
     return result;
   }
