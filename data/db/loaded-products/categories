@@ -1,0 +1,42 @@
+[{
+  "_id": {
+    "$oid": "6300f830823182f4d05671e8"
+  },
+  "name": "Конвертори",
+  "markup": 50,
+  "course": 37,
+  "translate": {
+    "name": "Конвертор"
+  },
+  "sync": {
+    "localAt": {
+      "$date": {
+        "$numberLong": "1661343740897"
+      }
+    },
+    "loaded": true,
+    "lastLoadedAt": {
+      "$date": {
+        "$numberLong": "1661008659327"
+      }
+    },
+    "tableLine": 2
+  },
+  "microtronId": "000000807",
+  "parentMicrotronId": "000000225",
+  "promId": 63137375,
+  "integration": {
+    "$oid": "62dd67baaa7c19d3a93073db"
+  },
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1661007920774"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1661343740907"
+    }
+  },
+  "__v": 0
+}]

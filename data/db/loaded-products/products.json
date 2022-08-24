@@ -1,0 +1,205 @@
+[{
+  "_id": {
+    "$oid": "6300fd76823182f4d0567217"
+  },
+  "name": "Конвертор TWIN подвійні",
+  "description": "Конвертор TWIN подвійні",
+  "translate": {
+    "name": "Конвертор TWIN двойные",
+    "description": "Конвертор TWIN двойные"
+  },
+  "brand": "NoNaMe",
+  "specifications": {
+    "Гарантийный срок (міс)": "12",
+    "Состояние": "Новое"
+  },
+  "sitePrice": 278,
+  "siteMarkup": 41.764,
+  "originalPriceCurrency": "USD",
+  "originalPrice": 5.3,
+  "ourPrice": 295,
+  "quantity": 4,
+  "warranty": 12,
+  "vendorCode": "",
+  "UKTZED": "",
+  "url": "https://www.microtron.ua/konvertor-twin-podvijni/p16913",
+  "images": [
+    "https://microtron.ua/image/catalog/products/p16913-0001.jpg"
+  ],
+  "new": true,
+  "available": true,
+  "sync": {
+    "localAt": {
+      "$date": {
+        "$numberLong": "1661343740936"
+      }
+    },
+    "prom": false,
+    "loaded": true,
+    "lastLoadedAt": {
+      "$date": {
+        "$numberLong": "1661016499710"
+      }
+    },
+    "lastPromAt": {
+      "$date": {
+        "$numberLong": "1661029132855"
+      }
+    },
+    "tableLine": 3
+  },
+  "category": {
+    "$oid": "6300f830823182f4d05671e8"
+  },
+  "microtronId": 16913,
+  "promId": {
+    "$numberLong": "4317276221553843700"
+  },
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1661009270406"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1661343740950"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6300fd76823182f4d0567219"
+  },
+  "name": "Конвертор на 4 виходи",
+  "description": "Конвертор на 4 виходи",
+  "translate": {
+    "name": "Конвертор на 4 выхода",
+    "description": "Конвертор на 4 выхода"
+  },
+  "brand": "NoNaMe",
+  "specifications": {
+    "Гарантийный срок (міс)": "12",
+    "Состояние": "Новое"
+  },
+  "sitePrice": 389,
+  "siteMarkup": 50.193,
+  "originalPriceCurrency": "USD",
+  "originalPrice": 7,
+  "ourPrice": 389,
+  "quantity": 3,
+  "warranty": 12,
+  "vendorCode": "",
+  "UKTZED": "",
+  "url": "https://www.microtron.ua/konvertor-na-4-vihodi/p24192",
+  "images": [
+    "https://microtron.ua/image/catalog/products/p24192-0001.jpg"
+  ],
+  "new": true,
+  "available": true,
+  "sync": {
+    "localAt": {
+      "$date": {
+        "$numberLong": "1661343740936"
+      }
+    },
+    "prom": false,
+    "loaded": true,
+    "lastLoadedAt": {
+      "$date": {
+        "$numberLong": "1661016499710"
+      }
+    },
+    "lastPromAt": {
+      "$date": {
+        "$numberLong": "1661029132855"
+      }
+    },
+    "tableLine": 4
+  },
+  "category": {
+    "$oid": "6300f830823182f4d05671e8"
+  },
+  "microtronId": 24192,
+  "promId": {
+    "$numberLong": "5311167433855313000"
+  },
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1661009270415"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1661343740959"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6300fd76823182f4d056721b"
+  },
+  "name": "Конвертор для NTV (кругова)",
+  "description": "Конвертор для NTV (кругова)",
+  "translate": {
+    "name": "Конвертор для NTV (круговая)",
+    "description": "Конвертор для NTV (круговая)"
+  },
+  "brand": "NoNaMe",
+  "specifications": {
+    "Гарантийный срок (міс)": "12",
+    "Состояние": "Новое"
+  },
+  "sitePrice": 222,
+  "siteMarkup": 62.162,
+  "originalPriceCurrency": "USD",
+  "originalPrice": 3.7,
+  "ourPrice": 206,
+  "quantity": 2,
+  "warranty": 12,
+  "vendorCode": "",
+  "UKTZED": "",
+  "url": "https://www.microtron.ua/konvertor-dlya-ntv-krugova/p36888",
+  "images": [
+    "https://microtron.ua/image/catalog/products/p36888-0001.jpg"
+  ],
+  "new": true,
+  "available": true,
+  "sync": {
+    "localAt": {
+      "$date": {
+        "$numberLong": "1661343740937"
+      }
+    },
+    "prom": false,
+    "loaded": true,
+    "lastLoadedAt": {
+      "$date": {
+        "$numberLong": "1661016499710"
+      }
+    },
+    "lastPromAt": {
+      "$date": {
+        "$numberLong": "1661029132855"
+      }
+    },
+    "tableLine": 5
+  },
+  "category": {
+    "$oid": "6300f830823182f4d05671e8"
+  },
+  "microtronId": 36888,
+  "promId": {
+    "$numberLong": "4423412326422138000"
+  },
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1661009270442"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1661343740968"
+    }
+  },
+  "__v": 0
+}]
