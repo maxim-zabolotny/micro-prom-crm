@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import { ClientSession } from 'mongodb';
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   Document,
@@ -87,34 +88,43 @@ export const CategorySchema = SchemaFactory.createForClass(Category);
 
 // CUSTOM TYPES
 type TStaticMethods = {
-  getCategoriesForLoadToSheet: (this: CategoryModel) => Promise<{
+  getCategoriesForLoadToSheet: (
+    this: CategoryModel,
+    session?: ClientSession | null,
+  ) => Promise<{
     categories: CategoryDocument[];
     count: number;
   }>;
   getCategoriesByIds: (
     this: CategoryModel,
     categoryIds: Types.ObjectId[],
+    session?: ClientSession | null,
   ) => Promise<CategoryDocument[]>;
   getCategoryByMicrotronId: (
     this: CategoryModel,
     microtronId: string,
+    session?: ClientSession | null,
   ) => Promise<CategoryDocument>;
   addCategory: (
     this: CategoryModel,
     categoryData: TAddCategoryToDB,
+    session?: ClientSession | null,
   ) => Promise<CategoryDocument>;
   updateCategory: (
     this: CategoryModel,
     categoryId: Types.ObjectId,
     data: TUpdateCategoryInDB,
+    session?: ClientSession | null,
   ) => Promise<CategoryDocument>;
   updateAllCategories: (
     this: CategoryModel,
     data: Partial<TUpdateCategoryInDB>,
+    session?: ClientSession | null,
   ) => Promise<UpdateWriteOpResult>;
   deleteCategory: (
     this: CategoryModel,
     categoryId: Types.ObjectId,
+    session?: ClientSession | null,
   ) => Promise<CategoryDocument>;
 };
 
@@ -122,29 +132,39 @@ type TStaticMethods = {
 const categoryLogger = new Logger('CategoryModel');
 const dataGenerateHelper = new DataGenerateHelper();
 
-CategorySchema.statics.getCategoriesForLoadToSheet = async function () {
-  const categories = await this.find({ 'sync.loaded': false }).exec();
+CategorySchema.statics.getCategoriesForLoadToSheet = async function (session) {
+  const categories = await this.find({ 'sync.loaded': false })
+    .session(session)
+    .exec();
   return {
     categories,
     count: categories.length,
   };
 } as TStaticMethods['getCategoriesForLoadToSheet'];
 
-CategorySchema.statics.getCategoriesByIds = async function (categoryIds) {
+CategorySchema.statics.getCategoriesByIds = async function (
+  categoryIds,
+  session,
+) {
   if (_.isEmpty(categoryIds)) return [];
 
   return this.find({
     _id: {
       $in: categoryIds,
     },
-  }).exec();
+  })
+    .session(session)
+    .exec();
 } as TStaticMethods['getCategoriesByIds'];
 
-CategorySchema.statics.getCategoryByMicrotronId = async function (microtronId) {
-  return this.findOne({ microtronId }).exec();
+CategorySchema.statics.getCategoryByMicrotronId = async function (
+  microtronId,
+  session,
+) {
+  return this.findOne({ microtronId }).session(session).exec();
 } as TStaticMethods['getCategoryByMicrotronId'];
 
-CategorySchema.statics.addCategory = async function (categoryData) {
+CategorySchema.statics.addCategory = async function (categoryData, session) {
   const parentMicrotronId =
     categoryData.parentId !== '0' ? categoryData.parentId : undefined;
 
@@ -162,7 +182,9 @@ CategorySchema.statics.addCategory = async function (categoryData) {
 
     const result = await this.findOne({
       microtronId: parentMicrotronId,
-    }).exec();
+    })
+      .session(session)
+      .exec();
     if (result) {
       categoryLogger.debug('Found parent Category:', {
         id: result._id,
@@ -191,7 +213,7 @@ CategorySchema.statics.addCategory = async function (categoryData) {
     parentPromId: parent?.promId,
     integration: categoryData.integrationId,
   });
-  await category.save();
+  await category.save({ session });
 
   const { matchedCount, modifiedCount } = await this.updateMany(
     {
@@ -203,7 +225,10 @@ CategorySchema.statics.addCategory = async function (categoryData) {
         parentPromId: category.promId,
       },
     },
-  ).exec();
+  )
+    .session(session)
+    .exec();
+
   categoryLogger.debug('Update Category children result:', {
     matchedCount,
     modifiedCount,
@@ -216,7 +241,11 @@ CategorySchema.statics.addCategory = async function (categoryData) {
   return category;
 } as TStaticMethods['addCategory'];
 
-CategorySchema.statics.updateCategory = async function (categoryId, data) {
+CategorySchema.statics.updateCategory = async function (
+  categoryId,
+  data,
+  session,
+) {
   categoryLogger.debug('Process update Category:', {
     categoryId,
     data,
@@ -232,7 +261,9 @@ CategorySchema.statics.updateCategory = async function (categoryId, data) {
     {
       returnOriginal: false,
     },
-  ).exec();
+  )
+    .session(session)
+    .exec();
 
   categoryLogger.debug('Category updated:', {
     categoryId,
@@ -241,7 +272,7 @@ CategorySchema.statics.updateCategory = async function (categoryId, data) {
   return updatedCategory;
 } as TStaticMethods['updateCategory'];
 
-CategorySchema.statics.updateAllCategories = async function (data) {
+CategorySchema.statics.updateAllCategories = async function (data, session) {
   categoryLogger.debug('Process update all Categories:', {
     data,
   });
@@ -251,7 +282,9 @@ CategorySchema.statics.updateAllCategories = async function (data) {
     {
       $set: data,
     },
-  ).exec();
+  )
+    .session(session)
+    .exec();
 
   categoryLogger.debug('Categories update result:', {
     ...updateResult,
@@ -260,14 +293,16 @@ CategorySchema.statics.updateAllCategories = async function (data) {
   return updateResult;
 } as TStaticMethods['updateAllCategories'];
 
-CategorySchema.statics.deleteCategory = async function (categoryId) {
+CategorySchema.statics.deleteCategory = async function (categoryId, session) {
   categoryLogger.debug('Process delete Category:', {
     categoryId,
   });
 
   const removedCategory = await this.findOneAndDelete({
     _id: categoryId,
-  }).exec();
+  })
+    .session(session)
+    .exec();
 
   if (removedCategory.sync.tableLine) {
     const { matchedCount, modifiedCount } = await this.updateMany(
@@ -285,7 +320,9 @@ CategorySchema.statics.deleteCategory = async function (categoryId) {
           },
         },
       ],
-    ).exec();
+    )
+      .session(session)
+      .exec();
 
     categoryLogger.debug('Updated Categories with higher table line:', {
       matchedCount,
