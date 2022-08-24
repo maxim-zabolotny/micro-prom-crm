@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import { ClientSession } from 'mongodb';
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   Document,
@@ -147,15 +148,23 @@ type TStaticMethods = {
     sitePrice: number,
   ) => number;
   // MAIN
-  getAllProducts: (this: ProductModel) => Promise<ProductDocument[]>;
+  getAllProducts: (
+    this: ProductModel,
+    session?: ClientSession | null,
+  ) => Promise<ProductDocument[]>;
   getProductsByCategories: (
     this: ProductModel,
     categoryIds: Types.ObjectId[],
+    session?: ClientSession | null,
   ) => Promise<ProductDocument[]>;
   getCategoriesWithProductsCount: (
     this: ProductModel,
+    session?: ClientSession | null,
   ) => Promise<Array<CategoryDocument & { productsCount: number }>>;
-  getProductsForLoadToSheet: (this: ProductModel) => Promise<{
+  getProductsForLoadToSheet: (
+    this: ProductModel,
+    session?: ClientSession | null,
+  ) => Promise<{
     products: Array<
       Omit<ProductDocument, 'category'> & {
         category: Pick<CategoryDocument, '_id' | 'promId'>;
@@ -166,6 +175,7 @@ type TStaticMethods = {
   getProductsForLoadToSheetByCategory: (
     this: ProductModel,
     categoryId: Types.ObjectId,
+    session?: ClientSession | null,
   ) => Promise<{
     products: ProductDocument[];
     count: number;
@@ -175,24 +185,29 @@ type TStaticMethods = {
     options?: {
       categories?: Types.ObjectId[];
       products?: Types.ObjectId[];
+      session?: ClientSession | null;
     },
   ) => Promise<ProductDocument[]>;
   addProduct: (
     this: ProductModel,
     productData: TAddProductToDB,
+    session?: ClientSession | null,
   ) => Promise<ProductDocument>;
   updateProduct: (
     this: ProductModel,
     productId: Types.ObjectId,
     data: TUpdateProductInDB,
+    session?: ClientSession | null,
   ) => Promise<ProductDocument>;
   updateAllProducts: (
     this: ProductModel,
     data: Partial<TUpdateProductInDB>,
+    session?: ClientSession | null,
   ) => Promise<UpdateWriteOpResult>;
   deleteProduct: (
     this: ProductModel,
     productId: Types.ObjectId,
+    session?: ClientSession | null,
   ) => Promise<ProductDocument>;
 };
 
@@ -239,15 +254,22 @@ ProductSchema.statics.calculateSiteProductMarkup = function (
 } as TStaticMethods['calculateSiteProductMarkup'];
 
 // MAIN
-ProductSchema.statics.getAllProducts = async function () {
-  return this.find().exec();
+ProductSchema.statics.getAllProducts = async function (session) {
+  return this.find().session(session).exec();
 } as TStaticMethods['getAllProducts'];
 
-ProductSchema.statics.getProductsByCategories = async function (categoryIds) {
-  return this.find({ category: { $in: categoryIds } }).exec();
+ProductSchema.statics.getProductsByCategories = async function (
+  categoryIds,
+  session,
+) {
+  return this.find({ category: { $in: categoryIds } })
+    .session(session)
+    .exec();
 } as TStaticMethods['getProductsByCategories'];
 
-ProductSchema.statics.getCategoriesWithProductsCount = async function () {
+ProductSchema.statics.getCategoriesWithProductsCount = async function (
+  session,
+) {
   // return this.categoryModel
   //   .aggregate([
   //     {
@@ -290,10 +312,12 @@ ProductSchema.statics.getCategoriesWithProductsCount = async function () {
     },
     { $unset: 'categories' },
     { $sort: { productsCount: -1 } },
-  ]).exec();
+  ])
+    .session(session)
+    .exec();
 } as TStaticMethods['getCategoriesWithProductsCount'];
 
-ProductSchema.statics.getProductsForLoadToSheet = async function () {
+ProductSchema.statics.getProductsForLoadToSheet = async function (session) {
   const products = await this.aggregate([
     {
       $match: { 'sync.loaded': false },
@@ -317,7 +341,9 @@ ProductSchema.statics.getProductsForLoadToSheet = async function () {
     {
       $unwind: '$category',
     },
-  ]).exec();
+  ])
+    .session(session)
+    .exec();
 
   return {
     products,
@@ -327,11 +353,14 @@ ProductSchema.statics.getProductsForLoadToSheet = async function () {
 
 ProductSchema.statics.getProductsForLoadToSheetByCategory = async function (
   categoryId,
+  session,
 ) {
   const products = await this.find({
     category: categoryId,
     'sync.loaded': false,
-  }).exec();
+  })
+    .session(session)
+    .exec();
 
   return {
     products,
@@ -357,10 +386,10 @@ ProductSchema.statics.getProductsForSyncWithProm = async function (options) {
     };
   }
 
-  return this.find(searchOptions).exec();
+  return this.find(searchOptions).session(options?.session).exec();
 } as TStaticMethods['getProductsForSyncWithProm'];
 
-ProductSchema.statics.addProduct = async function (productData) {
+ProductSchema.statics.addProduct = async function (productData, session) {
   const ProductConstants = AppConstants.Prom.Sheet.Product;
 
   productLogger.debug('Process add Product:', {
@@ -438,7 +467,7 @@ ProductSchema.statics.addProduct = async function (productData) {
       localAt: new Date(),
     },
   });
-  await product.save();
+  await product.save({ session });
 
   productLogger.debug('Product saved:', {
     microtronId: productData.id,
@@ -447,14 +476,18 @@ ProductSchema.statics.addProduct = async function (productData) {
   return product;
 } as TStaticMethods['addProduct'];
 
-ProductSchema.statics.updateProduct = async function (productId, data) {
+ProductSchema.statics.updateProduct = async function (
+  productId,
+  data,
+  session,
+) {
   productLogger.debug('Process update Product:', {
     productId,
     data,
   });
 
   productLogger.debug('Load old product version');
-  const oldProduct = await this.findById(productId).exec();
+  const oldProduct = await this.findById(productId).session(session).exec();
   if (!oldProduct) {
     throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
   }
@@ -533,7 +566,9 @@ ProductSchema.statics.updateProduct = async function (productId, data) {
     {
       returnOriginal: false,
     },
-  ).exec();
+  )
+    .session(session)
+    .exec();
 
   productLogger.debug('Product updated:', {
     id: productId,
@@ -542,7 +577,7 @@ ProductSchema.statics.updateProduct = async function (productId, data) {
   return updatedProduct;
 } as TStaticMethods['updateProduct'];
 
-ProductSchema.statics.updateAllProducts = async function (data) {
+ProductSchema.statics.updateAllProducts = async function (data, session) {
   productLogger.debug('Process update all Products:', {
     data,
   });
@@ -552,7 +587,9 @@ ProductSchema.statics.updateAllProducts = async function (data) {
     {
       $set: data,
     },
-  ).exec();
+  )
+    .session(session)
+    .exec();
 
   productLogger.debug('Products update result:', {
     ...updateResult,
@@ -561,14 +598,16 @@ ProductSchema.statics.updateAllProducts = async function (data) {
   return updateResult;
 } as TStaticMethods['updateAllProducts'];
 
-ProductSchema.statics.deleteProduct = async function (productId) {
+ProductSchema.statics.deleteProduct = async function (productId, session) {
   productLogger.debug('Process delete Product:', {
     productId,
   });
 
   const removedProduct = await this.findOneAndDelete({
     _id: productId,
-  }).exec();
+  })
+    .session(session)
+    .exec();
 
   if (removedProduct.sync.tableLine) {
     const { matchedCount, modifiedCount } = await this.updateMany(
@@ -586,7 +625,9 @@ ProductSchema.statics.deleteProduct = async function (productId) {
           },
         },
       ],
-    ).exec();
+    )
+      .session(session)
+      .exec();
 
     productLogger.debug('Updated Products with higher table line:', {
       matchedCount,
