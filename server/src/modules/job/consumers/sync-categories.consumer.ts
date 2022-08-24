@@ -45,7 +45,7 @@ export class SyncCategoriesConsumer {
   ) {
     this.logger.log(message, data);
     await job.log(
-      `${message}: ${typeof data === 'object' ? JSON.stringify(data) : data}`,
+      `${message} ${typeof data === 'object' ? JSON.stringify(data) : data}`,
     );
   }
 
