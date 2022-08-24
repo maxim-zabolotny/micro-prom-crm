@@ -7,12 +7,13 @@ export default () => {
   const mongo = {
     host: process.env.MONGO_HOST,
     port: parseInt(process.env.MONGO_PORT, 10),
-    username: process.env.MONGO_USER,
-    password: process.env.MONGO_PASSWORD,
+    // username: process.env.MONGO_USER,
+    // password: process.env.MONGO_PASSWORD,
     name: process.env.MONGO_DATABASE_NAME,
     url: '', // mongodb://username:password@host:port/database
   };
-  mongo.url = `mongodb://${mongo.username}:${mongo.password}@${mongo.host}:${mongo.port}`;
+  // mongo.url = `mongodb://${mongo.username}:${mongo.password}@${mongo.host}:${mongo.port}`;
+  mongo.url = `mongodb://${mongo.host}:${mongo.port}`;
 
   const telegram = {
     webhook: process.env.TELEGRAM_WEBHOOK,
