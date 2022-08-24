@@ -75,43 +75,55 @@ const consumers = [
     BullModule.registerQueue({
       name: loadAllCategoriesName,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         timeout: ms('10m'),
+        removeOnFail: false,
+        removeOnComplete: false,
       },
     }),
     BullModule.registerQueue({
       name: loadProductsByCategoryName,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         timeout: ms('1h'),
+        removeOnFail: false,
+        removeOnComplete: false,
       },
     }),
     BullModule.registerQueue({
       name: loadAllProductsName,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         timeout: ms('2h'),
+        removeOnFail: false,
+        removeOnComplete: false,
       },
     }),
     BullModule.registerQueue({
       name: syncCategoriesName,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         timeout: ms('1h'),
+        removeOnFail: false,
+        removeOnComplete: false,
       },
     }),
     BullModule.registerQueue({
       name: syncCourseName,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         timeout: ms('10m'),
+        removeOnFail: false,
+        removeOnComplete: false,
       },
     }),
     BullModule.registerQueue({
       name: initLoadSheetName,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         timeout: ms('2h'),
+        removeOnFail: false,
+        removeOnComplete: false,
       },
     }),
   ],
