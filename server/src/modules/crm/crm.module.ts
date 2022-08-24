@@ -13,9 +13,12 @@ import { CrmIntegrationsService } from './integrations/integrations.service';
 import { CrmUsersController } from './users/users.controller';
 import { CrmUsersService } from './users/users.service';
 import { User, UserSchema } from '@schemas/user';
+import { MicrotronModule } from '../microtron/microtron.module';
+import { Constant, ConstantSchema } from '@schemas/constant';
 
 @Module({
   imports: [
+    MicrotronModule,
     MongooseModule.forFeature([
       {
         name: User.name,
@@ -26,6 +29,12 @@ import { User, UserSchema } from '@schemas/user';
       {
         name: Product.name,
         schema: ProductSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: Constant.name,
+        schema: ConstantSchema,
       },
     ]),
   ],

@@ -1,9 +1,45 @@
+import * as _ from 'lodash';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Constant, ConstantModel } from '@schemas/constant';
+import { SaveCategoriesDto } from './dto/save-categories.dto';
+import { Data } from '../../../data';
+import { MicrotronCategoriesService } from '../../microtron/categories/categories.service';
 
 @Injectable()
 export class CrmCategoriesService {
   private readonly logger = new Logger(this.constructor.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private microtronCategoriesService: MicrotronCategoriesService,
+    @InjectModel(Constant.name) private constantModel: ConstantModel,
+  ) {}
+
+  public async saveToConstant(
+    categoriesData: SaveCategoriesDto,
+  ): Promise<{ success: boolean }> {
+    this.logger.debug('Received categories in array view');
+    const categories = categoriesData.categories;
+
+    // DATA
+    this.logger.debug('Write RU categories data to file');
+    await Data.SelectedRUCategories.write(
+      await this.microtronCategoriesService.retrieveRUFromAPI(
+        _.map(categories, 'id'),
+      ),
+    );
+
+    this.logger.debug('Write categories data to file');
+    await Data.SelectedCategories.write(categories);
+
+    // DB
+    const categoriesJSON = JSON.stringify(categories);
+    await this.constantModel.upsertCategories(categoriesJSON);
+
+    return {
+      success: true,
+    };
+  }
 }
