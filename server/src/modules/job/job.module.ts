@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 import {
   AudioConsumer,
   audioProcessorName,
+  InitLoadSheetConsumer,
+  initLoadSheetName,
   LoadAllCategoriesConsumer,
   loadAllCategoriesName,
   LoadAllProductsConsumer,
@@ -35,6 +37,7 @@ const consumers = [
   LoadAllProductsConsumer,
   SyncCategoriesConsumer,
   SyncCourseConsumer,
+  InitLoadSheetConsumer,
 ];
 
 @Global()
@@ -100,6 +103,13 @@ const consumers = [
       defaultJobOptions: {
         attempts: 3,
         timeout: ms('10m'),
+      },
+    }),
+    BullModule.registerQueue({
+      name: initLoadSheetName,
+      defaultJobOptions: {
+        attempts: 3,
+        timeout: ms('2h'),
       },
     }),
   ],
