@@ -1,6 +1,6 @@
 version: "3"
-services:
 
+services:
   web:
     container_name: crm_web
     build:
@@ -35,7 +35,7 @@ services:
       PORT: 8080
       NODE_ENV: development
     depends_on:
-      - database
+      - database-setup
     links:
       - database:database
     volumes:
@@ -50,17 +50,35 @@ services:
   database:
     image: mongo:5.0
     container_name: crm_database
+    hostname: crm_database
 #    user: ${MY_UID}:${MY_GID}
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: main-dev
     ports:
       - "27017:27017"
     volumes:
-      - ./mongodb:/data/db
+      - ./mongo/db:/data/db
+      - ./mongo/configdb:/data/configdb
     tty: true
     restart: "always"
+    entrypoint: [
+      "/usr/bin/mongod",
+      "--bind_ip_all",
+      "--replSet", "rs0",
+      "--journal",
+      "--dbpath", "/data/db",
+      "--setParameter", "transactionLifetimeLimitSeconds=7200" # 2 hours
+    ]
+
+  database-setup:
+    container_name: crm_database_setup
+    image: mongo:5.0
+    volumes:
+      - ./mongo/scripts:/scripts
+    links:
+      - database
+    depends_on:
+      - database
+    restart: "on-failure"
+    entrypoint: [ "/scripts/setup.sh" ]
 
   redis:
     image: redis:5.0.3-alpine
