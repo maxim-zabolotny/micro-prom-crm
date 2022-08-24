@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClientSession } from 'mongodb';
 import { Types } from 'mongoose';
 import { Category, CategoryDocument, CategoryModel } from '@schemas/category';
 import { AppConstants } from '../../../app.constants';
@@ -71,6 +72,8 @@ export class SyncPromService {
     this.logger.debug(
       'Load Category ids from DB by Category ids from Google Sheet',
     );
+
+    // todo: session
     const categories = await this.categoryModel
       .find({
         _id: { $in: categoryIdsInSheet },
@@ -167,7 +170,10 @@ export class SyncPromService {
     return addedRows;
   }
 
-  public async syncCategoriesWithSheet(categories: Category[]) {
+  public async syncCategoriesWithSheet(
+    categories: Category[],
+    session?: ClientSession | null,
+  ) {
     // ADD TO SHEET
     const addedRows = await this.addCategoriesToSheet(categories);
 
@@ -186,6 +192,7 @@ export class SyncPromService {
           'sync.tableLine': row.rowIndex,
         },
       ]),
+      session,
     );
 
     return {
@@ -383,6 +390,7 @@ export class SyncPromService {
         category: Pick<CategoryDocument, '_id' | 'promId'>;
       }
     >,
+    session?: ClientSession | null,
   ) {
     const productsByPromIdMap = new Map(
       _.map(products, (product) => [String(product.promId), product]),
@@ -408,6 +416,7 @@ export class SyncPromService {
           'sync.tableLine': row.rowIndex,
         },
       ]),
+      session,
     );
 
     return {
@@ -472,7 +481,10 @@ export class SyncPromService {
     return result;
   }
 
-  public async syncProductsWithProm(products: Array<TUpdateProductInProm>) {
+  public async syncProductsWithProm(
+    products: Array<TUpdateProductInProm>,
+    session?: ClientSession | null,
+  ) {
     if (_.isEmpty(products)) {
       return {
         processedIds: [],
@@ -500,6 +512,7 @@ export class SyncPromService {
           'sync.lastPromAt': new Date(),
         },
       ]),
+      session,
     );
 
     return {
@@ -541,7 +554,7 @@ export class SyncPromService {
   }
 
   // MAIN PART - CATEGORIES
-  public async loadAllCategoriesToSheet() {
+  public async loadAllCategoriesToSheet(session?: ClientSession | null) {
     const result: ILoadCategoriesToSheetResult = {
       newCategoriesCount: 0,
       addedRowsCount: 0,
@@ -550,7 +563,7 @@ export class SyncPromService {
     };
 
     const { count, categories } =
-      await this.categoryModel.getCategoriesForLoadToSheet();
+      await this.categoryModel.getCategoriesForLoadToSheet(session);
 
     this.logger.debug('Categories for loading to Google Sheet in DB:', {
       count,
@@ -567,6 +580,7 @@ export class SyncPromService {
     // ADD TO SHEET
     const { addedRows, updatedCategories } = await this.syncCategoriesWithSheet(
       categories,
+      session,
     );
 
     // RESULT
@@ -587,7 +601,7 @@ export class SyncPromService {
     };
   }
 
-  public async reloadAllCategoriesToSheet() {
+  public async reloadAllCategoriesToSheet(session?: ClientSession | null) {
     const categoriesSheet = this.spreadsheetService.getCategoriesSheet();
 
     this.logger.debug('Clear all rows in Categories Google Sheet');
@@ -598,19 +612,26 @@ export class SyncPromService {
     );
 
     this.logger.debug('Update all Categories in DB');
-    await this.categoryModel.updateAllCategories({
-      'sync.loaded': false,
-    });
+    await this.categoryModel.updateAllCategories(
+      {
+        'sync.loaded': false,
+      },
+      session,
+    );
 
-    return this.loadAllCategoriesToSheet();
+    return this.loadAllCategoriesToSheet(session);
   }
 
   // MAIN PART - PRODUCTS
-  public async loadAllProductsByCategoryToSheet(microtronId: string) {
+  public async loadAllProductsByCategoryToSheet(
+    microtronId: string,
+    session?: ClientSession | null,
+  ) {
     this.logger.debug('Load Category from DB:', { microtronId });
 
     const category = await this.categoryModel.getCategoryByMicrotronId(
       microtronId,
+      session,
     );
     if (!category) {
       throw new HttpException(
@@ -630,7 +651,10 @@ export class SyncPromService {
     };
 
     const { count, products } =
-      await this.productModel.getProductsForLoadToSheetByCategory(category._id);
+      await this.productModel.getProductsForLoadToSheetByCategory(
+        category._id,
+        session,
+      );
 
     this.logger.debug('Products for loading to Google Sheet in DB:', {
       count,
@@ -650,6 +674,7 @@ export class SyncPromService {
         ...product.toObject(),
         category,
       })),
+      session,
     );
 
     // RESULT
@@ -670,7 +695,7 @@ export class SyncPromService {
     };
   }
 
-  public async loadAllProductsToSheet() {
+  public async loadAllProductsToSheet(session?: ClientSession | null) {
     const result: ILoadProductsToSheetResult = {
       newProductsCount: 0,
       addedRowsCount: 0,
@@ -679,7 +704,7 @@ export class SyncPromService {
     };
 
     const { count, products } =
-      await this.productModel.getProductsForLoadToSheet();
+      await this.productModel.getProductsForLoadToSheet(session);
 
     this.logger.debug('Products for loading to Google Sheet in DB:', {
       count,
@@ -696,6 +721,7 @@ export class SyncPromService {
     // ADD TO SHEET
     const { addedRows, updatedProducts } = await this.syncProductsWithSheet(
       products,
+      session,
     );
 
     // RESULT
@@ -716,7 +742,7 @@ export class SyncPromService {
     };
   }
 
-  public async reloadAllProductsToSheet() {
+  public async reloadAllProductsToSheet(session?: ClientSession | null) {
     const productsSheet = this.spreadsheetService.getProductsSheet();
 
     this.logger.debug('Clear all rows in Products Google Sheet');
@@ -727,11 +753,14 @@ export class SyncPromService {
     );
 
     this.logger.debug('Update all Products in DB');
-    await this.productModel.updateAllProducts({
-      'sync.loaded': false,
-    });
+    await this.productModel.updateAllProducts(
+      {
+        'sync.loaded': false,
+      },
+      session,
+    );
 
-    return this.loadAllProductsToSheet();
+    return this.loadAllProductsToSheet(session);
   }
 
   // TESTING
