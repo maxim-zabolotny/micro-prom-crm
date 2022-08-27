@@ -12,9 +12,12 @@ import { SyncLocalService } from '../../sync/local/sync-local.service';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
 import { User, UserModel } from '@schemas/user';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { PromProductsService } from '../../prom/products/products.service';
 import { CommonSyncConsumer } from './CommonSync';
+import { Connection } from 'mongoose';
+import { TSyncCourseProcessorData } from './sync-course.consumer';
+import { ClientSession } from 'mongodb';
 
 export type TInitLoadSheetProcessorData = void;
 export type TInitLoadSheetProcessorQueue = Queue<TInitLoadSheetProcessorData>;
@@ -33,20 +36,25 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     protected readonly notificationBotService: NotificationBotService,
     @InjectModel(User.name)
     protected readonly userModel: UserModel,
+    @InjectConnection()
+    protected readonly connection: Connection,
   ) {
-    super(notificationBotService, userModel);
+    super(notificationBotService, userModel, connection);
   }
 
-  @Process()
-  async initLoadSheet(job: Job<TInitLoadSheetProcessorData>) {
+  async initLoadSheet(
+    job: Job<TInitLoadSheetProcessorData>,
+    session: ClientSession,
+  ) {
     // START
     await this.unionLogger(job, 'Start init load sheet');
 
     // 1. Load all categories to DB
     await this.unionLogger(job, '1. Load all categories to DB');
 
-    const loadedCategories =
-      await this.syncLocalService.loadAllCategoriesToDB();
+    const loadedCategories = await this.syncLocalService.loadAllCategoriesToDB(
+      session,
+    );
 
     await this.unionLogger(job, '1. Load all categories to DB result:', {
       loadedCategoriesCount: loadedCategories.length,
@@ -55,7 +63,9 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     // 2. Load all products to DB
     await this.unionLogger(job, '2. Load all products to DB');
 
-    const loadedProducts = await this.syncLocalService.loadAllProductsToDB();
+    const loadedProducts = await this.syncLocalService.loadAllProductsToDB(
+      session,
+    );
 
     await this.unionLogger(job, '2. Load all products to DB result:', {
       loadedProductsCount: loadedProducts.length,
@@ -65,7 +75,7 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(job, '3. Load all categories to Google Sheet');
 
     const loadCategoriesToSheetResult =
-      await this.syncPromService.loadAllCategoriesToSheet();
+      await this.syncPromService.loadAllCategoriesToSheet(session);
 
     await this.unionLogger(
       job,
@@ -77,7 +87,7 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(job, '4. Load all products to Google Sheet');
 
     const loadProductsToSheetResult =
-      await this.syncPromService.loadAllProductsToSheet();
+      await this.syncPromService.loadAllProductsToSheet(session);
 
     await this.unionLogger(
       job,
@@ -120,6 +130,13 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(job, 'Complete init load sheet');
 
     return result;
+  }
+
+  @Process()
+  protected async process(job: Job<TSyncCourseProcessorData>) {
+    return this.withTransaction(job, async (session) => {
+      return this.initLoadSheet(job, session);
+    });
   }
 
   @OnQueueActive()

@@ -13,8 +13,10 @@ import { SyncLocalService } from '../../sync/local/sync-local.service';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
 import { User, UserModel } from '@schemas/user';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CommonSyncConsumer } from './CommonSync';
+import { Connection } from 'mongoose';
+import { ClientSession } from 'mongodb';
 
 export type TSyncCourseProcessorData = void;
 export type TSyncCourseProcessorQueue = Queue<TSyncCourseProcessorData>;
@@ -32,12 +34,16 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
     protected readonly notificationBotService: NotificationBotService,
     @InjectModel(User.name)
     protected readonly userModel: UserModel,
+    @InjectConnection()
+    protected readonly connection: Connection,
   ) {
-    super(notificationBotService, userModel);
+    super(notificationBotService, userModel, connection);
   }
 
-  @Process()
-  async syncCourse(job: Job<TSyncCourseProcessorData>) {
+  private async syncCourse(
+    job: Job<TSyncCourseProcessorData>,
+    session: ClientSession,
+  ) {
     // START
     await this.unionLogger(job, 'Start sync course');
 
@@ -45,7 +51,7 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
     await this.unionLogger(job, '1. Sync course');
 
     const { updatedCategories, updatedProducts } =
-      await this.syncLocalService.syncCourse();
+      await this.syncLocalService.syncCourse(session);
 
     await this.unionLogger(job, '1. Sync course result:', {
       updatedCategoriesCount: updatedCategories.length,
@@ -64,6 +70,7 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
 
     const updateInPromResult = await this.syncPromService.syncProductsWithProm(
       productsToUpdateInProm,
+      session,
     );
 
     await this.unionLogger(job, '2. Prom updates result:', {
@@ -107,18 +114,25 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
     return result;
   }
 
+  @Process()
+  protected async process(job: Job<TSyncCourseProcessorData>) {
+    return this.withTransaction(job, async (session) => {
+      return this.syncCourse(job, session);
+    });
+  }
+
   @OnQueueActive()
-  onActive(job: Job) {
+  protected onActive(job: Job) {
     super.onActive(job);
   }
 
   @OnQueueCompleted()
-  onComplete(job: Job, result: Record<string, unknown>) {
+  protected onComplete(job: Job, result: Record<string, unknown>) {
     super.onComplete(job, result);
   }
 
   @OnQueueFailed()
-  async onFail(job: Job, err: Error) {
+  protected async onFail(job: Job, err: Error) {
     await super.onFail(job, err);
   }
 }

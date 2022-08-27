@@ -13,8 +13,10 @@ import { SyncLocalService } from '../../sync/local/sync-local.service';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
 import { User, UserModel } from '@schemas/user';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CommonSyncConsumer } from './CommonSync';
+import { Connection } from 'mongoose';
+import { ClientSession } from 'mongodb';
 
 export type TSyncCategoriesProcessorData = void;
 export type TSyncCategoriesProcessorQueue = Queue<TSyncCategoriesProcessorData>;
@@ -32,12 +34,16 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
     protected readonly notificationBotService: NotificationBotService,
     @InjectModel(User.name)
     protected readonly userModel: UserModel,
+    @InjectConnection()
+    protected readonly connection: Connection,
   ) {
-    super(notificationBotService, userModel);
+    super(notificationBotService, userModel, connection);
   }
 
-  @Process()
-  async syncCategories(job: Job<TSyncCategoriesProcessorData>) {
+  private async syncCategories(
+    job: Job<TSyncCategoriesProcessorData>,
+    session: ClientSession,
+  ) {
     // START
     await this.unionLogger(job, 'Start sync categories');
 
@@ -49,7 +55,7 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
       removedCategories,
       addedProducts,
       removedProducts,
-    } = await this.syncLocalService.actualizeCategories();
+    } = await this.syncLocalService.actualizeCategories(session);
 
     await this.unionLogger(job, '1. Actualize categories result:', {
       addedCategoriesCount: addedCategories.length,
@@ -62,7 +68,7 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
     await this.unionLogger(job, '2. Sync markup');
 
     const { updatedCategories, updatedProducts } =
-      await this.syncLocalService.syncMarkup();
+      await this.syncLocalService.syncMarkup(session);
 
     await this.unionLogger(job, '2. Sync markup result:', {
       updatedCategoriesCount: updatedCategories.length,
@@ -86,6 +92,7 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
 
     const updateInPromResult = await this.syncPromService.syncProductsWithProm(
       productsToUpdateInProm,
+      session,
     );
     const removeProductsFromPromResult =
       await this.syncPromService.removeProductsFromProm(
@@ -153,18 +160,25 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
     return result;
   }
 
+  @Process()
+  protected async process(job: Job<TSyncCategoriesProcessorData>) {
+    return this.withTransaction(job, async (session) => {
+      return this.syncCategories(job, session);
+    });
+  }
+
   @OnQueueActive()
-  onActive(job: Job) {
+  protected onActive(job: Job) {
     super.onActive(job);
   }
 
   @OnQueueCompleted()
-  onComplete(job: Job, result: Record<string, unknown>) {
+  protected onComplete(job: Job, result: Record<string, unknown>) {
     super.onComplete(job, result);
   }
 
   @OnQueueFailed()
-  async onFail(job: Job, err: Error) {
+  protected async onFail(job: Job, err: Error) {
     await super.onFail(job, err);
   }
 }
