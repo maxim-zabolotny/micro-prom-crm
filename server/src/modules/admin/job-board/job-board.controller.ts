@@ -54,4 +54,10 @@ export class JobBoardController {
   addInitLoadSheet() {
     return this.jobBoardService.addInitLoadSheet();
   }
+
+  @Post('/test-sync-products-by-category')
+  @HttpCode(201)
+  addSyncProductsByCategoryJob(@Query('categoryId') categoryId: string) {
+    return this.jobBoardService.addSyncProductsByCategory(categoryId);
+  }
 }

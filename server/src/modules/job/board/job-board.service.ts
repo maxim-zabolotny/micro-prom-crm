@@ -12,6 +12,7 @@ import {
   loadProductsByCategoryName,
   syncCategoriesName,
   syncCourseName,
+  syncProductsByCategoryName,
   TAudioProcessorQueue,
   TInitLoadSheetProcessorQueue,
   TLoadAllCategoriesProcessorQueue,
@@ -19,6 +20,7 @@ import {
   TLoadProductsByCategoryProcessorQueue,
   TSyncCategoriesProcessorQueue,
   TSyncCourseProcessorQueue,
+  TSyncProductsByCategoryProcessorQueue,
 } from '../consumers';
 
 @Injectable()
@@ -45,6 +47,8 @@ export class JobBoardService {
     private syncCourseQueue: TSyncCourseProcessorQueue,
     @InjectQueue(initLoadSheetName)
     private initLoadSheetQueue: TInitLoadSheetProcessorQueue,
+    @InjectQueue(syncProductsByCategoryName)
+    private syncProductsByCategoryQueue: TSyncProductsByCategoryProcessorQueue,
   ) {
     this.serverAdapter.setBasePath(this.basePath);
     this.serverAdapter.setErrorHandler((err) => {
@@ -64,6 +68,7 @@ export class JobBoardService {
         new BullAdapter(this.syncCategoriesQueue),
         new BullAdapter(this.syncCourseQueue),
         new BullAdapter(this.initLoadSheetQueue),
+        new BullAdapter(this.syncProductsByCategoryQueue),
       ],
       serverAdapter: this.serverAdapter,
     });
@@ -133,6 +138,17 @@ export class JobBoardService {
 
   public async addInitLoadSheet() {
     const job = await this.initLoadSheetQueue.add();
+    return {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    };
+  }
+
+  public async addSyncProductsByCategory(categoryId: string) {
+    const job = await this.syncProductsByCategoryQueue.add({
+      categoryMicrotronId: categoryId,
+    });
     return {
       id: job.id,
       name: job.queue.name,
