@@ -1,4 +1,5 @@
 /*external modules*/
+import * as _ from 'lodash';
 import {
   OnQueueActive,
   OnQueueCompleted,
@@ -17,7 +18,9 @@ import { CommonSyncConsumer } from './CommonSync';
 import { Connection } from 'mongoose';
 import { ClientSession } from 'mongodb';
 
-export type TSyncProductsByCategoryProcessorData = void;
+export type TSyncProductsByCategoryProcessorData = {
+  categoryMicrotronId: string;
+};
 export type TSyncProductsByCategoryProcessorQueue =
   Queue<TSyncProductsByCategoryProcessorData>;
 
@@ -43,7 +46,99 @@ export class SyncProductsByCategoryConsumer extends CommonSyncConsumer {
   private async syncProductsByCategory(
     job: Job<TSyncProductsByCategoryProcessorData>,
     session: ClientSession,
-  ) {}
+  ) {
+    // START
+    await this.unionLogger(job, 'Start sync products by category');
+
+    // 1. Actualize
+    await this.unionLogger(job, '1. Actualize products by category', job.data);
+
+    const { added, updated, removed } =
+      await this.syncLocalService.actualizeProductsByCategory(
+        job.data.categoryMicrotronId,
+        session,
+      );
+
+    await this.unionLogger(job, '1. Actualize products by category result:', {
+      addedProductsCount: added.length,
+      removedProductsCount: updated.length,
+      updatedProductsCount: removed.length,
+    });
+
+    // 2. Prom
+    const productsToUpdateInProm = _.filter(
+      updated,
+      (product) => product.sync.loaded,
+    );
+    const productsToRemoveFromProm = _.filter(
+      removed,
+      (product) => product.sync.loaded,
+    );
+
+    await this.unionLogger(job, '2. Prom updates:', {
+      productsToUpdateInPromCount: productsToUpdateInProm.length,
+      productsToRemoveFromPromCount: productsToRemoveFromProm.length,
+    });
+
+    const updateInPromResult = await this.syncPromService.syncProductsWithProm(
+      productsToUpdateInProm,
+      session,
+    );
+    const removeProductsFromPromResult =
+      await this.syncPromService.removeProductsFromProm(
+        _.map(productsToRemoveFromProm, '_id'),
+      );
+
+    await this.unionLogger(job, '2. Prom updates result:', {
+      updateInPromResult,
+      removeProductsFromPromResult,
+    });
+
+    // 3. Notify
+    await this.unionLogger(job, '3. Notify Admin');
+
+    await this.notifyAdmin(this.getReadableQueueName(), {
+      actualizeProductsByCategory: {
+        addedProductsCount: added.length,
+        removedProductsCount: updated.length,
+        updatedProductsCount: removed.length,
+      },
+      prom: {
+        update: {
+          processedIds: updateInPromResult.processedIds.length,
+          unprocessedIds: updateInPromResult.unprocessedIds.length,
+          errors: Object.keys(updateInPromResult.errors).length,
+          updatedProducts: updateInPromResult.updatedProducts.length,
+        },
+        delete: {
+          processedIds: removeProductsFromPromResult.processedIds.length,
+          unprocessedIds: removeProductsFromPromResult.unprocessedIds.length,
+          errors: Object.keys(removeProductsFromPromResult.errors).length,
+          productIds: removeProductsFromPromResult.productIds.length,
+        },
+      },
+    });
+
+    // 4. Result
+    await this.unionLogger(job, '4. Build result');
+
+    const result = {
+      actualizeProductsByCategory: {
+        addedProducts: added,
+        updatedProducts: updated,
+        removedProducts: removed,
+      },
+      prom: {
+        update: updateInPromResult,
+        delete: removeProductsFromPromResult,
+      },
+    };
+
+    // END
+    await this.unionLogger(job, 'Complete sync products by category');
+
+    return result;
+  }
 
   @Process()
   protected async process(job: Job<TSyncProductsByCategoryProcessorData>) {
