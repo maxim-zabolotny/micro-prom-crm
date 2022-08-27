@@ -96,7 +96,7 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
     );
     const removeProductsFromPromResult =
       await this.syncPromService.removeProductsFromProm(
-        productsToRemoveFromProm,
+        _.map(productsToRemoveFromProm, '_id'),
       );
 
     await this.unionLogger(job, '3. Prom updates result:', {
