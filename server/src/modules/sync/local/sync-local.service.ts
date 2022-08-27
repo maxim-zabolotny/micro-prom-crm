@@ -33,12 +33,6 @@ export interface IChangeCategoriesActions {
   categoriesToRemove: CategoryDocument[];
 }
 
-export interface ISyncCategoriesResult {
-  added: CategoryDocument[];
-  updated: CategoryDocument[];
-  removed: CategoryDocument[];
-}
-
 export interface IChangeProductsActions {
   productsToAdd: Array<
     TArray.Pair<Pick<TAddProductToDB, 'category'>, IProductFullInfo[]>
@@ -47,10 +41,33 @@ export interface IChangeProductsActions {
   productsToRemove: ProductDocument[];
 }
 
+export interface ISyncCategoriesResult {
+  added: CategoryDocument[];
+  updated: CategoryDocument[];
+  removed: CategoryDocument[];
+}
+
 export interface ISyncProductsResult {
   added: ProductDocument[];
   updated: ProductDocument[];
   removed: ProductDocument[];
+}
+
+export interface ISyncCourse {
+  updatedCategories: CategoryDocument[];
+  updatedProducts: ProductDocument[];
+}
+
+export interface ISyncMarkup {
+  updatedCategories: CategoryDocument[];
+  updatedProducts: ProductDocument[];
+}
+
+export interface IActualizeCategories {
+  addedCategories: CategoryDocument[];
+  removedCategories: CategoryDocument[];
+  addedProducts: ProductDocument[];
+  removedProducts: ProductDocument[];
 }
 
 @Injectable()
@@ -862,7 +879,7 @@ export class SyncLocalService {
 
   // MAIN PART - CATEGORIES + PRODUCTS
   public async syncCourse(session?: ClientSession | null) {
-    const result = {
+    const result: ISyncCourse = {
       updatedCategories: [],
       updatedProducts: [],
     };
@@ -931,7 +948,7 @@ export class SyncLocalService {
   }
 
   public async syncMarkup(session?: ClientSession | null) {
-    const result = {
+    const result: ISyncMarkup = {
       updatedCategories: [],
       updatedProducts: [],
     };
@@ -977,7 +994,7 @@ export class SyncLocalService {
   }
 
   public async actualizeCategories(session?: ClientSession | null) {
-    const result = {
+    const result: IActualizeCategories = {
       addedCategories: [],
       removedCategories: [],
       addedProducts: [],
