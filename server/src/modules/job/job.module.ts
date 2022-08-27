@@ -28,6 +28,7 @@ import { TelegramModule } from '../telegram/telegram.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@schemas/user';
 import { PromModule } from '../prom/prom.module';
+import { SyncProductsConsumer, syncProductsName } from './static/consumers';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -43,6 +44,9 @@ const consumers = [
   SyncCourseConsumer,
   SyncProductsByCategoryConsumer,
 ];
+const staticConsumers = [SyncProductsConsumer];
+
+const allConsumers = [...consumers, ...staticConsumers];
 
 @Global()
 @Module({
@@ -138,9 +142,21 @@ const consumers = [
         removeOnComplete: false,
       },
     }),
+    BullModule.registerQueue({
+      name: syncProductsName,
+      defaultJobOptions: {
+        attempts: 1,
+        timeout: ms('1h'),
+        removeOnFail: false,
+        removeOnComplete: false,
+        repeat: {
+          cron: '0 7-22 * * *', // At minute 0 past every hour from 7 through 22
+        },
+      },
+    }),
   ],
-  providers: [...consumers, JobBoardService, JobStaticService],
-  exports: [BullModule, JobBoardService, ...consumers],
+  providers: [...allConsumers, JobBoardService, JobStaticService],
+  exports: [BullModule, JobBoardService, ...allConsumers],
 })
 export class JobModule implements NestModule {
   constructor(private readonly jobBoardService: JobBoardService) {}
