@@ -4,6 +4,7 @@ import { Job } from 'bull';
 import { Logger } from '@nestjs/common';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
 import { UserModel } from '@schemas/user';
+import { ClientSession, Connection } from 'mongoose';
 
 export abstract class CommonSyncConsumer {
   protected readonly logger: Logger;
@@ -13,6 +14,7 @@ export abstract class CommonSyncConsumer {
   constructor(
     protected readonly notificationBotService: NotificationBotService,
     protected readonly userModel: UserModel,
+    protected readonly connection: Connection,
   ) {}
 
   // UTILITIES
@@ -43,7 +45,31 @@ export abstract class CommonSyncConsumer {
     });
   }
 
+  protected async withTransaction(
+    job: Job,
+    cb: (session: ClientSession) => Promise<Record<string, unknown>>,
+  ) {
+    await this.unionLogger(job, `DB #1: Start session`);
+    const session = await this.connection.startSession();
+
+    try {
+      let result: Record<string, unknown>;
+
+      await session.withTransaction(async () => {
+        await this.unionLogger(job, `DB #2: Run with transaction`);
+        result = await cb(session);
+      });
+
+      return result;
+    } finally {
+      await this.unionLogger(job, `DB #3: End session`);
+      await session.endSession();
+    }
+  }
+
   // EVENTS
+  protected abstract process(job: Job);
+
   protected onActive(job: Job) {
     this.logger.debug(
       `Processing job ${job.id} of Queue ${job.queue.name} with data:`,
