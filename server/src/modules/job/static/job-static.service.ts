@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
+import { syncProductsName, TSyncProductsProcessorQueue } from './consumers';
 
 @Injectable()
 export class JobStaticService implements OnModuleInit {
@@ -9,7 +11,13 @@ export class JobStaticService implements OnModuleInit {
 
   private readonly staticQueues: Queue[] = [];
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    @InjectQueue(syncProductsName)
+    private syncProductsQueue: TSyncProductsProcessorQueue,
+  ) {
+    this.staticQueues.push(syncProductsQueue);
+  }
 
   async onModuleInit() {
     this.logger.log('Starting static jobs..');
