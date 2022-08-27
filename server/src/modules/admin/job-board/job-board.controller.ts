@@ -57,7 +57,13 @@ export class JobBoardController {
 
   @Post('/test-sync-products-by-category')
   @HttpCode(201)
-  addSyncProductsByCategoryJob(@Query('categoryId') categoryId: string) {
+  addSyncProductsByCategory(@Query('categoryId') categoryId: string) {
     return this.jobBoardService.addSyncProductsByCategory(categoryId);
+  }
+
+  @Post('/test-sync-products')
+  @HttpCode(201)
+  addSyncProducts() {
+    return this.jobBoardService.addSyncProducts();
   }
 }
