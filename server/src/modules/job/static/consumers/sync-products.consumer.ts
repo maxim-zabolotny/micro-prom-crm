@@ -53,7 +53,7 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
     const { added, updated, removed } =
       await this.syncLocalService.actualizeAllProducts(session);
 
-    await this.unionLogger(job, '1. Actualize products:', {
+    await this.unionLogger(job, '1. Actualize products result:', {
       addedProductsCount: added.length,
       removedProductsCount: updated.length,
       updatedProductsCount: removed.length,
