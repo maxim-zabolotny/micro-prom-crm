@@ -23,7 +23,9 @@ import {
   TSyncProductsByCategoryProcessorQueue,
 } from '../consumers';
 import {
+  reloadSheetName,
   syncProductsName,
+  TReloadSheetProcessorQueue,
   TSyncProductsProcessorQueue,
 } from '../static/consumers';
 
@@ -55,6 +57,8 @@ export class JobBoardService {
     private syncProductsByCategoryQueue: TSyncProductsByCategoryProcessorQueue,
     @InjectQueue(syncProductsName)
     private syncProductsQueue: TSyncProductsProcessorQueue,
+    @InjectQueue(reloadSheetName)
+    private reloadSheetQueue: TReloadSheetProcessorQueue,
   ) {
     this.serverAdapter.setBasePath(this.basePath);
     this.serverAdapter.setErrorHandler((err) => {
@@ -76,6 +80,7 @@ export class JobBoardService {
         new BullAdapter(this.initLoadSheetQueue),
         new BullAdapter(this.syncProductsByCategoryQueue),
         new BullAdapter(this.syncProductsQueue),
+        new BullAdapter(this.reloadSheetQueue),
       ],
       serverAdapter: this.serverAdapter,
     });
@@ -165,6 +170,15 @@ export class JobBoardService {
 
   public async addSyncProducts() {
     const job = await this.syncProductsQueue.add(null, { repeat: null });
+    return {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    };
+  }
+
+  public async addReloadSheet() {
+    const job = await this.reloadSheetQueue.add(null, { repeat: null });
     return {
       id: job.id,
       name: job.queue.name,

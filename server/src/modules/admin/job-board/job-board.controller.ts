@@ -66,4 +66,10 @@ export class JobBoardController {
   addSyncProducts() {
     return this.jobBoardService.addSyncProducts();
   }
+
+  @Post('/test-reload-sheet')
+  @HttpCode(201)
+  addReloadSheet() {
+    return this.jobBoardService.addReloadSheet();
+  }
 }
