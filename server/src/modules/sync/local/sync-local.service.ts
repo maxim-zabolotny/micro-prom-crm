@@ -775,27 +775,20 @@ export class SyncLocalService {
         );
         loadedProducts.push(...addedProducts);
 
-        this.logger.debug('Category processed:', {
-          id: category._id,
-          name: category.name,
-          products: productsWithFullInfo.length,
-          categoriesLeft: Math.max(0, categories.length - categoryNumber),
-          productsLeft: Math.max(0, allProductsCount - loadedProducts.length),
-        });
-
         if (addedProducts.length >= 20) {
           this.logger.log('Sleep 2s');
           await this.timeHelper.sleep(2000);
         }
-      } else {
-        this.logger.debug('Empty Category processed:', {
-          id: category._id,
-          name: category.name,
-          products: productsWithFullInfo.length,
-          categoriesLeft: Math.max(0, categories.length - categoryNumber),
-          productsLeft: Math.max(0, allProductsCount - loadedProducts.length),
-        });
       }
+
+      this.logger.debug('Category processed:', {
+        id: category._id,
+        name: category.name,
+        empty: _.isEmpty(productsWithFullInfo),
+        products: productsWithFullInfo.length,
+        categoriesLeft: Math.max(0, categories.length - categoryNumber),
+        productsLeft: Math.max(0, allProductsCount - loadedProducts.length),
+      });
 
       categoryIndex++;
     }
