@@ -60,15 +60,25 @@ export abstract class CommonSyncConsumer {
         result = await cb(session);
       });
 
+      await this.unionLogger(job, `DB #3: Commit transaction`);
+
       return result;
+    } catch {
+      await this.unionLogger(job, `DB #3: Rollback transaction`);
     } finally {
-      await this.unionLogger(job, `DB #3: End session`);
+      await this.unionLogger(job, `DB #4: End session`);
       await session.endSession();
     }
   }
 
   // EVENTS
-  protected abstract process(job: Job);
+  protected abstract main(job: Job, session: ClientSession);
+
+  protected process(job: Job) {
+    return this.withTransaction(job, async (session) => {
+      return this.main(job, session);
+    });
+  }
 
   protected onActive(job: Job) {
     this.logger.debug(
