@@ -157,7 +157,7 @@ const allConsumers = [...consumers, ...staticConsumers];
         removeOnFail: false,
         removeOnComplete: false,
         repeat: {
-          cron: '0 7-22 * * *', // At minute 0 past every hour from 7 through 22
+          cron: '0 7-22 * * 1-6', // At minute 0 past every hour from 7 through 22 on every day-of-week from Monday through Saturday
         },
       },
     }),
