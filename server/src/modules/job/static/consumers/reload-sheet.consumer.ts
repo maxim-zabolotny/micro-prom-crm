@@ -18,7 +18,7 @@ import { Connection } from 'mongoose';
 import { PromProductsService } from '../../../prom/products/products.service';
 
 export type TReloadSheetProcessorData = void;
-export type TReloadSheetQueue = Queue<TReloadSheetProcessorData>;
+export type TReloadSheetProcessorQueue = Queue<TReloadSheetProcessorData>;
 
 export const reloadSheetName = 'reload-sheet' as const;
 

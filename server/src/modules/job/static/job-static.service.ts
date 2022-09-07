@@ -3,7 +3,12 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { syncProductsName, TSyncProductsProcessorQueue } from './consumers';
+import {
+  reloadSheetName,
+  syncProductsName,
+  TReloadSheetProcessorQueue,
+  TSyncProductsProcessorQueue,
+} from './consumers';
 
 @Injectable()
 export class JobStaticService implements OnModuleInit {
@@ -15,8 +20,10 @@ export class JobStaticService implements OnModuleInit {
     private configService: ConfigService,
     @InjectQueue(syncProductsName)
     private syncProductsQueue: TSyncProductsProcessorQueue,
+    @InjectQueue(reloadSheetName)
+    private reloadSheetQueue: TReloadSheetProcessorQueue,
   ) {
-    this.staticQueues.push(syncProductsQueue);
+    this.staticQueues.push(...[syncProductsQueue, reloadSheetQueue]);
   }
 
   async onModuleInit() {

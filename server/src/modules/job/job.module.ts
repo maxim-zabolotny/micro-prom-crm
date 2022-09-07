@@ -21,6 +21,12 @@ import {
   SyncProductsByCategoryConsumer,
   syncProductsByCategoryName,
 } from './consumers';
+import {
+  ReloadSheetConsumer,
+  reloadSheetName,
+  SyncProductsConsumer,
+  syncProductsName,
+} from './static/consumers';
 import { JobBoardService } from './board/job-board.service';
 import { SyncModule } from '../sync/sync.module';
 import { JobStaticService } from './static/job-static.service';
@@ -28,7 +34,6 @@ import { TelegramModule } from '../telegram/telegram.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@schemas/user';
 import { PromModule } from '../prom/prom.module';
-import { SyncProductsConsumer, syncProductsName } from './static/consumers';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -44,7 +49,7 @@ const consumers = [
   SyncCourseConsumer,
   SyncProductsByCategoryConsumer,
 ];
-const staticConsumers = [SyncProductsConsumer];
+const staticConsumers = [SyncProductsConsumer, ReloadSheetConsumer];
 
 const allConsumers = [...consumers, ...staticConsumers];
 
@@ -72,6 +77,7 @@ const allConsumers = [...consumers, ...staticConsumers];
       },
       inject: [ConfigService],
     }),
+    // BASIC
     BullModule.registerQueue({
       name: audioProcessorName,
       defaultJobOptions: {
@@ -142,6 +148,7 @@ const allConsumers = [...consumers, ...staticConsumers];
         removeOnComplete: false,
       },
     }),
+    // STATIC
     BullModule.registerQueue({
       name: syncProductsName,
       defaultJobOptions: {
@@ -151,6 +158,18 @@ const allConsumers = [...consumers, ...staticConsumers];
         removeOnComplete: false,
         repeat: {
           cron: '0 7-22 * * *', // At minute 0 past every hour from 7 through 22
+        },
+      },
+    }),
+    BullModule.registerQueue({
+      name: reloadSheetName,
+      defaultJobOptions: {
+        attempts: 1,
+        timeout: ms('2h'),
+        removeOnFail: false,
+        removeOnComplete: false,
+        repeat: {
+          cron: '0 4 * * 1-6', // At 04:00 on every day-of-week from Monday through Saturday
         },
       },
     }),
