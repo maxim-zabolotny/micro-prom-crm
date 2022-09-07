@@ -97,8 +97,8 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
 
     const result = {
       syncCourse: {
-        updatedCategories,
-        updatedProducts,
+        updatedCategories: updatedCategories.length,
+        updatedProducts: updatedProducts.length,
       },
       prom: {
         update: updateInPromResult,
