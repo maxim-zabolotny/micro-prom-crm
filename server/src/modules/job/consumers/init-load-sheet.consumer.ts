@@ -17,7 +17,6 @@ import { PromProductsService } from '../../prom/products/products.service';
 import { CommonSyncConsumer } from './CommonSync';
 import { Connection } from 'mongoose';
 import { TSyncCourseProcessorData } from './sync-course.consumer';
-import { ClientSession } from 'mongodb';
 
 export type TInitLoadSheetProcessorData = void;
 export type TInitLoadSheetProcessorQueue = Queue<TInitLoadSheetProcessorData>;
@@ -42,10 +41,8 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     super(notificationBotService, userModel, connection);
   }
 
-  async initLoadSheet(
-    job: Job<TInitLoadSheetProcessorData>,
-    session: ClientSession,
-  ) {
+  // initLoadSheet
+  protected async main(job: Job<TInitLoadSheetProcessorData>, session) {
     // START
     await this.unionLogger(job, 'Start init load sheet');
 
@@ -134,23 +131,21 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
 
   @Process()
   protected async process(job: Job<TSyncCourseProcessorData>) {
-    return this.withTransaction(job, async (session) => {
-      return this.initLoadSheet(job, session);
-    });
+    return super.process(job);
   }
 
   @OnQueueActive()
-  onActive(job: Job) {
+  protected onActive(job) {
     super.onActive(job);
   }
 
   @OnQueueCompleted()
-  onComplete(job: Job, result: Record<string, unknown>) {
+  protected onComplete(job, result) {
     super.onComplete(job, result);
   }
 
   @OnQueueFailed()
-  async onFail(job: Job, err: Error) {
+  protected async onFail(job, err) {
     await super.onFail(job, err);
   }
 }

@@ -15,7 +15,6 @@ import { User, UserModel } from '@schemas/user';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CommonSyncConsumer } from '../../consumers/CommonSync';
 import { Connection } from 'mongoose';
-import { ClientSession } from 'mongodb';
 import * as _ from 'lodash';
 
 export type TSyncProductsProcessorData = void;
@@ -40,10 +39,8 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
     super(notificationBotService, userModel, connection);
   }
 
-  private async syncProducts(
-    job: Job<TSyncProductsProcessorData>,
-    session: ClientSession,
-  ) {
+  // syncProducts
+  protected async main(job: Job<TSyncProductsProcessorData>, session) {
     // START
     await this.unionLogger(job, 'Start sync products');
 
@@ -78,6 +75,7 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
       productsToUpdateInProm,
       session,
     );
+
     const removeProductsFromPromResult =
       await this.syncPromService.removeProductsFromProm(
         _.map(productsToRemoveFromProm, '_id'),
@@ -136,23 +134,21 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
 
   @Process()
   protected async process(job: Job<TSyncProductsProcessorData>) {
-    return this.withTransaction(job, async (session) => {
-      return this.syncProducts(job, session);
-    });
+    return super.process(job);
   }
 
   @OnQueueActive()
-  protected onActive(job: Job) {
+  protected onActive(job) {
     super.onActive(job);
   }
 
   @OnQueueCompleted()
-  protected onComplete(job: Job, result: Record<string, unknown>) {
+  protected onComplete(job, result) {
     super.onComplete(job, result);
   }
 
   @OnQueueFailed()
-  protected async onFail(job: Job, err: Error) {
+  protected async onFail(job, err) {
     await super.onFail(job, err);
   }
 }

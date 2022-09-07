@@ -16,7 +16,6 @@ import { User, UserModel } from '@schemas/user';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CommonSyncConsumer } from './CommonSync';
 import { Connection } from 'mongoose';
-import { ClientSession } from 'mongodb';
 
 export type TSyncCourseProcessorData = void;
 export type TSyncCourseProcessorQueue = Queue<TSyncCourseProcessorData>;
@@ -40,10 +39,8 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
     super(notificationBotService, userModel, connection);
   }
 
-  private async syncCourse(
-    job: Job<TSyncCourseProcessorData>,
-    session: ClientSession,
-  ) {
+  // syncCourse
+  protected async main(job: Job<TSyncCourseProcessorData>, session) {
     // START
     await this.unionLogger(job, 'Start sync course');
 
@@ -116,23 +113,21 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
 
   @Process()
   protected async process(job: Job<TSyncCourseProcessorData>) {
-    return this.withTransaction(job, async (session) => {
-      return this.syncCourse(job, session);
-    });
+    return super.process(job);
   }
 
   @OnQueueActive()
-  protected onActive(job: Job) {
+  protected onActive(job) {
     super.onActive(job);
   }
 
   @OnQueueCompleted()
-  protected onComplete(job: Job, result: Record<string, unknown>) {
+  protected onComplete(job, result) {
     super.onComplete(job, result);
   }
 
   @OnQueueFailed()
-  protected async onFail(job: Job, err: Error) {
+  protected async onFail(job, err) {
     await super.onFail(job, err);
   }
 }
