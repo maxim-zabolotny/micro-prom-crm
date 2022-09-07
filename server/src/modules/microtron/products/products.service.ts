@@ -771,7 +771,7 @@ export class MicrotronProductsService {
     });
 
     this.logger.debug('Load parse products cache');
-    this.loadProductsParseCacheFromFile(this.productsParseCacheFilePath);
+    await this.loadProductsParseCacheFromFile(this.productsParseCacheFilePath);
 
     this.logger.debug('Remove empty parse results');
     this.removeEmptyProductsParseResults();
