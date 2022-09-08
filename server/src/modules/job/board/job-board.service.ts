@@ -169,7 +169,10 @@ export class JobBoardService {
   }
 
   public async addSyncProducts() {
-    const job = await this.syncProductsQueue.add(null, { repeat: null });
+    const job = await this.syncProductsQueue.add(null, {
+      repeat: null,
+      attempts: 1,
+    });
     return {
       id: job.id,
       name: job.queue.name,
@@ -178,7 +181,10 @@ export class JobBoardService {
   }
 
   public async addReloadSheet() {
-    const job = await this.reloadSheetQueue.add(null, { repeat: null });
+    const job = await this.reloadSheetQueue.add(null, {
+      repeat: null,
+      attempts: 1,
+    });
     return {
       id: job.id,
       name: job.queue.name,

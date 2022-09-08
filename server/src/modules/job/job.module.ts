@@ -53,6 +53,16 @@ const staticConsumers = [SyncProductsConsumer, ReloadSheetConsumer];
 
 const allConsumers = [...consumers, ...staticConsumers];
 
+const buildDefaultJobOptions = (
+  timeout: number,
+  [removeOnComplete = 2, removeOnFail = 2] = [],
+) => ({
+  attempts: 1,
+  timeout,
+  removeOnFail,
+  removeOnComplete,
+});
+
 @Global()
 @Module({
   imports: [
@@ -77,99 +87,70 @@ const allConsumers = [...consumers, ...staticConsumers];
       },
       inject: [ConfigService],
     }),
-    // BASIC
+    // BASIC - DEV TEST
     BullModule.registerQueue({
       name: audioProcessorName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('5s'),
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('5s'), [1, 1]),
     }),
     BullModule.registerQueue({
       name: loadAllCategoriesName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('10m'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('10m')),
     }),
     BullModule.registerQueue({
       name: loadProductsByCategoryName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('1h'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('1h')),
     }),
     BullModule.registerQueue({
       name: loadAllProductsName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('2h'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('2h')),
+    }),
+    // BASIC - PROD
+    BullModule.registerQueue({
+      name: initLoadSheetName,
+      defaultJobOptions: buildDefaultJobOptions(ms('2.5 hrs')),
     }),
     BullModule.registerQueue({
       name: syncCategoriesName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('1h'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('30m')),
     }),
     BullModule.registerQueue({
       name: syncCourseName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('10m'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
-    }),
-    BullModule.registerQueue({
-      name: initLoadSheetName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('2h'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('20m')),
     }),
     BullModule.registerQueue({
       name: syncProductsByCategoryName,
-      defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('1h'),
-        removeOnFail: false,
-        removeOnComplete: false,
-      },
+      defaultJobOptions: buildDefaultJobOptions(ms('1h')),
     }),
     // STATIC
     BullModule.registerQueue({
       name: syncProductsName,
       defaultJobOptions: {
-        attempts: 1,
-        timeout: ms('1h'),
-        removeOnFail: false,
-        removeOnComplete: false,
+        attempts: 2,
+        timeout: ms('50m'),
+        removeOnFail: 8,
+        removeOnComplete: 16,
         repeat: {
           cron: '0 7-22 * * 1-6', // At minute 0 past every hour from 7 through 22 on every day-of-week from Monday through Saturday
+        },
+        backoff: {
+          type: 'fixed',
+          delay: ms('5m'),
         },
       },
     }),
     BullModule.registerQueue({
       name: reloadSheetName,
       defaultJobOptions: {
-        attempts: 1,
+        attempts: 2,
         timeout: ms('2h'),
-        removeOnFail: false,
-        removeOnComplete: false,
+        removeOnFail: 4,
+        removeOnComplete: 6,
         repeat: {
           cron: '0 4 * * 1-6', // At 04:00 on every day-of-week from Monday through Saturday
+        },
+        backoff: {
+          type: 'fixed',
+          delay: ms('10m'),
         },
       },
     }),
