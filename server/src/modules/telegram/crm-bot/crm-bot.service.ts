@@ -1,3 +1,4 @@
+import * as urlJoin from 'url-join';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModel } from '@schemas/user';
@@ -28,6 +29,23 @@ export class CrmBotService {
     return user;
   }
 
+  public async buildLoginURL(
+    telegramId: TTelegramUser['telegramId'],
+    urlPath?: string,
+  ) {
+    const user = await this.getUserByTelegramId(telegramId);
+    const token = this.authService.generateAuthToken(user);
+
+    const clientUrl = this.configService.get('client.url');
+    const serverUrl = await this.ngrokService.connect({
+      port: this.configService.get('port'),
+    });
+
+    return `${urlJoin(clientUrl, urlPath ?? '')}?token=${
+      token.accessToken
+    }&server_url=${serverUrl}`;
+  }
+
   public async getAuthToken(telegramId: TTelegramUser['telegramId']) {
     const user = await this.getUserByTelegramId(telegramId);
     const token = this.authService.generateAuthToken(user);
@@ -53,6 +71,15 @@ export class CrmBotService {
     });
 
     const urlMsg = MarkdownHelper.bold('URL');
+    const urlText = MarkdownHelper.monospaced(url);
+
+    return `${urlMsg}: ${urlText}`;
+  }
+
+  public async getLoginUrl(telegramId: TTelegramUser['telegramId']) {
+    const url = await this.buildLoginURL(telegramId);
+
+    const urlMsg = MarkdownHelper.bold('Login URL');
     const urlText = MarkdownHelper.monospaced(url);
 
     return `${urlMsg}: ${urlText}`;

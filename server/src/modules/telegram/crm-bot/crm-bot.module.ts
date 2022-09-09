@@ -17,6 +17,6 @@ import { NotificationBotService } from './notification/notification.service';
     ]),
   ],
   providers: [CrmBotService, CrmBotUpdate, NotificationBotService],
-  exports: [NotificationBotService],
+  exports: [CrmBotService, NotificationBotService],
 })
 export class CrmBotModule {}

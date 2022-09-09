@@ -57,6 +57,15 @@ export class CrmBotUpdate {
     await ctx.replyWithMarkdown(message);
   }
 
+  @Command('get_login_url')
+  async onGetLoginUrlCommand(
+    @CurrentTelegramUser() tgUser: TTelegramUser,
+    @Ctx() ctx: Context,
+  ): Promise<void> {
+    const message = await this.crmBotService.getLoginUrl(tgUser.telegramId);
+    await ctx.replyWithMarkdown(message);
+  }
+
   // @Action(MarkupCallbackButtonName.MarkAsVisited)
   // async onChangeVisitStatusCommand(@Ctx() ctx: Context): Promise<void> {
   //   await this.notificationBotService.updateVisitStatus(ctx);
