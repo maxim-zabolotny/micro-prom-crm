@@ -63,8 +63,9 @@ export abstract class CommonSyncConsumer {
       await this.unionLogger(job, `DB #3: Commit transaction`);
 
       return result;
-    } catch {
-      await this.unionLogger(job, `DB #3: Rollback transaction`);
+    } catch (e) {
+      await this.unionLogger(job, `DB #3: Rollback transaction`, { error: e });
+      throw e;
     } finally {
       await this.unionLogger(job, `DB #4: End session`);
       await session.endSession();
