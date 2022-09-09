@@ -77,7 +77,13 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(
       job,
       '3. Reload all categories to Google Sheet result:',
-      reloadCategoriesToSheetResult,
+      {
+        reloadCategoriesToSheetResult: {
+          ...reloadCategoriesToSheetResult,
+          updatedCategories:
+            reloadCategoriesToSheetResult.updatedCategories.length,
+        },
+      },
     );
 
     // 4. Reload all products to Google Sheet
@@ -89,7 +95,12 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(
       job,
       '4. Reload all products to Google Sheet result:',
-      reloadProductsToSheetResult,
+      {
+        reloadProductsToSheetResult: {
+          ...reloadProductsToSheetResult,
+          updatedProducts: reloadProductsToSheetResult.updatedProducts.length,
+        },
+      },
     );
 
     // 5. Prom import Google Sheet
@@ -116,8 +127,15 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
         updatedCategories: updatedCategories.length,
         updatedProducts: updatedProducts.length,
       },
-      reloadCategoriesToSheetResult: reloadCategoriesToSheetResult,
-      reloadProductsToSheetResult: reloadProductsToSheetResult,
+      reloadCategoriesToSheetResult: {
+        ...reloadCategoriesToSheetResult,
+        updatedCategories:
+          reloadCategoriesToSheetResult.updatedCategories.length,
+      },
+      reloadProductsToSheetResult: {
+        ...reloadProductsToSheetResult,
+        updatedProducts: reloadProductsToSheetResult.updatedProducts.length,
+      },
       importSheet: promImportSheetResult,
     });
 

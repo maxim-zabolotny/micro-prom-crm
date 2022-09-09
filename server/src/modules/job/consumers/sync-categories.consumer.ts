@@ -98,8 +98,14 @@ export class SyncCategoriesConsumer extends CommonSyncConsumer {
       );
 
     await this.unionLogger(job, '3. Prom updates result:', {
-      updateInPromResult,
-      removeProductsFromPromResult,
+      updateInPromResult: {
+        ...updateInPromResult,
+        updatedProducts: updateInPromResult.updatedProducts.length,
+      },
+      removeProductsFromPromResult: {
+        ...removeProductsFromPromResult,
+        productIds: removeProductsFromPromResult.productIds.length,
+      },
     });
 
     // 4. Notify

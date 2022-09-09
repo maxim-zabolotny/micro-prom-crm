@@ -71,7 +71,10 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
     );
 
     await this.unionLogger(job, '2. Prom updates result:', {
-      updateInPromResult,
+      updateInPromResult: {
+        ...updateInPromResult,
+        updatedProducts: updateInPromResult.updatedProducts.length,
+      },
     });
 
     // 3. Notify

@@ -77,7 +77,10 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(
       job,
       '3. Load all categories to Google Sheet result:',
-      loadCategoriesToSheetResult,
+      {
+        ...loadCategoriesToSheetResult,
+        updatedCategories: loadCategoriesToSheetResult.updatedCategories.length,
+      },
     );
 
     // 4. Load all products to Google Sheet
@@ -89,7 +92,10 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
     await this.unionLogger(
       job,
       '4. Load all products to Google Sheet result:',
-      loadProductsToSheetResult,
+      {
+        ...loadProductsToSheetResult,
+        updatedProducts: loadProductsToSheetResult.updatedProducts.length,
+      },
     );
 
     // 5. Prom import Google Sheet
@@ -103,8 +109,29 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
       promImportSheetResult,
     );
 
-    // 6. Build result
-    await this.unionLogger(job, '6. Build result');
+    // 6. Notify
+    await this.unionLogger(job, '6. Notify Admin');
+
+    await this.notifyAdmin(this.getReadableQueueName(), {
+      loadAllCategoriesToDB: {
+        loadedCategories: loadedCategories.length,
+      },
+      loadAllProductsToDB: {
+        loadedProducts: loadedProducts.length,
+      },
+      loadAllCategoriesToSheet: {
+        ...loadCategoriesToSheetResult,
+        updatedCategories: loadCategoriesToSheetResult.updatedCategories.length,
+      },
+      loadProductsToSheetResult: {
+        ...loadProductsToSheetResult,
+        updatedProducts: loadProductsToSheetResult.updatedProducts.length,
+      },
+      importSheet: promImportSheetResult,
+    });
+
+    // 7. Build result
+    await this.unionLogger(job, '7. Build result');
 
     const result = {
       loadAllCategoriesToDB: {
@@ -117,11 +144,6 @@ export class InitLoadSheetConsumer extends CommonSyncConsumer {
       loadProductsToSheetResult: loadProductsToSheetResult,
       importSheet: promImportSheetResult,
     };
-
-    // 7. Notify
-    await this.unionLogger(job, '7. Notify Admin');
-
-    await this.notifyAdmin(this.getReadableQueueName(), result);
 
     // END
     await this.unionLogger(job, 'Complete init load sheet');

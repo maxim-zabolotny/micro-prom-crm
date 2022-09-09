@@ -61,6 +61,7 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
       updated,
       (product) => product.sync.loaded,
     );
+
     const productsToRemoveFromProm = _.filter(
       removed,
       (product) => product.sync.loaded,
@@ -82,8 +83,14 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
       );
 
     await this.unionLogger(job, '2. Prom updates result:', {
-      updateInPromResult,
-      removeProductsFromPromResult,
+      updateInPromResult: {
+        ...updateInPromResult,
+        updatedProducts: updateInPromResult.updatedProducts.length,
+      },
+      removeProductsFromPromResult: {
+        ...removeProductsFromPromResult,
+        productIds: removeProductsFromPromResult.productIds.length,
+      },
     });
 
     // 3. Notify
