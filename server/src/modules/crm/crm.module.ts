@@ -18,10 +18,12 @@ import { Constant, ConstantSchema } from '@schemas/constant';
 import { ProductBooking, ProductBookingSchema } from '@schemas/productBooking';
 import { CrmProductBookingsController } from './productBookings/productBookings.controller';
 import { CrmProductBookingsService } from './productBookings/productBookings.service';
+import { TelegramModule } from '../telegram/telegram.module';
 
 @Module({
   imports: [
     MicrotronModule,
+    TelegramModule,
     MongooseModule.forFeature([
       {
         name: User.name,
