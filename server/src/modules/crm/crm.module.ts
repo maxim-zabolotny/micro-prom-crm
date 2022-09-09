@@ -15,6 +15,9 @@ import { CrmUsersService } from './users/users.service';
 import { User, UserSchema } from '@schemas/user';
 import { MicrotronModule } from '../microtron/microtron.module';
 import { Constant, ConstantSchema } from '@schemas/constant';
+import { ProductBooking, ProductBookingSchema } from '@schemas/productBooking';
+import { CrmProductBookingsController } from './productBookings/productBookings.controller';
+import { CrmProductBookingsService } from './productBookings/productBookings.service';
 
 @Module({
   imports: [
@@ -33,6 +36,12 @@ import { Constant, ConstantSchema } from '@schemas/constant';
     ]),
     MongooseModule.forFeature([
       {
+        name: ProductBooking.name,
+        schema: ProductBookingSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
         name: Constant.name,
         schema: ConstantSchema,
       },
@@ -42,6 +51,7 @@ import { Constant, ConstantSchema } from '@schemas/constant';
     CrmController,
     CrmCategoriesController,
     CrmProductsController,
+    CrmProductBookingsController,
     CrmIntegrationsController,
     CrmUsersController,
   ],
@@ -50,6 +60,7 @@ import { Constant, ConstantSchema } from '@schemas/constant';
     CrmService,
     CrmCategoriesService,
     CrmProductsService,
+    CrmProductBookingsService,
     CrmIntegrationsService,
     CrmUsersService,
   ],
