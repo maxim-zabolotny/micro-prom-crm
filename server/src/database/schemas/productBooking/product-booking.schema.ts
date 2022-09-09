@@ -56,10 +56,10 @@ export class ProductBooking {
   count: number;
 
   @Prop({ type: String })
-  disapproveReason: string;
+  disapproveReason?: string;
 
   @Prop({ type: Number })
-  rawPrice: number;
+  rawPrice?: number;
 
   @Prop({
     type: raw({
