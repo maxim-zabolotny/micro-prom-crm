@@ -27,12 +27,18 @@ export type TAddProductBookingToDB = Pick<
   byUser: Types.ObjectId;
 };
 
-export type TUpdateProductBookingInDB = Pick<
-  ProductBooking,
-  'status' | 'rawPrice' | 'disapproveReason'
-> & {
+export type TUpdateProductBookingInDB = {
   byUser: Types.ObjectId;
-};
+} & (
+  | ({ status: ProductBookingStatus.Approve } & Pick<
+      ProductBooking,
+      'rawPrice'
+    >)
+  | ({ status: ProductBookingStatus.Disapprove } & Pick<
+      ProductBooking,
+      'disapproveReason'
+    >)
+);
 
 // MONGOOSE
 export type ProductBookingDocument = ProductBooking & Document;
@@ -230,10 +236,8 @@ ProductBookingSchema.statics.addBooking = async function (
   });
   await productBooking.save({ session });
 
-  productBookingLogger.debug('Product booking saved:', {
+  productBookingLogger.debug('Product Booking saved:', {
     productBookingId: productBooking._id,
-    productId: productBookingData.product._id,
-    productName: productBookingData.product.name,
   });
 
   return productBooking;
@@ -244,17 +248,17 @@ ProductBookingSchema.statics.updateBooking = async function (
   data,
   session,
 ) {
-  productBookingLogger.debug('Process update Product booking:', {
+  productBookingLogger.debug('Process update Product Booking:', {
     productBookingId,
     data,
   });
 
-  productBookingLogger.debug('Load old product booking version');
+  productBookingLogger.debug('Load old Product Booking version');
   const oldProductBooking = await this.findById(productBookingId)
     .session(session)
     .exec();
   if (!oldProductBooking) {
-    throw new HttpException('Product booking not found', HttpStatus.NOT_FOUND);
+    throw new HttpException('Product Booking not found', HttpStatus.NOT_FOUND);
   }
 
   if (oldProductBooking.status !== ProductBookingStatus.Wait) {
