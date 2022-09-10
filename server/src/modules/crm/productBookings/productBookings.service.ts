@@ -2,7 +2,11 @@ import * as _ from 'lodash';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { ProductBooking, ProductBookingModel } from '@schemas/productBooking';
+import {
+  ProductBooking,
+  ProductBookingModel,
+  ProductBookingStatus,
+} from '@schemas/productBooking';
 import { CreateProductBookingDto } from './dto/create-product-booking.dto';
 import { User, UserDocument, UserModel } from '@schemas/user';
 import { Product, ProductModel } from '@schemas/product';
@@ -11,6 +15,12 @@ import { NotificationBotService } from '../../telegram/crm-bot/notification/noti
 import { TArray } from '@custom-types';
 import { MarkdownHelper } from '../../telegram/common/helpers';
 import { CrmBotService } from '../../telegram/crm-bot/crm-bot.service';
+import { DisapproveProductBookingDto } from './dto/disapprove-product-booking.dto';
+import { InjectQueue } from '@nestjs/bull';
+import {
+  syncProductsByCategoryName,
+  TSyncProductsByCategoryProcessorQueue,
+} from '../../job/consumers';
 
 @Injectable()
 export class CrmProductBookingsService {
@@ -28,6 +38,8 @@ export class CrmProductBookingsService {
     protected userModel: UserModel,
     @InjectConnection()
     protected connection: Connection,
+    @InjectQueue(syncProductsByCategoryName)
+    private syncProductsByCategoryQueue: TSyncProductsByCategoryProcessorQueue,
   ) {}
 
   private async withTransaction<T>(cb: (session: ClientSession) => Promise<T>) {
@@ -64,18 +76,42 @@ export class CrmProductBookingsService {
     });
   }
 
+  private async notifySales(
+    productBookingId: string,
+    productBookingStatus: ProductBookingStatus,
+    userTelegramId: UserDocument['telegramId'],
+    details: Array<TArray.Pair<string, string | number>>,
+  ) {
+    const sales = await this.userModel.getByTelegram(userTelegramId);
+    const url = await this.botService.buildLoginURL(
+      sales.telegramId,
+      `/booking/${productBookingId}`,
+    );
+
+    const title =
+      productBookingStatus === ProductBookingStatus.Approve
+        ? 'Подтверждение'
+        : 'Отказ';
+    await this.notificationBotService.send({
+      to: String(sales.telegramId),
+      title: `${title} Бронирования`,
+      button: ['Просмотреть', url],
+      details,
+    });
+  }
+
   public async createProductBooking(
-    productBookingData: CreateProductBookingDto,
+    data: CreateProductBookingDto,
     currentUser: UserDocument,
   ) {
     const product = await this.productModel
-      .findById(new Types.ObjectId(productBookingData.productId))
+      .findById(new Types.ObjectId(data.productId))
       .exec();
     if (!product) {
       throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
     }
 
-    if (productBookingData.count > product.quantity) {
+    if (data.count > product.quantity) {
       throw new HttpException(
         `Product haven't enough quantity`,
         HttpStatus.BAD_REQUEST,
@@ -88,8 +124,8 @@ export class CrmProductBookingsService {
         name: product.name,
         microtronId: product.microtronId,
       },
-      count: productBookingData.count,
-      description: productBookingData.description,
+      count: data.count,
+      description: data.description,
       user: {
         name: currentUser.name,
         role: currentUser.role,
@@ -99,7 +135,7 @@ export class CrmProductBookingsService {
     return await this.withTransaction(async (session) => {
       const productBooking = await this.productBookingModel.addBooking(
         {
-          ..._.omit(productBookingData, ['productId']),
+          ..._.omit(data, ['productId']),
           byUser: currentUser._id,
           product,
         },
@@ -109,17 +145,106 @@ export class CrmProductBookingsService {
       await this.notifyProvider(
         productBooking._id.toString(),
         Object.entries({
+          'Время бронирования': _.get(
+            productBooking,
+            'createdAt',
+          ).toLocaleString(),
           'Имя продукта': product.name,
           'Код продукта': MarkdownHelper.monospaced(
             String(product.microtronId),
           ),
-          Колличество: productBookingData.count,
-          Сведения: productBookingData.description,
+          Колличество: data.count,
+          Сведения: data.description,
           Продавец: currentUser.name,
         }),
       );
 
       return productBooking;
     });
+  }
+
+  public async disapproveProductBooking(
+    data: DisapproveProductBookingDto,
+    currentUser: UserDocument,
+  ) {
+    const productBooking =
+      await this.productBookingModel.getWithProductAndCategory(
+        new Types.ObjectId(data.productBookingId),
+      );
+    if (!productBooking) {
+      throw new HttpException(
+        'Product Booking not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    this.logger.debug('Disapprove Product Booking:', {
+      product: {
+        id: productBooking.product._id,
+        name: productBooking.product.name,
+        microtronId: productBooking.product.microtronId,
+      },
+      disapproveReason: data.disapproveReason,
+      user: {
+        name: currentUser.name,
+        role: currentUser.role,
+      },
+    });
+
+    const updatedProductBooking = await this.withTransaction(
+      async (session) => {
+        const salesId = productBooking.history[0].byUser;
+        const sales = await this.userModel
+          .findById(salesId)
+          .session(session)
+          .exec();
+        if (!sales) {
+          throw new HttpException('Sales user not found', HttpStatus.NOT_FOUND);
+        }
+
+        const updatedProductBooking =
+          await this.productBookingModel.updateBooking(
+            productBooking._id,
+            {
+              status: ProductBookingStatus.Disapprove,
+              disapproveReason: data.disapproveReason,
+              byUser: currentUser._id,
+            },
+            session,
+          );
+
+        await this.notifySales(
+          updatedProductBooking._id.toString(),
+          updatedProductBooking.status,
+          sales.telegramId,
+          Object.entries({
+            'Время бронирования': _.get(
+              productBooking,
+              'createdAt',
+            ).toLocaleString(),
+            'Имя продукта': MarkdownHelper.monospaced(
+              productBooking.product.name,
+            ),
+            'Код продукта': MarkdownHelper.monospaced(
+              String(productBooking.product.microtronId),
+            ),
+            Причина: data.disapproveReason,
+          }),
+        );
+
+        return updatedProductBooking;
+      },
+    );
+
+    const job = await this.syncProductsByCategoryQueue.add({
+      categoryMicrotronId: productBooking.category.microtronId,
+    });
+    this.logger.debug('Add job sync-products-by-category', {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    });
+
+    return updatedProductBooking;
   }
 }

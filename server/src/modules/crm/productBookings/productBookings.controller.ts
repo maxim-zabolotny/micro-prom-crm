@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   Post,
+  Put,
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import { CrmProductBookingsService } from './productBookings.service';
 import { Auth, CurrentUser } from '@common/decorators';
 import { UserDocument, UserRole } from '@schemas/user';
 import { CreateProductBookingDto } from './dto/create-product-booking.dto';
+import { DisapproveProductBookingDto } from './dto/disapprove-product-booking.dto';
 
 @Controller('/crm/product-bookings')
 @UseFilters(MongoExceptionFilter)
@@ -25,11 +27,24 @@ export class CrmProductBookingsController {
   @HttpCode(201)
   @Auth(UserRole.Sales)
   createProductBooking(
-    @Body() productBookingData: CreateProductBookingDto,
+    @Body() data: CreateProductBookingDto,
     @CurrentUser() currentUser: UserDocument,
   ) {
     return this.crmProductBookingsService.createProductBooking(
-      productBookingData,
+      data,
+      currentUser,
+    );
+  }
+
+  @Put('/disapprove')
+  @HttpCode(201)
+  @Auth(UserRole.Provider)
+  disapproveProductBooking(
+    @Body() data: DisapproveProductBookingDto,
+    @CurrentUser() currentUser: UserDocument,
+  ) {
+    return this.crmProductBookingsService.disapproveProductBooking(
+      data,
       currentUser,
     );
   }
