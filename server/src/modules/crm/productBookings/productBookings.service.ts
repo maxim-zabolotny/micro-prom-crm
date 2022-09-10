@@ -21,6 +21,7 @@ import {
   syncProductsByCategoryName,
   TSyncProductsByCategoryProcessorQueue,
 } from '../../job/consumers';
+import { ApproveProductBookingDto } from './dto/approve-product-booking.dto';
 
 @Injectable()
 export class CrmProductBookingsService {
@@ -199,6 +200,22 @@ export class CrmProductBookingsService {
 
       return productBooking;
     });
+  }
+
+  public async approveProductBooking(
+    data: ApproveProductBookingDto,
+    currentUser: UserDocument,
+  ) {
+    const productBooking =
+      await this.productBookingModel.getWithProductAndCategory(
+        new Types.ObjectId(data.productBookingId),
+      );
+    if (!productBooking) {
+      throw new HttpException(
+        'Product Booking not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   public async disapproveProductBooking(

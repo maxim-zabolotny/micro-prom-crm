@@ -21,6 +21,7 @@ import { DisapproveProductBookingDto } from './dto/disapprove-product-booking.dt
 import { ParseObjectIdPipe } from '@common/pipes';
 import { Types } from 'mongoose';
 import { ProductBookingStatus } from '@schemas/productBooking';
+import { ApproveProductBookingDto } from './dto/approve-product-booking.dto';
 
 @Controller('/crm/product-bookings')
 @UseFilters(MongoExceptionFilter)
@@ -59,6 +60,19 @@ export class CrmProductBookingsController {
     @CurrentUser() currentUser: UserDocument,
   ) {
     return this.crmProductBookingsService.createProductBooking(
+      data,
+      currentUser,
+    );
+  }
+
+  @Put('/approve')
+  @HttpCode(201)
+  @Auth(UserRole.Provider)
+  approveProductBooking(
+    @Body() data: ApproveProductBookingDto,
+    @CurrentUser() currentUser: UserDocument,
+  ) {
+    return this.crmProductBookingsService.approveProductBooking(
       data,
       currentUser,
     );
