@@ -104,12 +104,10 @@ type TStaticMethods = {
     id: Types.ObjectId,
     session?: ClientSession | null,
   ) => Promise<
-    Array<
-      Omit<ProductBookingDocument, 'product'> & {
-        product: ProductDocument;
-        category: CategoryDocument;
-      }
-    >
+    Omit<ProductBookingDocument, 'product'> & {
+      product: ProductDocument;
+      category: CategoryDocument;
+    }
   >;
   findBookings: (
     this: ProductBookingModel,
@@ -142,7 +140,7 @@ ProductBookingSchema.statics.getWithProductAndCategory = async function (
   id,
   session,
 ) {
-  return this.aggregate([
+  const result = await this.aggregate([
     { $match: { _id: id } },
     {
       $lookup: {
@@ -157,12 +155,13 @@ ProductBookingSchema.statics.getWithProductAndCategory = async function (
       $replaceRoot: {
         newRoot: {
           $mergeObjects: [
-            { product: { $arrayElemAt: ['products', 0] } },
+            { product: { $arrayElemAt: ['$products', 0] } },
             '$$ROOT',
           ],
         },
       },
     },
+    { $unset: 'products' },
     {
       $lookup: {
         from: 'categories',
@@ -177,6 +176,8 @@ ProductBookingSchema.statics.getWithProductAndCategory = async function (
   ])
     .session(session)
     .exec();
+
+  return result[0];
 } as TStaticMethods['getWithProductAndCategory'];
 
 ProductBookingSchema.statics.findBookings = async function (
