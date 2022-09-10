@@ -101,7 +101,7 @@ export class CrmProductBookingsService {
   }
 
   public async getById(id: Types.ObjectId) {
-    this.logger.debug('Find Product Booking by id:', { id });
+    this.logger.debug('Get Product Booking by id:', { id });
 
     const productBooking = await this.productBookingModel.findById(id).exec();
     if (!productBooking) {
@@ -112,6 +112,30 @@ export class CrmProductBookingsService {
     }
 
     return productBooking;
+  }
+
+  public async find(
+    status: ProductBookingStatus,
+    limit: number,
+    offset: number,
+  ) {
+    this.logger.debug('Find Product Bookings:', { status, limit, offset });
+
+    const productBookings = await this.productBookingModel.findBookings(
+      {
+        status,
+      },
+      {
+        limit,
+        offset,
+      },
+    );
+
+    this.logger.debug('Found Product Bookings:', {
+      count: productBookings.length,
+    });
+
+    return productBookings;
   }
 
   public async createProductBooking(
