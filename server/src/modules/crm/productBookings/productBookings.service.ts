@@ -100,6 +100,20 @@ export class CrmProductBookingsService {
     });
   }
 
+  public async getById(id: Types.ObjectId) {
+    this.logger.debug('Find Product Booking by id:', { id });
+
+    const productBooking = await this.productBookingModel.findById(id).exec();
+    if (!productBooking) {
+      throw new HttpException(
+        'Product Booking not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return productBooking;
+  }
+
   public async createProductBooking(
     data: CreateProductBookingDto,
     currentUser: UserDocument,
