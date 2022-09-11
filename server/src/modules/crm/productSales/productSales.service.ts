@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { User, UserModel } from '@schemas/user';
-import { ClientSession, Connection } from 'mongoose';
+import { ClientSession, Connection, Types } from 'mongoose';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
 import { TArray } from '@custom-types';
 import { CrmBotService } from '../../telegram/crm-bot/crm-bot.service';
@@ -11,6 +11,9 @@ import {
   ProductSaleModel,
   ProductSaleStatus,
 } from '@schemas/productSale';
+import { SetProductSaleDescriptionDto } from './dto/set-product-sale-description.dto';
+import { SetProductSaleOrderDto } from './dto/set-product-sale-order.dto';
+import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -82,5 +85,75 @@ export class CrmProductSalesService {
       title,
       details,
     });
+  }
+
+  public async setProductSaleDescription(data: SetProductSaleDescriptionDto) {
+    const productSale = await this.productSaleModel
+      .findById(new Types.ObjectId(data.productSaleId))
+      .exec();
+    if (!productSale) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    this.logger.debug('Set Product Sale description:', {
+      productSaleId: data.productSaleId,
+      description: data.description,
+    });
+
+    const updatedProductSale = await this.productSaleModel.setSaleDescription(
+      productSale._id,
+      data.description,
+    );
+
+    return updatedProductSale;
+  }
+
+  public async setProductSaleOrder(data: SetProductSaleOrderDto) {
+    const productSale = await this.productSaleModel
+      .findById(new Types.ObjectId(data.productSaleId))
+      .exec();
+    if (!productSale) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    this.logger.debug('Set Product Sale Prom order:', {
+      productSaleId: data.productSaleId,
+      promOrderId: data.promOrderId,
+    });
+
+    const updatedProductSale = await this.productSaleModel.setSaleOrder(
+      productSale._id,
+      data.promOrderId,
+    );
+
+    return updatedProductSale;
+  }
+
+  public async setProductSaleClient(data: SetProductSaleClientDto) {
+    const productSale = await this.productSaleModel
+      .findById(new Types.ObjectId(data.productSaleId))
+      .exec();
+    if (!productSale) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    const client = {
+      id: data.promClientId,
+      name: data.promClientName,
+      emails: data.promClientEmails,
+      phones: data.promClientPhones,
+    };
+
+    this.logger.debug('Set Product Sale Prom client:', {
+      productSaleId: data.productSaleId,
+      client: client,
+    });
+
+    const updatedProductSale = await this.productSaleModel.setSaleClient(
+      productSale._id,
+      client,
+    );
+
+    return updatedProductSale;
   }
 }
