@@ -14,6 +14,7 @@ import {
 import { SetProductSaleDescriptionDto } from './dto/set-product-sale-description.dto';
 import { SetProductSaleOrderDto } from './dto/set-product-sale-order.dto';
 import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
+import { SearchProductSalesDto } from './dto/search-product-sales.dto';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -96,6 +97,25 @@ export class CrmProductSalesService {
     }
 
     return productBooking;
+  }
+
+  public async search({ limit, offset, ...data }: SearchProductSalesDto) {
+    this.logger.debug('Find Product Sales:', {
+      limit,
+      offset,
+      data,
+    });
+
+    const productBookings = await this.productSaleModel.findSales(data, {
+      limit,
+      offset,
+    });
+
+    this.logger.debug('Found Product Sales:', {
+      count: productBookings.length,
+    });
+
+    return productBookings;
   }
 
   public async setProductSaleDescription(data: SetProductSaleDescriptionDto) {

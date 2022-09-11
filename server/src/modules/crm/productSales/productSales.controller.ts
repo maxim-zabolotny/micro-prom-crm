@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Post,
   Put,
   Query,
   UseFilters,
@@ -18,6 +19,7 @@ import { SetProductSaleOrderDto } from './dto/set-product-sale-order.dto';
 import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
 import { ParseObjectIdPipe } from '@common/pipes';
 import { Types } from 'mongoose';
+import { SearchProductSalesDto } from './dto/search-product-sales.dto';
 
 @Controller('/crm/product-sales')
 @UseFilters(MongoExceptionFilter)
@@ -32,6 +34,13 @@ export class CrmProductSalesController {
   @Auth(UserRole.General)
   async getById(@Query('id', ParseObjectIdPipe) productSaleId: Types.ObjectId) {
     return this.crmProductSalesService.getById(productSaleId);
+  }
+
+  @Post('/search')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  async search(@Body() findData: SearchProductSalesDto) {
+    return this.crmProductSalesService.search(findData);
   }
 
   @Put('/set-description')
