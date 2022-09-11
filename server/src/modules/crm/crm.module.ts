@@ -19,9 +19,12 @@ import { ProductBooking, ProductBookingSchema } from '@schemas/productBooking';
 import { CrmProductBookingsController } from './productBookings/productBookings.controller';
 import { CrmProductBookingsService } from './productBookings/productBookings.service';
 import { TelegramModule } from '../telegram/telegram.module';
+import { ProductSale, ProductSaleSchema } from '@schemas/productSale';
+import { SyncModule } from '../sync/sync.module';
 
 @Module({
   imports: [
+    SyncModule,
     MicrotronModule,
     TelegramModule,
     MongooseModule.forFeature([
@@ -40,6 +43,12 @@ import { TelegramModule } from '../telegram/telegram.module';
       {
         name: ProductBooking.name,
         schema: ProductBookingSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: ProductSale.name,
+        schema: ProductSaleSchema,
       },
     ]),
     MongooseModule.forFeature([

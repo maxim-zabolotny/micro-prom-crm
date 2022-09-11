@@ -22,6 +22,8 @@ import {
   TSyncProductsByCategoryProcessorQueue,
 } from '../../job/consumers';
 import { ApproveProductBookingDto } from './dto/approve-product-booking.dto';
+import { ProductSale, ProductSaleModel } from '@schemas/productSale';
+import { SyncPromService } from '../../sync/prom/sync-prom.service';
 
 @Injectable()
 export class CrmProductBookingsService {
@@ -31,10 +33,13 @@ export class CrmProductBookingsService {
     private configService: ConfigService,
     protected botService: CrmBotService,
     protected notificationBotService: NotificationBotService,
+    private syncPromService: SyncPromService,
     @InjectModel(Product.name)
     private productModel: ProductModel,
     @InjectModel(ProductBooking.name)
     private productBookingModel: ProductBookingModel,
+    @InjectModel(ProductSale.name)
+    private productSaleModel: ProductSaleModel,
     @InjectModel(User.name)
     protected userModel: UserModel,
     @InjectConnection()
@@ -59,6 +64,18 @@ export class CrmProductBookingsService {
     }
   }
 
+  private async getProductBookingSalesUser(
+    productBooking: Pick<ProductBooking, 'history'>,
+  ) {
+    const salesId = productBooking.history[0].byUser;
+    const sales = await this.userModel.findById(salesId).exec();
+    if (!sales) {
+      throw new HttpException('Sales user not found', HttpStatus.NOT_FOUND);
+    }
+
+    return sales;
+  }
+
   private async notifyProvider(
     productBookingId: string,
     details: Array<TArray.Pair<string, string | number>>,
@@ -69,34 +86,68 @@ export class CrmProductBookingsService {
       `/booking/${productBookingId}`,
     );
 
+    this.logger.debug('Notify Provider User:', {
+      name: provider.name,
+      role: provider.role,
+      telegramId: provider.telegramId,
+    });
+
     await this.notificationBotService.send({
       to: String(provider.telegramId),
       title: 'Запрос Бронирования',
-      button: ['Подтвердить / Отклонить бронирование', url],
+      buttons: [['Подтвердить / Отклонить бронирование', url]],
       details,
     });
   }
 
   private async notifySales(
-    productBookingId: string,
-    productBookingStatus: ProductBookingStatus,
-    userTelegramId: UserDocument['telegramId'],
+    {
+      userTelegramId,
+      productBookingStatus,
+      productBookingId,
+      productSaleId,
+    }: {
+      userTelegramId: UserDocument['telegramId'];
+      productBookingStatus: ProductBookingStatus;
+      productBookingId: string;
+      productSaleId?: string;
+    },
     details: Array<TArray.Pair<string, string | number>>,
   ) {
     const sales = await this.userModel.getByTelegram(userTelegramId);
-    const url = await this.botService.buildLoginURL(
+    const bookingUrl = await this.botService.buildLoginURL(
       sales.telegramId,
       `/booking/${productBookingId}`,
     );
 
-    const title =
-      productBookingStatus === ProductBookingStatus.Approve
-        ? 'Подтверждение'
-        : 'Отказ';
+    this.logger.debug('Notify Sales User:', {
+      name: sales.name,
+      role: sales.role,
+      telegramId: sales.telegramId,
+    });
+
+    let title: string;
+    const buttons = [];
+    if (productBookingStatus === ProductBookingStatus.Approve) {
+      title = 'Подтверждение';
+
+      const saleUrl = bookingUrl.replace(
+        `/booking/${productBookingId}`,
+        `/sale/${productSaleId}`,
+      );
+
+      buttons.push(['Просмотреть Бронирование', bookingUrl]);
+      buttons.push(['Просмотреть Продажу', saleUrl]);
+    } else {
+      title = 'Отказ';
+
+      buttons.push(['Просмотреть', bookingUrl]);
+    }
+
     await this.notificationBotService.send({
       to: String(sales.telegramId),
       title: `${title} Бронирования`,
-      button: ['Просмотреть', url],
+      buttons,
       details,
     });
   }
@@ -158,13 +209,13 @@ export class CrmProductBookingsService {
     }
 
     this.logger.debug('Create Product Booking:', {
+      count: data.count,
+      description: data.description,
       product: {
         id: product._id,
         name: product.name,
         microtronId: product.microtronId,
       },
-      count: data.count,
-      description: data.description,
       user: {
         name: currentUser.name,
         role: currentUser.role,
@@ -216,6 +267,91 @@ export class CrmProductBookingsService {
         HttpStatus.NOT_FOUND,
       );
     }
+
+    this.logger.debug('Approve Product Booking:', {
+      rawPrice: data.rawPrice,
+      product: {
+        id: productBooking.product._id,
+        name: productBooking.product.name,
+        microtronId: productBooking.product.microtronId,
+      },
+      user: {
+        name: currentUser.name,
+        role: currentUser.role,
+      },
+    });
+
+    return await this.withTransaction(async (session) => {
+      const sales = await this.getProductBookingSalesUser(productBooking);
+
+      const updatedProductBooking =
+        await this.productBookingModel.updateBooking(
+          productBooking._id,
+          {
+            status: ProductBookingStatus.Approve,
+            rawPrice: data.rawPrice,
+            byUser: currentUser._id,
+          },
+          session,
+        );
+
+      const productSale = await this.productSaleModel.addSale(
+        {
+          productBooking: updatedProductBooking,
+          count: productBooking.count,
+          product: productBooking.product,
+          category: productBooking.category,
+        },
+        session,
+      );
+
+      const updatedProduct = await this.productModel.updateProduct(
+        productBooking.product._id,
+        {
+          quantity: productBooking.product.quantity - productBooking.count,
+          'sync.prom': false,
+        },
+        session,
+      );
+
+      const updateInPromResult =
+        await this.syncPromService.syncProductsWithProm(
+          [updatedProduct],
+          session,
+        );
+      this.logger.debug('Sync Prom Result:', {
+        ...updateInPromResult,
+        updatedProducts: updateInPromResult.updatedProducts.length,
+      });
+
+      await this.notifySales(
+        {
+          productBookingId: updatedProductBooking._id.toString(),
+          productSaleId: productSale._id.toString(),
+          productBookingStatus: updatedProductBooking.status,
+          userTelegramId: sales.telegramId,
+        },
+        Object.entries({
+          'Время бронирования': _.get(
+            productBooking,
+            'createdAt',
+          ).toLocaleString(),
+          'Имя продукта': MarkdownHelper.monospaced(
+            productBooking.product.name,
+          ),
+          'Код продукта': MarkdownHelper.monospaced(
+            String(productBooking.product.microtronId),
+          ),
+          Колличество: updatedProductBooking.count,
+          Сведения: updatedProductBooking.description,
+        }),
+      );
+
+      return {
+        booking: updatedProductBooking,
+        sale: productSale,
+      };
+    });
   }
 
   public async disapproveProductBooking(
@@ -234,12 +370,12 @@ export class CrmProductBookingsService {
     }
 
     this.logger.debug('Disapprove Product Booking:', {
+      disapproveReason: data.disapproveReason,
       product: {
         id: productBooking.product._id,
         name: productBooking.product.name,
         microtronId: productBooking.product.microtronId,
       },
-      disapproveReason: data.disapproveReason,
       user: {
         name: currentUser.name,
         role: currentUser.role,
@@ -248,14 +384,7 @@ export class CrmProductBookingsService {
 
     const updatedProductBooking = await this.withTransaction(
       async (session) => {
-        const salesId = productBooking.history[0].byUser;
-        const sales = await this.userModel
-          .findById(salesId)
-          .session(session)
-          .exec();
-        if (!sales) {
-          throw new HttpException('Sales user not found', HttpStatus.NOT_FOUND);
-        }
+        const sales = await this.getProductBookingSalesUser(productBooking);
 
         const updatedProductBooking =
           await this.productBookingModel.updateBooking(
@@ -269,9 +398,11 @@ export class CrmProductBookingsService {
           );
 
         await this.notifySales(
-          updatedProductBooking._id.toString(),
-          updatedProductBooking.status,
-          sales.telegramId,
+          {
+            productBookingId: updatedProductBooking._id.toString(),
+            productBookingStatus: updatedProductBooking.status,
+            userTelegramId: sales.telegramId,
+          },
           Object.entries({
             'Время бронирования': _.get(
               productBooking,
