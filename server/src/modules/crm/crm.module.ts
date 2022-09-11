@@ -21,6 +21,8 @@ import { CrmProductBookingsService } from './productBookings/productBookings.ser
 import { TelegramModule } from '../telegram/telegram.module';
 import { ProductSale, ProductSaleSchema } from '@schemas/productSale';
 import { SyncModule } from '../sync/sync.module';
+import { CrmProductSalesController } from './productSales/productSales.controller';
+import { CrmProductSalesService } from './productSales/productSales.service';
 
 @Module({
   imports: [
@@ -63,6 +65,7 @@ import { SyncModule } from '../sync/sync.module';
     CrmCategoriesController,
     CrmProductsController,
     CrmProductBookingsController,
+    CrmProductSalesController,
     CrmIntegrationsController,
     CrmUsersController,
   ],
@@ -72,6 +75,7 @@ import { SyncModule } from '../sync/sync.module';
     CrmCategoriesService,
     CrmProductsService,
     CrmProductBookingsService,
+    CrmProductSalesService,
     CrmIntegrationsService,
     CrmUsersService,
   ],
