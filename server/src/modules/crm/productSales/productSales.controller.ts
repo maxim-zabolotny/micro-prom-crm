@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Put,
+  Query,
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
@@ -14,6 +16,8 @@ import { UserRole } from '@schemas/user';
 import { SetProductSaleDescriptionDto } from './dto/set-product-sale-description.dto';
 import { SetProductSaleOrderDto } from './dto/set-product-sale-order.dto';
 import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
+import { ParseObjectIdPipe } from '@common/pipes';
+import { Types } from 'mongoose';
 
 @Controller('/crm/product-sales')
 @UseFilters(MongoExceptionFilter)
@@ -22,6 +26,13 @@ export class CrmProductSalesController {
   constructor(
     private readonly crmProductSalesService: CrmProductSalesService,
   ) {}
+
+  @Get('/')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  async getById(@Query('id', ParseObjectIdPipe) productSaleId: Types.ObjectId) {
+    return this.crmProductSalesService.getById(productSaleId);
+  }
 
   @Put('/set-description')
   @HttpCode(201)

@@ -87,6 +87,17 @@ export class CrmProductSalesService {
     });
   }
 
+  public async getById(id: Types.ObjectId) {
+    this.logger.debug('Get Product Sale by id:', { id });
+
+    const productBooking = await this.productSaleModel.findById(id).exec();
+    if (!productBooking) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    return productBooking;
+  }
+
   public async setProductSaleDescription(data: SetProductSaleDescriptionDto) {
     const productSale = await this.productSaleModel
       .findById(new Types.ObjectId(data.productSaleId))
