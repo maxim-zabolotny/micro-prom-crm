@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Model, SchemaTypes, Types } from 'mongoose';
 import { ProductSaleStatus } from '@schemas/productSale/product-sale-status.enum';
@@ -144,7 +145,12 @@ type TStaticMethods = {
   ) => Promise<ProductSaleDocument[]>;
   findSales: (
     this: ProductSaleModel,
-    data: Partial<Pick<ProductSale, 'status'>>,
+    data: Partial<
+      Pick<ProductSale, 'status'> & {
+        productName: string;
+        productMicrotronId: number;
+      }
+    >,
     pagination: { limit: number; offset: number },
     session?: ClientSession | null,
   ) => Promise<ProductSaleDocument[]>;
@@ -192,13 +198,36 @@ ProductSaleSchema.statics.findSales = async function (
   { offset, limit },
   session,
 ) {
-  const searchData = {};
+  const searchData: Array<Record<string, unknown>> = [];
 
-  if ('status' in data) {
-    searchData['status'] = data.status;
+  if (!_.isEmpty(data.status)) {
+    searchData.push({ status: data.status });
   }
 
-  return this.find(searchData)
+  if (!_.isEmpty(data.productName)) {
+    searchData.push({
+      $or: [
+        {
+          'product.name': {
+            $regex: new RegExp(data.productName),
+            $options: 'i',
+          },
+        },
+        {
+          'product.translate.name': {
+            $regex: new RegExp(data.productName),
+            $options: 'i',
+          },
+        },
+      ],
+    });
+  }
+
+  if (_.isNumber(data.productMicrotronId)) {
+    searchData.push({ 'product.microtronId': data.productMicrotronId });
+  }
+
+  return this.find({ $and: searchData })
     .limit(limit)
     .skip(offset)
     .sort({ updatedAt: -1 })
