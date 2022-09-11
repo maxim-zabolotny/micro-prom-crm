@@ -54,7 +54,7 @@ export type ProductSaleDocument = ProductSale & Document;
 
 export type ProductSaleModel = Model<ProductSaleDocument> & TStaticMethods;
 
-@Schema({ timestamps: true, collection: 'productSales' })
+@Schema({ timestamps: true, collection: 'productSales', autoIndex: false })
 export class ProductSale {
   @Prop({
     type: String,
