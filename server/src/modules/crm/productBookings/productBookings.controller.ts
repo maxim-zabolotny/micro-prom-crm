@@ -3,8 +3,6 @@ import {
   Controller,
   Get,
   HttpCode,
-  ParseEnumPipe,
-  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -20,8 +18,8 @@ import { CreateProductBookingDto } from './dto/create-product-booking.dto';
 import { DisapproveProductBookingDto } from './dto/disapprove-product-booking.dto';
 import { ParseObjectIdPipe } from '@common/pipes';
 import { Types } from 'mongoose';
-import { ProductBookingStatus } from '@schemas/productBooking';
 import { ApproveProductBookingDto } from './dto/approve-product-booking.dto';
+import { SearchProductBookingsDto } from './dto/search-product-bookings.dto';
 
 @Controller('/crm/product-bookings')
 @UseFilters(MongoExceptionFilter)
@@ -40,16 +38,11 @@ export class CrmProductBookingsController {
     return this.crmProductBookingsService.getById(productBookingId);
   }
 
-  @Get('/find')
+  @Post('/search')
   @HttpCode(200)
   @Auth(UserRole.General)
-  async find(
-    @Query('status', new ParseEnumPipe(ProductBookingStatus))
-    status: ProductBookingStatus,
-    @Query('limit', ParseIntPipe) limit: number,
-    @Query('offset', ParseIntPipe) offset: number,
-  ) {
-    return this.crmProductBookingsService.find(status, limit, offset);
+  async search(@Body() findData: SearchProductBookingsDto) {
+    return this.crmProductBookingsService.search(findData);
   }
 
   @Post('/create')

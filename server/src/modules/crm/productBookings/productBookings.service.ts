@@ -24,6 +24,7 @@ import {
 import { ApproveProductBookingDto } from './dto/approve-product-booking.dto';
 import { ProductSale, ProductSaleModel } from '@schemas/productSale';
 import { SyncPromService } from '../../sync/prom/sync-prom.service';
+import { SearchProductBookingsDto } from './dto/search-product-bookings.dto';
 
 @Injectable()
 export class CrmProductBookingsService {
@@ -166,22 +167,17 @@ export class CrmProductBookingsService {
     return productBooking;
   }
 
-  public async find(
-    status: ProductBookingStatus,
-    limit: number,
-    offset: number,
-  ) {
-    this.logger.debug('Find Product Bookings:', { status, limit, offset });
+  public async search({ limit, offset, ...data }: SearchProductBookingsDto) {
+    this.logger.debug('Find Product Bookings:', {
+      limit,
+      offset,
+      data,
+    });
 
-    const productBookings = await this.productBookingModel.findBookings(
-      {
-        status,
-      },
-      {
-        limit,
-        offset,
-      },
-    );
+    const productBookings = await this.productBookingModel.findBookings(data, {
+      limit,
+      offset,
+    });
 
     this.logger.debug('Found Product Bookings:', {
       count: productBookings.length,
