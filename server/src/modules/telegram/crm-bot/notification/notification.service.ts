@@ -12,14 +12,17 @@ export class NotificationBotService {
     private readonly bot: Telegraf<Context>,
   ) {}
 
-  private buildButtonWithUrl(title: string, url: string) {
-    return Markup.inlineKeyboard([
+  private buildButtonsWithUrl(buttons: Array<[string, string]>) {
+    const markupButtons = buttons.map(([title, url]) =>
       Markup.button.url(title, url),
-      // Markup.button.callback(
-      //   'Пометить как выполненое',
-      //   MarkupCallbackButtonName.MarkAsVisited,
-      // ),
-    ]);
+    );
+
+    return Markup.inlineKeyboard(markupButtons);
+
+    // Markup.button.callback(
+    //   'Пометить как выполненое',
+    //   MarkupCallbackButtonName.MarkAsVisited,
+    // ),
   }
 
   private buildMessage(data: Omit<ISendNotification, 'button'>) {
@@ -72,7 +75,9 @@ export class NotificationBotService {
   public async send(data: ISendNotification) {
     await this.bot.telegram.sendMessage(data.to, this.buildMessage(data), {
       parse_mode: 'MarkdownV2',
-      ...(data.button ? this.buildButtonWithUrl(...data.button) : null),
+      ...(_.isEmpty(data.buttons)
+        ? null
+        : this.buildButtonsWithUrl(data.buttons)),
     });
   }
 }

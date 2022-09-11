@@ -3,5 +3,5 @@ export interface ISendNotification {
   title: string;
   jsonObject?: Record<string, unknown>;
   details?: Array<[string, string | number]>;
-  button?: [string, string];
+  buttons?: Array<[string, string]>;
 }
