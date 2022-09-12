@@ -21,6 +21,10 @@ export class SearchProductSalesDto {
   @IsOptional()
   productMicrotronId?: number;
 
+  @IsNumber()
+  @IsOptional()
+  productPromId?: number;
+
   // PAGINATION
   @IsNumber()
   @IsNotEmpty()
