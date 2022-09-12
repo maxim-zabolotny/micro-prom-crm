@@ -17,6 +17,8 @@ import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
 import { SearchProductSalesDto } from './dto/search-product-sales.dto';
 import { DeliveryProductSaleDto } from './dto/delivery-product-sale.dto';
 import { PromOrdersService } from '../../prom/orders/orders.service';
+import { SaleProductSaleDto } from './dto/sale-product-sale.dto';
+import { MarkdownHelper } from '../../telegram/common/helpers';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -232,6 +234,55 @@ export class CrmProductSalesService {
         delivery_type: data.provider,
         declaration_id: data.declarationId,
       });
+
+      return updatedProductSale;
+    });
+  }
+
+  public async saleProductSale(data: SaleProductSaleDto) {
+    const productSale = await this.productSaleModel
+      .findById(new Types.ObjectId(data.productSaleId))
+      .exec();
+    if (!productSale) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    this.logger.debug('Sale Product Sale:', {
+      productSaleId: productSale._id,
+      saleAt: data.saleAt,
+      client: productSale.client,
+      product: {
+        id: productSale.product._id,
+        name: productSale.product.name,
+        microtronId: productSale.product.microtronId,
+      },
+    });
+
+    return await this.withTransaction(async (session) => {
+      const updatedProductSale = await this.productSaleModel.updateSale(
+        productSale._id,
+        {
+          status: ProductSaleStatus.Sale,
+          saleAt: data.saleAt,
+        },
+        session,
+      );
+
+      const product = updatedProductSale.product;
+      await this.notifyProvider(
+        updatedProductSale._id.toString(),
+        updatedProductSale.status,
+        Object.entries({
+          'Имя продукта': product.name,
+          'Код продукта': MarkdownHelper.monospaced(
+            String(product.microtronId),
+          ),
+          Колличество: updatedProductSale.count,
+          'Общая цена': updatedProductSale.totalPrice,
+          'Общая выгода': updatedProductSale.benefitPrice,
+          'Время Продажи': updatedProductSale.saleAt.toLocaleString(),
+        }),
+      );
 
       return updatedProductSale;
     });
