@@ -149,6 +149,7 @@ type TStaticMethods = {
       Pick<ProductSale, 'status'> & {
         productName: string;
         productMicrotronId: number;
+        productPromId: number;
       }
     >,
     pagination: { limit: number; offset: number },
@@ -225,6 +226,10 @@ ProductSaleSchema.statics.findSales = async function (
 
   if (_.isNumber(data.productMicrotronId)) {
     searchData.push({ 'product.microtronId': data.productMicrotronId });
+  }
+
+  if (_.isNumber(data.productPromId)) {
+    searchData.push({ 'product.promId': data.productPromId });
   }
 
   return this.find({ $and: searchData })
