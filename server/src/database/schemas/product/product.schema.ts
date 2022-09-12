@@ -148,6 +148,12 @@ type TStaticMethods = {
     sitePrice: number,
   ) => number;
   // MAIN
+  findProducts: (
+    this: ProductModel,
+    data: Partial<Pick<Product, 'name' | 'microtronId' | 'promId'>>,
+    pagination: { limit: number; offset: number },
+    session?: ClientSession | null,
+  ) => Promise<ProductDocument[]>;
   getAllProducts: (
     this: ProductModel,
     session?: ClientSession | null,
@@ -254,6 +260,48 @@ ProductSchema.statics.calculateSiteProductMarkup = function (
 } as TStaticMethods['calculateSiteProductMarkup'];
 
 // MAIN
+ProductSchema.statics.findProducts = async function (
+  data,
+  { offset, limit },
+  session,
+) {
+  const searchData: Array<Record<string, unknown>> = [];
+
+  if (!_.isEmpty(data.name)) {
+    searchData.push({
+      $or: [
+        {
+          name: {
+            $regex: new RegExp(data.name),
+            $options: 'i',
+          },
+        },
+        {
+          'translate.name': {
+            $regex: new RegExp(data.name),
+            $options: 'i',
+          },
+        },
+      ],
+    });
+  }
+
+  if (_.isNumber(data.microtronId)) {
+    searchData.push({ microtronId: data.microtronId });
+  }
+
+  if (_.isNumber(data.promId)) {
+    searchData.push({ promId: data.promId });
+  }
+
+  return this.find({ $and: searchData })
+    .limit(limit)
+    .skip(offset)
+    .sort({ updatedAt: -1 })
+    .session(session)
+    .exec();
+} as TStaticMethods['findProducts'];
+
 ProductSchema.statics.getAllProducts = async function (session) {
   return this.find().session(session).exec();
 } as TStaticMethods['getAllProducts'];
