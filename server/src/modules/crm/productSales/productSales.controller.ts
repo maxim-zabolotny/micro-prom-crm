@@ -22,6 +22,7 @@ import { Types } from 'mongoose';
 import { SearchProductSalesDto } from './dto/search-product-sales.dto';
 import { DeliveryProductSaleDto } from './dto/delivery-product-sale.dto';
 import { SaleProductSaleDto } from './dto/sale-product-sale.dto';
+import { CancelProductSaleDto } from './dto/cancel-product-sale.dto';
 
 @Controller('/crm/product-sales')
 @UseFilters(MongoExceptionFilter)
@@ -75,8 +76,15 @@ export class CrmProductSalesController {
 
   @Put('/sale')
   @HttpCode(201)
-  @Auth(UserRole.General) // TODO: Sales
+  @Auth(UserRole.Sales)
   saleProductSale(@Body() data: SaleProductSaleDto) {
     return this.crmProductSalesService.saleProductSale(data);
+  }
+
+  @Put('/cancel')
+  @HttpCode(201)
+  @Auth(UserRole.Sales)
+  cancelProductSale(@Body() data: CancelProductSaleDto) {
+    return this.crmProductSalesService.cancelProductSale(data);
   }
 }
