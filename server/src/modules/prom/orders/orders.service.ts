@@ -1,17 +1,25 @@
 import * as _ from 'lodash';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import PromAPI, { Order as PromOrder } from '@lib/prom';
+import PromAPI, {
+  Delivery as PromDelivery,
+  Order as PromOrder,
+} from '@lib/prom';
 import { SearchOrdersDto } from './dto/search-orders.dto';
+import { SetOrderDeliveryDto } from './dto/set-order-delivery.dto';
 
 @Injectable()
 export class PromOrdersService {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly ordersAPI: PromOrder.Order;
+  private readonly deliveryAPI: PromDelivery.Delivery;
 
   constructor(private configService: ConfigService) {
     this.ordersAPI = new PromAPI.Order({
+      token: configService.get('tokens.prom'),
+    });
+    this.deliveryAPI = new PromAPI.Delivery({
       token: configService.get('tokens.prom'),
     });
   }
@@ -162,5 +170,15 @@ export class PromOrdersService {
     });
 
     return resultOrders;
+  }
+
+  public async setDeclaration(data: SetOrderDeliveryDto) {
+    this.logger.debug('Set order delivery:', data);
+
+    const result = await this.deliveryAPI.saveDeclaration(data);
+
+    this.logger.debug('Set order delivery result:', data);
+
+    return result;
   }
 }
