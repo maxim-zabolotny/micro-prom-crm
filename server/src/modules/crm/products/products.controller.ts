@@ -1,13 +1,18 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
+  Post,
   UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
 import { LoggingInterceptor } from '@common/interceptors';
 import { MongoExceptionFilter } from '@common/filters';
 import { CrmProductsService } from './products.service';
+import { Auth } from '@common/decorators';
+import { UserRole } from '@schemas/user';
+import { SearchProductsDto } from './dto/search-products.dto';
 
 @Controller('/crm/products')
 @UseFilters(MongoExceptionFilter)
@@ -17,7 +22,15 @@ export class CrmProductsController {
 
   @Get('/all')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async getAllProducts() {
     return this.crmProductsService.getAllProducts();
+  }
+
+  @Post('/search')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  async search(@Body() findData: SearchProductsDto) {
+    return this.crmProductsService.search(findData);
   }
 }

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product } from '@schemas/product';
 import { ProductModel } from '@schemas/product/product.schema';
+import { SearchProductsDto } from './dto/search-products.dto';
 
 @Injectable()
 export class CrmProductsService {
@@ -15,5 +16,24 @@ export class CrmProductsService {
 
   public async getAllProducts() {
     return this.productModel.getAllProducts();
+  }
+
+  public async search({ limit, offset, ...data }: SearchProductsDto) {
+    this.logger.debug('Find Products:', {
+      limit,
+      offset,
+      data,
+    });
+
+    const products = await this.productModel.findProducts(data, {
+      limit,
+      offset,
+    });
+
+    this.logger.debug('Found Products:', {
+      count: products.length,
+    });
+
+    return products;
   }
 }
