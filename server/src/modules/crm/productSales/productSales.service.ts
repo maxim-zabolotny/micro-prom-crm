@@ -15,6 +15,8 @@ import { SetProductSaleDescriptionDto } from './dto/set-product-sale-description
 import { SetProductSaleOrderDto } from './dto/set-product-sale-order.dto';
 import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
 import { SearchProductSalesDto } from './dto/search-product-sales.dto';
+import { DeliveryProductSaleDto } from './dto/delivery-product-sale.dto';
+import { PromOrdersService } from '../../prom/orders/orders.service';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -22,14 +24,15 @@ export class CrmProductSalesService {
 
   constructor(
     private configService: ConfigService,
-    protected botService: CrmBotService,
-    protected notificationBotService: NotificationBotService,
+    private botService: CrmBotService,
+    private notificationBotService: NotificationBotService,
+    private promOrdersService: PromOrdersService,
     @InjectModel(ProductSale.name)
     private productSaleModel: ProductSaleModel,
     @InjectModel(User.name)
-    protected userModel: UserModel,
+    private userModel: UserModel,
     @InjectConnection()
-    protected connection: Connection,
+    private connection: Connection,
   ) {}
 
   private async withTransaction<T>(cb: (session: ClientSession) => Promise<T>) {
@@ -186,5 +189,51 @@ export class CrmProductSalesService {
     );
 
     return updatedProductSale;
+  }
+
+  public async deliveryProductSale(data: DeliveryProductSaleDto) {
+    const productSale = await this.productSaleModel
+      .findById(new Types.ObjectId(data.productSaleId))
+      .exec();
+    if (!productSale) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (!productSale.promOrderId) {
+      throw new HttpException(
+        'You should set Prom Order Id before Delivering',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    this.logger.debug('Delivery Product Sale:', {
+      productSaleId: productSale._id,
+      client: productSale.client,
+      product: {
+        id: productSale.product._id,
+        name: productSale.product.name,
+        microtronId: productSale.product.microtronId,
+      },
+    });
+
+    return await this.withTransaction(async (session) => {
+      const updatedProductSale = await this.productSaleModel.updateSale(
+        productSale._id,
+        {
+          status: ProductSaleStatus.Delivering,
+          provider: data.provider,
+          declarationId: data.declarationId,
+        },
+        session,
+      );
+
+      await this.promOrdersService.setDeclaration({
+        order_id: updatedProductSale.promOrderId,
+        delivery_type: data.provider,
+        declaration_id: data.declarationId,
+      });
+
+      return updatedProductSale;
+    });
   }
 }

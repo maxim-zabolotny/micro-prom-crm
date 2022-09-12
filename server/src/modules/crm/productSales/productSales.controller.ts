@@ -20,6 +20,7 @@ import { SetProductSaleClientDto } from './dto/set-product-sale-client.dto';
 import { ParseObjectIdPipe } from '@common/pipes';
 import { Types } from 'mongoose';
 import { SearchProductSalesDto } from './dto/search-product-sales.dto';
+import { DeliveryProductSaleDto } from './dto/delivery-product-sale.dto';
 
 @Controller('/crm/product-sales')
 @UseFilters(MongoExceptionFilter)
@@ -62,5 +63,12 @@ export class CrmProductSalesController {
   @Auth(UserRole.Sales)
   setProductSaleClient(@Body() data: SetProductSaleClientDto) {
     return this.crmProductSalesService.setProductSaleClient(data);
+  }
+
+  @Put('/delivery')
+  @HttpCode(201)
+  @Auth(UserRole.Sales)
+  deliveryProductSale(@Body() data: DeliveryProductSaleDto) {
+    return this.crmProductSalesService.deliveryProductSale(data);
   }
 }

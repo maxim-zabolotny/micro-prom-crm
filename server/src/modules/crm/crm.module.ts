@@ -23,12 +23,14 @@ import { ProductSale, ProductSaleSchema } from '@schemas/productSale';
 import { SyncModule } from '../sync/sync.module';
 import { CrmProductSalesController } from './productSales/productSales.controller';
 import { CrmProductSalesService } from './productSales/productSales.service';
+import { PromModule } from '../prom/prom.module';
 
 @Module({
   imports: [
     SyncModule,
     MicrotronModule,
     TelegramModule,
+    PromModule,
     MongooseModule.forFeature([
       {
         name: User.name,

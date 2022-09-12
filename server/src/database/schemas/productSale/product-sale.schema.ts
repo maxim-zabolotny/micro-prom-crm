@@ -22,7 +22,7 @@ export type TProductClient = {
 
 export type TDeliveryProvider = Extract<
   PromTypes.DeliveryProvider,
-  PromTypes.DeliveryProvider.NovaPoshta | PromTypes.DeliveryProvider.UkrPoshta
+  PromTypes.DeliveryProvider.NovaPoshta
 >;
 
 export type TProductDelivery = {
