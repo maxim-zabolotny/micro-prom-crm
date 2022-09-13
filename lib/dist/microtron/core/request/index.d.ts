@@ -1,15 +1,17 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { Axios, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TObject } from '../types';
 import { IResponse, IResponseError, IResponseErrorRaw, IResponseRaw } from './IResponse';
 declare type TUnknownRec = TObject.TUnknownRec;
 export declare abstract class Request<TInstance = unknown, TRawInstance = unknown> {
     protected config: AxiosRequestConfig;
+    protected axios: Axios;
     protected token: string;
     protected force: boolean;
     constructor({ token, config }: {
         token: string;
         config?: AxiosRequestConfig;
     });
+    private resolveRequestError;
     getToken(): string;
     getConfig(): AxiosRequestConfig<any>;
     getForce(): boolean;
