@@ -1,7 +1,7 @@
 /*external modules*/
 import _ from 'lodash';
 import moment from 'moment';
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { Axios, AxiosRequestConfig, AxiosResponse } from 'axios';
 import urlJoin from 'url-join';
 /*lib*/
 import { MicroError } from '../error';
@@ -16,13 +16,50 @@ type TUnknownRec = TObject.TUnknownRec;
 
 export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
   protected config: AxiosRequestConfig;
+  protected axios: Axios;
+
   protected token: string;
   protected force: boolean;
 
   constructor({ token, config }: { token: string, config?: AxiosRequestConfig }) {
-    this.token = token;
     this.config = config ?? {};
+
+    this.axios = axios.create();
+    this.axios.interceptors.response.use(
+      (response) => response,
+      this.resolveRequestError(),
+    );
+
+    this.token = token;
     this.force = true;
+  }
+
+  private resolveRequestError() {
+    const timeToSleep = 1000 * 60;
+
+    return async (error: any) => {
+      if (
+        error.code === 'EAI_AGAIN'
+        || error.message?.includes('getaddrinfo')
+      ) {
+        console.error('A temporary failure in name resolution:', {
+          code: error.code,
+          message: error.message,
+        });
+
+        console.log('Sleep and repeat request:', {
+          timeToSleep: timeToSleep / 1000,
+        });
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, timeToSleep);
+        });
+
+        return this.axios.request(error.config);
+      }
+
+      return Promise.reject(error);
+    };
   }
 
   public getToken() {
@@ -84,7 +121,7 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
     const path = urlJoin(Request.HOST, resource);
     const body = _.merge({}, data, { token: this.token });
 
-    return axios({
+    return this.axios.request({
       ...this.config,
       method: Request.METHOD,
       url: path,
