@@ -50,21 +50,23 @@ export class MicrotronProductsService {
   ) => {
     const price = _.isNumber(product.price) ? product.price : product.price_s;
 
-    return (
-      _.conforms<Pick<IProductFull, 'url'>>({
-        url: (url: string) => {
-          const isEmptyUrl = _.isEmpty(url);
-          if (isEmptyUrl) return false;
+    const baseCheck = _.conformsTo<Pick<IProductFull, 'url'>>(product, {
+      url: (url: string) => {
+        const isEmptyUrl = _.isEmpty(url);
+        if (isEmptyUrl) return false;
 
-          const isInvalidUrl = url
-            .slice(0, url.lastIndexOf('/p'))
-            .endsWith('microtron.ua');
-          if (isInvalidUrl) return false;
+        const isInvalidUrl = url
+          .slice(0, url.lastIndexOf('/p'))
+          .endsWith('microtron.ua');
+        if (isInvalidUrl) return false;
 
-          return true;
-        },
-      }) && price > 0
-    );
+        return true;
+      },
+    });
+
+    const priceCheck = price > 0;
+
+    return baseCheck && priceCheck;
   };
 
   private readonly isValidProductFullInfo = _.conforms<
