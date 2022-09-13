@@ -8,6 +8,8 @@ import {
 import { LoggingInterceptor } from '@common/interceptors';
 import { MongoExceptionFilter } from '@common/filters';
 import { CrmUsersService } from './users.service';
+import { Auth, CurrentUser } from '@common/decorators';
+import { UserDocument, UserRole } from '@schemas/user';
 
 @Controller('/crm/users')
 @UseFilters(MongoExceptionFilter)
@@ -19,5 +21,12 @@ export class CrmUsersController {
   @HttpCode(200)
   async getAllUsers() {
     return this.crmUsersService.getAllUsers();
+  }
+
+  @Get('/current')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  async getCurrentUser(@CurrentUser() currentUser: UserDocument) {
+    return currentUser;
   }
 }
