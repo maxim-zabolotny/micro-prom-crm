@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Post,
   UseFilters,
@@ -18,6 +19,13 @@ import { SaveCategoriesDto } from './dto/save-categories.dto';
 @UseInterceptors(LoggingInterceptor)
 export class CrmCategoriesController {
   constructor(private readonly crmCategoriesService: CrmCategoriesService) {}
+
+  @Get('/with-product-count')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  getWithProductCount() {
+    return this.crmCategoriesService.getAllWithProductsCount();
+  }
 
   @Post('/save-to-constant')
   @HttpCode(201)
