@@ -19,6 +19,36 @@ export {
   TProductSpecifications,
 };
 
+const localAxios = axios.create();
+localAxios.interceptors.response.use(
+  (response) => response,
+  async (error: any) => {
+    if (
+      error.code === 'EAI_AGAIN'
+      || error.message?.includes('getaddrinfo')
+    ) {
+      const timeToSleep = 1000 * 60;
+
+      console.error('A temporary failure in name resolution:', {
+        code: error.code,
+        message: error.message,
+      });
+
+      console.log('Sleep and repeat request:', {
+        timeToSleep: timeToSleep / 1000,
+      });
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, timeToSleep);
+      });
+
+      return localAxios.request(error.config);
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export class ParserV2 {
   public readonly htmlPage: string;
   public readonly $root: cheerio.CheerioAPI;
@@ -130,7 +160,7 @@ export class ParserV2 {
   }
 
   public static async load(link: string) {
-    const { data } = await axios.get(link);
+    const { data } = await localAxios.get(link);
     return new ParserV2(data, link);
   }
 
