@@ -1,10 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@schemas/user';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private configService: ConfigService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.get<UserRole[]>('roles', context.getHandler());
@@ -19,6 +23,13 @@ export class RolesGuard implements CanActivate {
   }
 
   matchRoles(roles: UserRole[], userRole: UserRole): boolean {
+    if (
+      this.configService.get('rules.adminIsSuperuser') &&
+      userRole === UserRole.Admin
+    ) {
+      return true;
+    }
+
     if (roles.every((role) => role === UserRole.General)) {
       return true;
     }
