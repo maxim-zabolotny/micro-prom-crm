@@ -14,11 +14,12 @@ import {
 } from '@nestjs/common';
 import { MicrotronProductsService } from './products.service';
 import { MicrotronExceptionFilter } from '@common/filters';
-import { TimeoutLimit } from '@common/decorators';
+import { Auth, TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
 import { TranslateProductDto } from './dto/translate-product.dto';
 import { Types as GoogleTranslateTypes } from '@lib/google-translate';
 import { ParseProductsDto } from './dto/parse-products.dto';
+import { UserRole } from '@schemas/user';
 
 @Controller('/microtron/products')
 @UseFilters(MicrotronExceptionFilter)
@@ -31,6 +32,7 @@ export class MicrotronProductsController {
   @Get('/')
   @HttpCode(200)
   @TimeoutLimit(35000)
+  @Auth(UserRole.General)
   async get(
     @Query('categories', ParseArrayPipe)
     categories: string[],
@@ -42,6 +44,7 @@ export class MicrotronProductsController {
 
   @Get('/all-products-by-saved-categories')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async getAllBySavedCategories(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
@@ -51,6 +54,7 @@ export class MicrotronProductsController {
 
   @Get('/all-products-full-info-by-saved-categories')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async getAllFullInfoBySavedCategories(
     @Query('forceParse', new DefaultValuePipe(false), ParseBoolPipe)
     forceParse: boolean,
@@ -65,6 +69,7 @@ export class MicrotronProductsController {
 
   @Get('/cached')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getCached(
     @Query('products', new ParseArrayPipe({ items: Number }))
     products: number[],
@@ -74,6 +79,7 @@ export class MicrotronProductsController {
 
   @Get('/cached-by-categories')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getCachedByCategories(
     @Query('categories', ParseArrayPipe)
     categories: string[],
@@ -83,12 +89,14 @@ export class MicrotronProductsController {
 
   @Get('/all-cached')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getAllCached() {
     return this.microtronProductsService.getAllCachedProducts();
   }
 
   @Get('/parse')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getParse(
     @Query('url')
     url: string,
@@ -100,6 +108,7 @@ export class MicrotronProductsController {
 
   @Get('/parse-ru')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getParseRU(
     @Query('url')
     url: string,
@@ -111,6 +120,7 @@ export class MicrotronProductsController {
 
   @Post('/parse-products')
   @HttpCode(201)
+  @Auth(UserRole.General)
   getParseProducts(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,
@@ -124,6 +134,7 @@ export class MicrotronProductsController {
 
   @Post('/translate')
   @HttpCode(201)
+  @Auth(UserRole.General)
   getTranslate(
     @Body() productData: TranslateProductDto,
     @Query('from', new ParseEnumPipe(GoogleTranslateTypes.Lang))

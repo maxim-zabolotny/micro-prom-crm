@@ -29,7 +29,7 @@ export class CrmCategoriesController {
 
   @Post('/save-to-constant')
   @HttpCode(201)
-  @Auth(UserRole.Provider, UserRole.Admin)
+  @Auth(UserRole.Provider)
   save(@Body() categoriesData: SaveCategoriesDto) {
     return this.crmCategoriesService.saveToConstant(categoriesData);
   }

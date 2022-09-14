@@ -19,6 +19,7 @@ export class CrmUsersController {
 
   @Get('/all')
   @HttpCode(200)
+  @Auth(UserRole.Admin)
   async getAllUsers() {
     return this.crmUsersService.getAllUsers();
   }

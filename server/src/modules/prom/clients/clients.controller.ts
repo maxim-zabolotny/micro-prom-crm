@@ -9,6 +9,8 @@ import {
 import { PromExceptionFilter } from '@common/filters';
 import { LoggingInterceptor } from '@common/interceptors';
 import { PromClientsService } from './clients.service';
+import { Auth } from '@common/decorators';
+import { UserRole } from '@schemas/user';
 
 @Controller('/prom/clients')
 @UseFilters(PromExceptionFilter)
@@ -18,6 +20,7 @@ export class PromClientsController {
 
   @Get('/search')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async search(@Query('query') query: string) {
     return this.promClientsService.search(query);
   }

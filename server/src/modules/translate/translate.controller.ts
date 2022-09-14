@@ -10,6 +10,8 @@ import { TranslateService } from './translate.service';
 import { ApertiumTranslateDto } from './dto/apertium-translate.dto';
 import { GoogleTranslateDto } from './dto/google-translate.dto';
 import { AutoTranslateDto } from './dto/auto-translate.dto';
+import { Auth } from '@common/decorators';
+import { UserRole } from '@schemas/user';
 
 @Controller('translate')
 @UseInterceptors(LoggingInterceptor)
@@ -18,6 +20,7 @@ export class TranslateController {
 
   @Get('/detect')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async detectLanguage(@Query('text') text: string) {
     const result = await this.translateService.detectLanguage(text);
 
@@ -26,6 +29,7 @@ export class TranslateController {
 
   @Get('/apertium')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async apertiumTranslate(@Query() translateData: ApertiumTranslateDto) {
     const result = await this.translateService.translateViaApertium(
       translateData.text,
@@ -38,6 +42,7 @@ export class TranslateController {
 
   @Get('/google')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async googleTranslate(@Query() translateData: GoogleTranslateDto) {
     const result = await this.translateService.translateViaGoogle(
       translateData.text,
@@ -50,6 +55,7 @@ export class TranslateController {
 
   @Get('/auto')
   @HttpCode(200)
+  @Auth(UserRole.General)
   async autoTranslate(@Query() translateData: AutoTranslateDto) {
     const result = await this.translateService.autoTranslate(
       translateData.text,

@@ -10,8 +10,9 @@ import {
 } from '@nestjs/common';
 import { MicrotronCoursesService } from './courses.service';
 import { MicrotronExceptionFilter } from '@common/filters';
-import { TimeoutLimit } from '@common/decorators';
+import { Auth, TimeoutLimit } from '@common/decorators';
 import { LoggingInterceptor } from '@common/interceptors';
+import { UserRole } from '@schemas/user';
 
 @Controller('/microtron/courses')
 @UseFilters(MicrotronExceptionFilter)
@@ -24,6 +25,7 @@ export class MicrotronCoursesController {
   @Get('/')
   @HttpCode(200)
   @TimeoutLimit(5000)
+  @Auth(UserRole.General)
   async get(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe)
     force: boolean,

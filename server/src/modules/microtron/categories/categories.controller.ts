@@ -28,6 +28,7 @@ export class MicrotronCategoriesController {
   @Get('/')
   @HttpCode(200)
   @TimeoutLimit(5000)
+  @Auth(UserRole.General)
   async get(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean,
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
@@ -37,6 +38,7 @@ export class MicrotronCategoriesController {
 
   @Get('/saved')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getSaved(
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
@@ -45,7 +47,7 @@ export class MicrotronCategoriesController {
 
   @Put('/set-markup')
   @HttpCode(201)
-  @Auth(UserRole.Provider, UserRole.Admin)
+  @Auth(UserRole.Provider)
   @DisableEndpoint()
   setMarkup(@Body() markupCategoryData: SetMarkupDto) {
     return this.microtronCategoriesService.setMarkup(markupCategoryData);
@@ -53,6 +55,7 @@ export class MicrotronCategoriesController {
 
   @Get('/saved-ru-translate')
   @HttpCode(200)
+  @Auth(UserRole.General)
   getSavedRUTranslate(
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
