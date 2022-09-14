@@ -34,6 +34,30 @@ export class JobStaticService implements OnModuleInit {
     this.logger.log('Static jobs started');
   }
 
+  public async removeAllNextJobs(staticQueue: Queue) {
+    const allNextJobs = await staticQueue.getJobs([
+      'waiting',
+      'delayed',
+      'paused',
+    ]);
+    const result = {
+      waiting: 0,
+      delayed: 0,
+      paused: 0,
+    };
+
+    await Promise.all(
+      _.map(allNextJobs, async (job) => {
+        const status = await job.getState();
+        result[status] = result[status] + 1;
+
+        await job.remove();
+      }),
+    );
+
+    return result;
+  }
+
   public async reCreateRepeatableJobs() {
     await Promise.all(
       _.map(this.staticQueues, async (staticQueue) => {
@@ -43,19 +67,28 @@ export class JobStaticService implements OnModuleInit {
           .join(' ');
 
         try {
-          const jobsToBeRemoved = await staticQueue.getRepeatableJobs();
+          const repeatableJobs = await staticQueue.getRepeatableJobs();
 
-          if (jobsToBeRemoved.length) {
+          if (repeatableJobs.length) {
             await Promise.all(
-              _.map(jobsToBeRemoved, (job) =>
+              _.map(repeatableJobs, (job) =>
                 staticQueue.removeRepeatableByKey(job.key),
               ),
             );
 
-            this.logger.debug(`"${readableQueueName}" old jobs removed:`, {
-              oldJobs: _.map(jobsToBeRemoved, 'key'),
-            });
+            this.logger.debug(
+              `"${readableQueueName}" repeatable jobs removed:`,
+              {
+                oldJobs: _.map(repeatableJobs, 'key'),
+              },
+            );
           }
+
+          const result = await this.removeAllNextJobs(staticQueue);
+          this.logger.debug(
+            `"${readableQueueName}" next jobs removed:`,
+            result,
+          );
 
           await staticQueue.add({});
           this.logger.debug(`"${readableQueueName}" started`);
