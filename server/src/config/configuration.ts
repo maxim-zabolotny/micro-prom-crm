@@ -1,4 +1,8 @@
 export default () => {
+  const rules = {
+    adminIsSuperuser: Boolean(Number(process.env.ADMIN_IS_SUPERUSER)),
+  };
+
   const redis = {
     host: process.env.REDIS_HOST,
     port: parseInt(process.env.REDIS_PORT, 10),
@@ -64,5 +68,6 @@ export default () => {
     google,
     jwtToken,
     tokens,
+    rules,
   };
 };
