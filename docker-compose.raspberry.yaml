@@ -1,0 +1,104 @@
+version: "3"
+
+services:
+  web:
+    container_name: crm_web
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile.raspberry
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - "3000:3000"
+#      - "80" # for dev we don't need to expose port
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      - api
+    links:
+      - api:api
+    volumes:
+      - ./client:/home/app/crm_web
+      - /client/node_modules
+    tty: true
+    restart: "always"
+    entrypoint: /bin/bash
+    command: -s
+
+  api:
+    container_name: crm_api
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile.raspberry
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      NODE_ENV: development
+    depends_on:
+      - database-setup
+    links:
+      - database:database
+    volumes:
+      - ./server:/home/app/crm_server
+      - ./server/lib:/home/app/crm_server/lib
+      - /server/node_modules
+    tty: true
+    restart: "always"
+    entrypoint: /bin/bash
+    command: -s
+
+  database:
+    image: bitnami/mongodb:4.4.2-debian-10-r0
+    container_name: crm_database
+    hostname: crm_database
+#    user: ${MY_UID}:${MY_GID}
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/db:/data/db
+      - ./mongo/configdb:/data/configdb
+    tty: true
+    restart: "always"
+    entrypoint: [
+      "/opt/bitnami/scripts/mongodb/entrypoint.sh",
+      "--bind_ip_all",
+      "--replSet", "rs0",
+      "--journal",
+      "--dbpath", "/data/db",
+      "--setParameter", "transactionLifetimeLimitSeconds=7200" # 2 hours
+    ]
+
+  database-setup:
+    container_name: crm_database_setup
+    image: bitnami/mongodb:4.4.2-debian-10-r0
+    volumes:
+      - ./mongo/scripts:/scripts
+    links:
+      - database
+    depends_on:
+      - database
+    restart: "on-failure"
+    entrypoint: [ "/scripts/setup.sh" ]
+
+  redis:
+    image: redis:5.0.3-alpine
+    container_name: crm_redis
+    ports:
+      - "6379:6379"
+    tty: true
+    restart: "always"
+
+  localtunnel:
+    image: efrecon/localtunnel
+    container_name: crm_tunnel
+    command:
+      --local-host web --port 3000 --subdomain micropromcrm
+    links:
+      - web
+    depends_on:
+      - web
+    restart: "always"
