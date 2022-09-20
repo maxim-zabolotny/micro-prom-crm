@@ -89,8 +89,10 @@ services:
     restart: "always"
 
   localtunnel:
-    image: efrecon/localtunnel
     container_name: crm_tunnel
+    build:
+      context: ./
+      dockerfile: ./localtunnel/Dockerfile
     command:
       --local-host web --port 3000 --subdomain micropromcrm
     links:
