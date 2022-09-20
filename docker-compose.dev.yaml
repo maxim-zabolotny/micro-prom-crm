@@ -94,7 +94,7 @@ services:
       context: ./
       dockerfile: ./localtunnel/Dockerfile
     command:
-      --local-host web --port 3000 --subdomain micropromcrm
+      --local-host web --port 3000 --subdomain local-micropromcrm
     links:
       - web
     depends_on:
