@@ -373,9 +373,13 @@ ProductSchema.statics.getProductsForLoadToSheet = async function (session) {
     {
       $lookup: {
         from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
+        let: { category: '$category' },
         pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$$category', '$_id'] },
+            },
+          },
           {
             $project: {
               _id: 1,
