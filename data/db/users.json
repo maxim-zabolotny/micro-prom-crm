@@ -1,0 +1,60 @@
+[{
+  "_id": {
+    "$oid": "6318f693dd99b05f3e06c4fa"
+  },
+  "telegramId": 347255152,
+  "chatId": 347255152,
+  "name": "денис",
+  "username": "skroll17",
+  "role": "admin",
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1662580371544"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1662580371544"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6318f693dd99b05f3e06c4fb"
+  },
+  "telegramId": 673874731,
+  "chatId": 673874731,
+  "name": "Аня",
+  "username": "Anya1922",
+  "role": "sales",
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1662580371544"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1662580371544"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6318f693dd99b05f3e06c4fc"
+  },
+  "telegramId": 560731563,
+  "chatId": 560731563,
+  "name": "Алексей",
+  "role": "provider",
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1662580371544"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1662580371544"
+    }
+  },
+  "__v": 0
+}]
