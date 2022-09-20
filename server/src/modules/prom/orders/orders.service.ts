@@ -27,26 +27,17 @@ export class PromOrdersService {
   public async search(data: SearchOrdersDto) {
     this.logger.debug('Search orders by:', data);
 
-    const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0));
-    const now = new Date(Date.now());
+    // const startOfDay = new Date(new Date().setUTCHours(0, 0, 0, 0));
 
     const orders = _.flattenDeep(
       await Promise.all(
         _.map(
-          [
-            {
-              limit: 15,
-              date_from: startOfDay,
-              date_to: now,
-              status: PromOrder.OrderStatus.Pending,
-            },
-            {
-              limit: 15,
-              date_from: startOfDay,
-              date_to: now,
-              status: PromOrder.OrderStatus.Draft,
-            },
-          ],
+          data.statuses.map((status) => ({
+            status,
+            limit: 30,
+            date_from: data.searchFrom,
+            date_to: new Date(Date.now()),
+          })),
           async (data) => {
             const { orders } = await this.ordersAPI.getList(data);
             return orders;
@@ -79,7 +70,7 @@ export class PromOrdersService {
         }
 
         if (data.price) {
-          conditions.push(order.price && Number(order.price) >= data.price);
+          conditions.push(order.price && parseFloat(order.price) >= data.price);
         }
 
         if (data.productId) {
@@ -113,7 +104,7 @@ export class PromOrdersService {
             _.some(
               order.products,
               (product) =>
-                product.price && Number(product.price) >= data.productPrice,
+                product.price && parseFloat(product.price) >= data.productPrice,
             ),
           );
         }
@@ -124,7 +115,7 @@ export class PromOrdersService {
               order.products,
               (product) =>
                 product.total_price &&
-                Number(product.total_price) >= data.productTotalPrice,
+                parseFloat(product.total_price) >= data.productTotalPrice,
             ),
           );
         }
@@ -163,6 +154,8 @@ export class PromOrdersService {
           ),
         };
       })
+      .uniqBy((order) => order.id)
+      .orderBy((order) => new Date(order.date_created).valueOf(), 'desc')
       .value();
 
     this.logger.debug('Found orders:', {
