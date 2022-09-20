@@ -5,12 +5,10 @@ services:
     container_name: crm_web
     build:
       context: ./
-      dockerfile: ./client/Dockerfile.raspberry
-    security_opt:
-      - seccomp:unconfined
+      dockerfile: ./client/Dockerfile
     ports:
       - "3000:3000"
-#      - "80" # for dev we don't need to expose port
+    #      - "80" # for dev we don't need to expose port
     environment:
       PORT: 3000
       NODE_ENV: development
@@ -30,13 +28,11 @@ services:
     container_name: crm_api
     build:
       context: ./
-      dockerfile: ./server/Dockerfile.raspberry
-    security_opt:
-      - seccomp:unconfined
+      dockerfile: ./server/Dockerfile
     ports:
-      - "8080:8080"
+      - "4000:4000"
     environment:
-      PORT: 8080
+      PORT: 4000
       NODE_ENV: development
     depends_on:
       - database-setup
@@ -52,10 +48,10 @@ services:
     command: -s
 
   database:
-    image: bitnami/mongodb:4.4.2-debian-10-r0
+    image: mongo:5.0
     container_name: crm_database
     hostname: crm_database
-#    user: ${MY_UID}:${MY_GID}
+    #    user: ${MY_UID}:${MY_GID}
     ports:
       - "27017:27017"
     volumes:
@@ -64,7 +60,7 @@ services:
     tty: true
     restart: "always"
     entrypoint: [
-      "/opt/bitnami/scripts/mongodb/entrypoint.sh",
+      "/usr/bin/mongod",
       "--bind_ip_all",
       "--replSet", "rs0",
       "--journal",
@@ -74,7 +70,7 @@ services:
 
   database-setup:
     container_name: crm_database_setup
-    image: bitnami/mongodb:4.4.2-debian-10-r0
+    image: mongo:5.0
     volumes:
       - ./mongo/scripts:/scripts
     links:
@@ -93,8 +89,10 @@ services:
     restart: "always"
 
   localtunnel:
-    image: efrecon/localtunnel
     container_name: crm_tunnel
+    build:
+      context: ./
+      dockerfile: ./localtunnel/Dockerfile
     command:
       --local-host web --port 3000 --subdomain micropromcrm
     links:
