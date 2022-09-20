@@ -95,6 +95,8 @@ export abstract class Request {
   public static readonly PORT = 443;
 
   public static isErrorCase(response: AxiosResponse): boolean {
+    if (!response.data) return false;
+
     const errorType = PromAPIError.getErrorType(response.data);
     return Boolean(errorType);
   }

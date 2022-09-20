@@ -81,7 +81,7 @@ export class PromAPIError<IErrorData extends TAPIError> {
           saveDeliveryDeclarationKeys,
           {
             status: (v: string) => v === 'error',
-            errors: (v: object) => Object.keys(v).length > 0,
+            errors: (v: object | null) => _.isNull(v) || Object.keys(v).length > 0,
           },
         )
       ): {
