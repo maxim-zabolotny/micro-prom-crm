@@ -3,6 +3,7 @@
 /node_modules
 /lib
 /src/data/cache
+package-lock.json
 
 # Env
 .env
