@@ -16,7 +16,7 @@ done
 
 
 echo SETUP.sh time now: `date +"%T" `
-mongo --host ${MONGODB1}:27017 <<EOF
+mongo --host "${MONGODB1}:27017" <<EOF
 
 var cfg = {
     "_id": "rs0",
