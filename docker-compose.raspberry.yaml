@@ -48,7 +48,7 @@ services:
     command: -s
 
   database:
-    image: mongo:5.0
+    image: mongo:4.4
     container_name: crm_database
     hostname: crm_database
     #    user: ${MY_UID}:${MY_GID}
@@ -70,7 +70,7 @@ services:
 
   database-setup:
     container_name: crm_database_setup
-    image: mongo:5.0
+    image: mongo:4.4
     volumes:
       - ./mongo/scripts:/scripts
     links:
