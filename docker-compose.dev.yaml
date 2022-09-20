@@ -30,9 +30,9 @@ services:
       context: ./
       dockerfile: ./server/Dockerfile
     ports:
-      - "8080:8080"
+      - "4000:4000"
     environment:
-      PORT: 8080
+      PORT: 4000
       NODE_ENV: development
     depends_on:
       - database-setup
