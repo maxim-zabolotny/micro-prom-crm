@@ -12,11 +12,7 @@ export class SetOrderDeliveryDto
   @IsNotEmpty()
   declaration_id: string;
 
-  @IsIn([
-    Types.DeliveryProvider.NovaPoshta,
-    Types.DeliveryProvider.Justin,
-    Types.DeliveryProvider.Meest,
-  ])
+  @IsIn([Types.DeliveryProvider.NovaPoshta, Types.DeliveryProvider.UkrPoshta])
   @IsNotEmpty()
   delivery_type: PromDelivery.IPostSaveDeliveryDeclarationBody['delivery_type'];
 }
