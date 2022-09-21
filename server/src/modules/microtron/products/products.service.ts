@@ -74,7 +74,7 @@ export class MicrotronProductsService {
     });
 
     const minPriceCheck = price > 0;
-    const minQuantityCheck = quantity >= 3; // TODO: temp solution
+    const minQuantityCheck = quantity >= 1; // TODO: temp solution
 
     // VERIFY
     const conditions = [baseCheck, minPriceCheck, minQuantityCheck];
@@ -109,7 +109,7 @@ export class MicrotronProductsService {
 
       const siteMarkup = (sitePrice - rawPrice) / onePercentFromRawPrice;
 
-      isValidPrice = siteMarkup >= -5;
+      isValidPrice = siteMarkup >= -20;
     }
 
     // VERIFY
