@@ -315,31 +315,32 @@ CategorySchema.statics.deleteCategory = async function (categoryId, session) {
     .session(session)
     .exec();
 
-  if (removedCategory.sync.tableLine) {
-    const { matchedCount, modifiedCount } = await this.updateMany(
-      {
-        'sync.tableLine': {
-          $gt: removedCategory.sync.tableLine,
-        },
-      },
-      [
-        {
-          $set: {
-            'sync.tableLine': {
-              $subtract: ['$sync.tableLine', 1],
-            },
-          },
-        },
-      ],
-    )
-      .session(session)
-      .exec();
-
-    categoryLogger.debug('Updated Categories with higher table line:', {
-      matchedCount,
-      modifiedCount,
-    });
-  }
+  /** @deprecated logic */
+  // if (removedCategory.sync.tableLine) {
+  //   const { matchedCount, modifiedCount } = await this.updateMany(
+  //     {
+  //       'sync.tableLine': {
+  //         $gt: removedCategory.sync.tableLine,
+  //       },
+  //     },
+  //     [
+  //       {
+  //         $set: {
+  //           'sync.tableLine': {
+  //             $subtract: ['$sync.tableLine', 1],
+  //           },
+  //         },
+  //       },
+  //     ],
+  //   )
+  //     .session(session)
+  //     .exec();
+  //
+  //   categoryLogger.debug('Updated Categories with higher table line:', {
+  //     matchedCount,
+  //     modifiedCount,
+  //   });
+  // }
 
   categoryLogger.debug('Category removed:', {
     categoryId,

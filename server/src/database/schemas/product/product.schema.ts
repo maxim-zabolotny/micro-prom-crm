@@ -664,31 +664,32 @@ ProductSchema.statics.deleteProduct = async function (productId, session) {
     .session(session)
     .exec();
 
-  if (removedProduct.sync.tableLine) {
-    const { matchedCount, modifiedCount } = await this.updateMany(
-      {
-        'sync.tableLine': {
-          $gt: removedProduct.sync.tableLine,
-        },
-      },
-      [
-        {
-          $set: {
-            'sync.tableLine': {
-              $subtract: ['$sync.tableLine', 1],
-            },
-          },
-        },
-      ],
-    )
-      .session(session)
-      .exec();
-
-    productLogger.debug('Updated Products with higher table line:', {
-      matchedCount,
-      modifiedCount,
-    });
-  }
+  /** @deprecated logic */
+  // if (removedProduct.sync.tableLine) {
+  //   const { matchedCount, modifiedCount } = await this.updateMany(
+  //     {
+  //       'sync.tableLine': {
+  //         $gt: removedProduct.sync.tableLine,
+  //       },
+  //     },
+  //     [
+  //       {
+  //         $set: {
+  //           'sync.tableLine': {
+  //             $subtract: ['$sync.tableLine', 1],
+  //           },
+  //         },
+  //       },
+  //     ],
+  //   )
+  //     .session(session)
+  //     .exec();
+  //
+  //   productLogger.debug('Updated Products with higher table line:', {
+  //     matchedCount,
+  //     modifiedCount,
+  //   });
+  // }
 
   productLogger.debug('Product removed:', {
     productId,
