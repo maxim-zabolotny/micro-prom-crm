@@ -16,7 +16,7 @@ export class NgrokService implements OnModuleDestroy {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly defaultDirPath = path.join(__dirname, '../../../bin');
-  private readonly binFileName = path.join('ngrok');
+  private readonly binFileName: string;
 
   private readonly readyMessage = 'started tunnel';
 
@@ -25,7 +25,9 @@ export class NgrokService implements OnModuleDestroy {
 
   private processUrl: string | null = null;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) {
+    this.binFileName = path.join(this.configService.get('ngrok.fileName'));
+  }
 
   async onModuleDestroy() {
     await this.killProcess();
@@ -48,7 +50,7 @@ export class NgrokService implements OnModuleDestroy {
 
     // default auth token
     if (!resultOpts.authToken) {
-      resultOpts.authToken = this.configService.get('tokens.ngrok');
+      resultOpts.authToken = this.configService.get('ngrok.token');
     }
 
     resultOpts.log = 'stdout';
