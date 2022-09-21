@@ -25,6 +25,11 @@ export default () => {
     botName: process.env.TELEGRAM_BOT_NAME,
   };
 
+  const ngrok = {
+    token: process.env.NGROK_TOKEN,
+    fileName: process.env.NGROK_FILE_NAME,
+  };
+
   const google = {
     serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     privateKey: process.env.GOOGLE_PRIVATE_KEY,
@@ -45,7 +50,6 @@ export default () => {
   const tokens = {
     microtron: process.env.MICROTRON_TOKEN,
     prom: process.env.PROM_TOKEN,
-    ngrok: process.env.NGROK_TOKEN,
   };
 
   const cors = {
@@ -65,6 +69,7 @@ export default () => {
     redis,
     mongo,
     telegram,
+    ngrok,
     google,
     jwtToken,
     tokens,
