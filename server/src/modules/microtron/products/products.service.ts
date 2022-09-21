@@ -18,7 +18,6 @@ import {
 import { MicrotronCategoriesService } from '../categories/categories.service';
 import { ICategoryInConstant } from '@common/interfaces/category';
 import { ProductsParseMap } from './utils/ProductsParseMap';
-import { Currency } from '@lib/microtron/core/types/api';
 import { MicrotronCoursesService } from '../courses/courses.service';
 
 type IProductFull = Product.IProductFull;
@@ -104,7 +103,7 @@ export class MicrotronProductsService {
 
     // TODO: temp solution
     let isValidPrice = true;
-    if (product.currency === Currency.USD) {
+    if (product.currency === Types.Currency.USD) {
       const rawPrice = originalPrice * course;
       const onePercentFromRawPrice = rawPrice / 100;
 
