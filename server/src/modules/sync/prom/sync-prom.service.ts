@@ -458,7 +458,7 @@ export class SyncPromService {
         await this.promProductsService.edit(chunk);
 
       processedIds.push(...processed_ids);
-      errors.push(error);
+      if (!_.isEmpty(error)) errors.push(error);
 
       const productsLeft = bulkData.length - chunkNumber * chunkSize;
       this.logger.debug('Chunk processed:', {
