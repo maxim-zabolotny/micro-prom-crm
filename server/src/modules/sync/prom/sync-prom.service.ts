@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as ms from 'ms';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientSession } from 'mongodb';
@@ -430,11 +431,53 @@ export class SyncPromService {
     productIds: Types.ObjectId[],
     bulkData: Array<TObject.MakeRequired<Partial<TEditPromProduct>, 'id'>>,
   ) {
-    const { processed_ids, errors } = await this.promProductsService.edit(
-      bulkData,
-    );
+    const chunkSize = 100;
+    const sleep = ms('3s');
 
-    const processedIds = processed_ids;
+    const chunks = _.chunk(bulkData, chunkSize);
+
+    this.logger.debug('Update products in Prom:', {
+      productsCount: bulkData.length,
+      chunksCount: chunks.length,
+      chunkSize: chunkSize,
+    });
+
+    const processedIds = [];
+    const errors = [];
+
+    let chunkIndex = 0;
+    for (const chunk of chunks) {
+      const chunkNumber = chunkIndex + 1;
+
+      this.logger.debug('Process chunk:', {
+        number: chunkNumber,
+        size: chunk.length,
+      });
+
+      const { processed_ids, errors: error } =
+        await this.promProductsService.edit(chunk);
+
+      processedIds.push(...processed_ids);
+      errors.push(error);
+
+      const productsLeft = bulkData.length - chunkNumber * chunkSize;
+      this.logger.debug('Chunk processed:', {
+        number: chunkNumber,
+        processedIdsCount: processed_ids.length,
+        allProductsCount: bulkData.length,
+        productsLeft: productsLeft >= 0 ? productsLeft : 0,
+      });
+
+      chunkIndex++;
+      if (chunkNumber < chunks.length) {
+        this.logger.log(`Sleep ${ms(sleep)}`, {
+          timeMS: sleep,
+        });
+
+        await this.timeHelper.sleep(sleep);
+      }
+    }
+
     const unprocessedIds = _.difference(
       _.map(productIds, (productId) => productId.toString()),
       processedIds,
@@ -489,7 +532,7 @@ export class SyncPromService {
       return {
         processedIds: [],
         unprocessedIds: [],
-        errors: {},
+        errors: [],
         updatedProducts: [],
       };
     }
@@ -526,9 +569,9 @@ export class SyncPromService {
   public async removeProductsFromProm(productIds: Types.ObjectId[]) {
     if (_.isEmpty(productIds)) {
       return {
-        errors: {},
         processedIds: [],
         unprocessedIds: [],
+        errors: [],
         productIds: [],
       };
     }
