@@ -18,6 +18,8 @@ import {
 import { MicrotronCategoriesService } from '../categories/categories.service';
 import { ICategoryInConstant } from '@common/interfaces/category';
 import { ProductsParseMap } from './utils/ProductsParseMap';
+import { Currency } from '@lib/microtron/core/types/api';
+import { MicrotronCoursesService } from '../courses/courses.service';
 
 type IProductFull = Product.IProductFull;
 type IProductRequestOptions = Product.IProductRequestOptions;
@@ -81,15 +83,41 @@ export class MicrotronProductsService {
     return _.every(conditions, (cond) => cond === true);
   };
 
-  private readonly isValidProductFullInfo = _.conforms<
-    Partial<IProductFullInfo>
-  >({
-    parse: (v: Partial<IProductFullInfo['parse']>) => {
-      return _.conformsTo(v, {
-        description: (v: string) => v.length > 0,
-      });
-    },
-  });
+  private readonly isValidProductFullInfo = (
+    product: Partial<IProductFullInfo>,
+    course: number,
+  ) => {
+    // DATA
+    const originalPrice = _.isNumber(product.price)
+      ? product.price
+      : product.price_s;
+    const sitePrice = product.parse.cost.price;
+
+    // CHECKS
+    const baseCheck = _.conformsTo<Partial<IProductFullInfo>>(product, {
+      parse: (v: Partial<IProductFullInfo['parse']>) => {
+        return _.conformsTo(v, {
+          description: (v: string) => v.length > 0,
+        });
+      },
+    });
+
+    // TODO: temp solution
+    let isValidPrice = true;
+    if (product.currency === Currency.USD) {
+      const rawPrice = originalPrice * course;
+      const onePercentFromRawPrice = rawPrice / 100;
+
+      const siteMarkup = (sitePrice - rawPrice) / onePercentFromRawPrice;
+
+      isValidPrice = siteMarkup >= -5;
+    }
+
+    // VERIFY
+    const conditions = [baseCheck, isValidPrice];
+
+    return _.every(conditions, (cond) => cond === true);
+  };
 
   private productsCache: TProductsCache = new Map();
   private productsParseCache: TProductsParseCache = new ProductsParseMap();
@@ -111,6 +139,7 @@ export class MicrotronProductsService {
   constructor(
     private configService: ConfigService,
     private microtronCategoriesService: MicrotronCategoriesService,
+    private microtronCourseService: MicrotronCoursesService,
     private translateService: TranslateService,
     private dataUtilHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
@@ -784,11 +813,15 @@ export class MicrotronProductsService {
       forceParse,
     });
 
+    /// CACHE
     this.logger.debug('Load parse products cache');
     await this.loadProductsParseCacheFromFile(this.productsParseCacheFilePath);
 
     this.logger.debug('Remove empty parse results');
     this.removeEmptyProductsParseResults();
+
+    /// MAIN
+    const course = await this.microtronCourseService.getCoursesByAPI(true);
 
     // load children categories too
     const productsByCategories = await this.getProductsByAPI(
@@ -872,9 +905,8 @@ export class MicrotronProductsService {
       );
 
       this.logger.debug('Validate products with full info');
-      productsWithFullInfo[categoryId] = _.filter(
-        products,
-        this.isValidProductFullInfo,
+      productsWithFullInfo[categoryId] = _.filter(products, (product) =>
+        this.isValidProductFullInfo(product, course.bank),
       ) as IProductFullInfo[];
 
       this.logger.debug('Loaded full info Products by Category:', {
@@ -899,6 +931,7 @@ export class MicrotronProductsService {
       ),
     });
 
+    /// CACHE
     this.logger.debug('Save cache');
     await this.saveProductsCache(this.productsCacheFilePath);
     await this.saveProductsParseCache(this.productsParseCacheFilePath);
