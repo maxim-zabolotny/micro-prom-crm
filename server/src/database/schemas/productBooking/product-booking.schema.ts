@@ -1,11 +1,17 @@
 import * as _ from 'lodash';
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Model, SchemaTypes, Types } from 'mongoose';
+import {
+  Document,
+  Model,
+  Schema as MongooseSchema,
+  SchemaTypes,
+  Types,
+} from 'mongoose';
 import { ProductBookingStatus } from '@schemas/productBooking/product-booking-status.enum';
 import { Product, ProductDocument } from '@schemas/product';
 import { ClientSession } from 'mongodb';
 import { CategoryDocument } from '@schemas/category';
-import { HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Logger, Type } from '@nestjs/common';
 
 // TYPES
 export type TInnerProduct = { id: Types.ObjectId } & Pick<
@@ -96,8 +102,9 @@ export class ProductBooking {
   history: TProductBookingHistory[];
 }
 
-export const ProductBookingSchema =
-  SchemaFactory.createForClass(ProductBooking);
+export const ProductBookingSchema = SchemaFactory.createForClass(
+  ProductBooking,
+) as unknown as MongooseSchema<Type<ProductBooking>, ProductBookingModel>;
 
 // CUSTOM TYPES
 type TStaticMethods = {

@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Model } from 'mongoose';
+import { Document, Model, Schema as MongooseSchema } from 'mongoose';
 import { ConstantEntities } from '@schemas/constant/constant-entities.enum';
 import * as _ from 'lodash';
 import { ICategoryInConstant } from '@common/interfaces/category';
+import { Type } from '@nestjs/common';
 
 // MONGOOSE
 export type ConstantDocument = Constant & Document;
@@ -23,7 +24,9 @@ export class Constant {
   value: string;
 }
 
-export const ConstantSchema = SchemaFactory.createForClass(Constant);
+export const ConstantSchema = SchemaFactory.createForClass(
+  Constant,
+) as unknown as MongooseSchema<Type<Constant>, ConstantModel>;
 
 // CUSTOM TYPES
 type TStaticMethods = {

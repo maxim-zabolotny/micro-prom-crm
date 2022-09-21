@@ -4,6 +4,7 @@ import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   Document,
   Model,
+  Schema as MongooseSchema,
   SchemaTypes,
   Types,
   UpdateWriteOpResult,
@@ -13,7 +14,7 @@ import {
   CategorySync,
   CategorySyncSchema,
 } from '@schemas/category/category-sync.schema';
-import { Logger } from '@nestjs/common';
+import { Logger, Type } from '@nestjs/common';
 import { ITranslatedCategoryInConstant } from '@common/interfaces/category';
 import { DataGenerateHelper } from '@common/helpers';
 
@@ -84,7 +85,9 @@ export class Category {
   integration: Integration;
 }
 
-export const CategorySchema = SchemaFactory.createForClass(Category);
+export const CategorySchema = SchemaFactory.createForClass(
+  Category,
+) as unknown as MongooseSchema<Type<Category>, CategoryModel>;
 
 // CUSTOM TYPES
 type TStaticMethods = {

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Model } from 'mongoose';
+import { Document, Model, Schema as MongooseSchema } from 'mongoose';
 import { IntegrationCompany } from '@schemas/integration/integration-company.enum';
-import { HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Logger, Type } from '@nestjs/common';
 
 // MONGOOSE
 export type IntegrationDocument = Integration & Document;
@@ -19,7 +19,9 @@ export class Integration {
   company: IntegrationCompany;
 }
 
-export const IntegrationSchema = SchemaFactory.createForClass(Integration);
+export const IntegrationSchema = SchemaFactory.createForClass(
+  Integration,
+) as unknown as MongooseSchema<Type<Integration>, IntegrationModel>;
 
 // CUSTOM TYPES
 type TStaticMethods = {

@@ -4,6 +4,7 @@ import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   Document,
   Model,
+  Schema as MongooseSchema,
   SchemaTypes,
   Types,
   UpdateWriteOpResult,
@@ -14,7 +15,7 @@ import {
   ProductSync,
   ProductSyncSchema,
 } from '@schemas/product/product-sync.schema';
-import { HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Logger, Type } from '@nestjs/common';
 import { DataGenerateHelper } from '@common/helpers';
 import { IProductFullInfo } from '@common/interfaces/product';
 import { AppConstants } from '../../../app.constants';
@@ -123,7 +124,9 @@ export class Product {
   promId: number;
 }
 
-export const ProductSchema = SchemaFactory.createForClass(Product);
+export const ProductSchema = SchemaFactory.createForClass(
+  Product,
+) as unknown as MongooseSchema<Type<Product>, ProductModel>;
 
 // CUSTOM TYPES
 type TStaticMethods = {

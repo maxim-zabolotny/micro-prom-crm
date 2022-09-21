@@ -1,5 +1,6 @@
+import { Type } from '@nestjs/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Model } from 'mongoose';
+import { Document, Model, Schema as MongooseSchema } from 'mongoose';
 import { UserRole } from '@schemas/user/user-role.enum';
 
 // MONGOOSE
@@ -33,7 +34,9 @@ export class User {
   role: UserRole;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const UserSchema = SchemaFactory.createForClass(
+  User,
+) as unknown as MongooseSchema<Type<User>, UserModel>;
 
 // CUSTOM TYPES
 type TStaticMethods = {
