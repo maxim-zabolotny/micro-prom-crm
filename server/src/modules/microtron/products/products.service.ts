@@ -103,7 +103,7 @@ export class MicrotronProductsService {
 
     // TODO: temp solution
     let isValidPrice = true;
-    if (product.currency === Types.Currency.USD) {
+    if (product.currency === Types.Currency.USD && sitePrice > 0) {
       const rawPrice = originalPrice * course;
       const onePercentFromRawPrice = rawPrice / 100;
 
