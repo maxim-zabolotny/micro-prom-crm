@@ -106,13 +106,13 @@ export class SyncProductsConsumer extends CommonSyncConsumer {
         update: {
           processedIds: updateInPromResult.processedIds.length,
           unprocessedIds: updateInPromResult.unprocessedIds.length,
-          errors: Object.keys(updateInPromResult.errors).length,
+          errors: updateInPromResult.errors.length,
           updatedProducts: updateInPromResult.updatedProducts.length,
         },
         delete: {
           processedIds: removeProductsFromPromResult.processedIds.length,
           unprocessedIds: removeProductsFromPromResult.unprocessedIds.length,
-          errors: Object.keys(removeProductsFromPromResult.errors).length,
+          errors: removeProductsFromPromResult.errors.length,
           productIds: removeProductsFromPromResult.productIds.length,
         },
       },

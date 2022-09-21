@@ -89,7 +89,7 @@ export class SyncCourseConsumer extends CommonSyncConsumer {
         update: {
           processedIds: updateInPromResult.processedIds.length,
           unprocessedIds: updateInPromResult.unprocessedIds.length,
-          errors: Object.keys(updateInPromResult.errors).length,
+          errors: updateInPromResult.errors.length,
           updatedProducts: updateInPromResult.updatedProducts.length,
         },
       },
