@@ -61,8 +61,8 @@ export class SyncProductsByCategoryConsumer extends CommonSyncConsumer {
 
     await this.unionLogger(job, '1. Actualize products by category result:', {
       addedProductsCount: added.length,
-      removedProductsCount: updated.length,
-      updatedProductsCount: removed.length,
+      updatedProductsCount: updated.length,
+      removedProductsCount: removed.length,
     });
 
     // 2. Prom
@@ -108,8 +108,8 @@ export class SyncProductsByCategoryConsumer extends CommonSyncConsumer {
     await this.notifyAdmin(this.getReadableQueueName(), {
       actualizeProductsByCategory: {
         addedProductsCount: added.length,
-        removedProductsCount: updated.length,
-        updatedProductsCount: removed.length,
+        updatedProductsCount: updated.length,
+        removedProductsCount: removed.length,
       },
       prom: {
         update: {

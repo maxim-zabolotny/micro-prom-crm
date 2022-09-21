@@ -53,8 +53,8 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
 
     await this.unionLogger(job, '1. Actualize products result:', {
       addedProductsCount: added.length,
-      removedProductsCount: updated.length,
-      updatedProductsCount: removed.length,
+      updatedProductsCount: updated.length,
+      removedProductsCount: removed.length,
     });
 
     // 2. Sync course
@@ -120,8 +120,8 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
     await this.notifyAdmin(this.getReadableQueueName(), {
       actualizeProducts: {
         addedProductsCount: added.length,
-        removedProductsCount: updated.length,
-        updatedProductsCount: removed.length,
+        updatedProductsCount: updated.length,
+        removedProductsCount: removed.length,
       },
       syncCourse: {
         updatedCategories: updatedCategories.length,
