@@ -64,7 +64,14 @@ export abstract class CommonSyncConsumer {
 
       return result;
     } catch (e) {
-      await this.unionLogger(job, `DB #3: Rollback transaction`, { error: e });
+      const preparedError = _.omit(e, ['request']);
+      if ('response' in preparedError) {
+        preparedError['response'] = _.omit(e.response, ['request']);
+      }
+
+      await this.unionLogger(job, `DB #3: Rollback transaction`, {
+        error: preparedError,
+      });
       throw e;
     } finally {
       await this.unionLogger(job, `DB #4: End session`);
