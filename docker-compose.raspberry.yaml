@@ -28,7 +28,7 @@ services:
     container_name: crm_api
     build:
       context: ./
-      dockerfile: ./server/Dockerfile
+      dockerfile: ./server/Dockerfile-prod
     ports:
       - "4000:4000"
     environment:
@@ -42,10 +42,7 @@ services:
       - ./server:/home/app/crm_server
       - ./server/lib:/home/app/crm_server/lib
       - /server/node_modules
-    tty: true
     restart: "always"
-    entrypoint: /bin/bash
-    command: -s
 
   database:
     image: mongo:4.4
