@@ -46,10 +46,18 @@ export class MicrotronProductsService {
   };
 
   private readonly isValidProduct = (
-    product: Pick<IProductFull, 'url' | 'price' | 'price_s'>,
+    product: Pick<
+      IProductFull,
+      'url' | 'price' | 'price_s' | 'quantity' | 'quantity_s'
+    >,
   ) => {
+    // DATA
     const price = _.isNumber(product.price) ? product.price : product.price_s;
+    const quantity = _.isNumber(product.quantity)
+      ? product.quantity
+      : product.quantity_s;
 
+    // CHECKS
     const baseCheck = _.conformsTo<Pick<IProductFull, 'url'>>(product, {
       url: (url: string) => {
         const isEmptyUrl = _.isEmpty(url);
@@ -64,9 +72,13 @@ export class MicrotronProductsService {
       },
     });
 
-    const priceCheck = price > 0;
+    const minPriceCheck = price > 0;
+    const minQuantityCheck = quantity >= 3; // TODO: temp solution
 
-    return baseCheck && priceCheck;
+    // VERIFY
+    const conditions = [baseCheck, minPriceCheck, minQuantityCheck];
+
+    return _.every(conditions, (cond) => cond === true);
   };
 
   private readonly isValidProductFullInfo = _.conforms<
