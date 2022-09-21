@@ -44,28 +44,44 @@ export class PromProductsService {
   public async importSheet() {
     this.logger.debug('Import Google Sheet to Prom');
 
-    const result = await this.productAPI.importUrl({
-      url: AppConstants.Google.Sheet.SHARE_URL,
-      mark_missing_product_as: Product.MarkMissingProductAs.Deleted,
-      force_update: true,
-      only_available: false,
-      updated_fields: [
-        Product.ProductUpdatedFields.Name,
-        Product.ProductUpdatedFields.Sku,
-        Product.ProductUpdatedFields.Price,
-        Product.ProductUpdatedFields.ImagesUrls,
-        Product.ProductUpdatedFields.Presence,
-        Product.ProductUpdatedFields.QuantityInStock,
-        Product.ProductUpdatedFields.Description,
-        Product.ProductUpdatedFields.Group,
-        Product.ProductUpdatedFields.Keywords,
-        Product.ProductUpdatedFields.Attributes,
-      ],
-    });
+    try {
+      const result = await this.productAPI.importUrl({
+        url: AppConstants.Google.Sheet.SHARE_URL,
+        mark_missing_product_as: Product.MarkMissingProductAs.Deleted,
+        force_update: true,
+        only_available: false,
+        updated_fields: [
+          Product.ProductUpdatedFields.Name,
+          Product.ProductUpdatedFields.Sku,
+          Product.ProductUpdatedFields.Price,
+          Product.ProductUpdatedFields.ImagesUrls,
+          Product.ProductUpdatedFields.Presence,
+          Product.ProductUpdatedFields.QuantityInStock,
+          Product.ProductUpdatedFields.Description,
+          Product.ProductUpdatedFields.Group,
+          Product.ProductUpdatedFields.Keywords,
+          Product.ProductUpdatedFields.Attributes,
+        ],
+      });
 
-    this.logger.debug('Import Google Sheet to Prom result:', result);
+      this.logger.debug('Import Google Sheet to Prom result:', result);
 
-    return result;
+      return result;
+    } catch (err: unknown) {
+      const isImportProductsError =
+        err['type'] === LibErrors.APIErrorType.ImportProducts;
+
+      if (err instanceof LibErrors.PromAPIError && isImportProductsError) {
+        this.logger.debug(
+          'Import Google Sheet to Prom with error result:',
+          err.data,
+        );
+
+        return err.data;
+      }
+
+      throw err;
+    }
   }
 
   public async getImportStatus(importId: string) {
