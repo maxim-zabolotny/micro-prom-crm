@@ -240,7 +240,8 @@ ProductSaleSchema.statics.findSales = async function (
     searchData.push({ 'product.promId': data.productPromId });
   }
 
-  return this.find({ $and: searchData })
+  const filter = searchData.length > 0 ? { $and: searchData } : {};
+  return this.find(filter)
     .limit(limit)
     .skip(offset)
     .sort({ updatedAt: -1 })
