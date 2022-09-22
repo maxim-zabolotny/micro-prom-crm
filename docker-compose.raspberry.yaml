@@ -39,8 +39,6 @@ services:
     links:
       - database:database
     volumes:
-      - ./server:/home/app/crm_server
-      - ./server/lib:/home/app/crm_server/lib
       - /server/node_modules
     restart: "always"
 
