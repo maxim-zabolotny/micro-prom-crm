@@ -160,7 +160,10 @@ export class ParserV2 {
   }
 
   public static async load(link: string) {
-    const { data } = await localAxios.get(link);
+    const { data } = await localAxios.get(link, {
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
     return new ParserV2(data, link);
   }
 
