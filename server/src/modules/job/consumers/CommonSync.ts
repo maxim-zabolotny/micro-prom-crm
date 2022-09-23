@@ -31,8 +31,12 @@ export abstract class CommonSyncConsumer {
     data: string | object = {},
   ) {
     this.logger.log(message, data);
+
+    const currentTime = new Date().toTimeString().slice(0, 8);
     await job.log(
-      `${message} ${typeof data === 'object' ? JSON.stringify(data) : data}`,
+      `[${currentTime}] ${message} ${
+        typeof data === 'object' ? JSON.stringify(data) : data
+      }`,
     );
   }
 
