@@ -5,8 +5,7 @@ import "./FindProducts.css";
 export function FindProducts({ data, fetch, productsSize }) {
   const onFinish = (values) => {
     const nextData = {
-      offset: 0,
-      limit: data.limit,
+      ...data,
       ...values,
     };
 

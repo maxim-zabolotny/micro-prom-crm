@@ -9,6 +9,7 @@ export function Products() {
   const [requestData, setRequestData] = useState({
     offset: 0,
     limit: 30,
+    loadedOnProm: true,
   });
 
   const config = {
