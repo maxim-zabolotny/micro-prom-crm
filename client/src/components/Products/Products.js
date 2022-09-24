@@ -1,4 +1,4 @@
-import { FindProducts } from "./FindProducts/FindProducts";
+import { FindProductsForm } from "./FindProductsForm/FindProductsForm";
 import { useEffect, useState } from "react";
 import _ from "lodash";
 import { useAxios } from "../../hooks";
@@ -36,7 +36,7 @@ export function Products() {
 
   return (
     <div style={{ width: "100%" }}>
-      <FindProducts
+      <FindProductsForm
         data={requestData}
         fetch={(data) => setRequestData(data)}
         productsSize={(data ?? []).length}

@@ -1,8 +1,8 @@
 import { Button, Form, Input } from "antd";
 import React from "react";
-import "./FindProducts.css";
+import "./FindProductsForm.css";
 
-export function FindProducts({ data, fetch, productsSize }) {
+export function FindProductsForm({ data, fetch, productsSize }) {
   const onFinish = (values) => {
     const nextData = {
       ...data,
