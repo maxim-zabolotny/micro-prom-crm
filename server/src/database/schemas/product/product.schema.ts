@@ -120,7 +120,12 @@ export class Product {
   @Prop({ type: Number, required: true, unique: true })
   microtronId: number;
 
-  @Prop({ type: Number, required: true, unique: true })
+  @Prop({
+    type: SchemaTypes.Decimal128,
+    required: true,
+    unique: true,
+    get: (v) => parseInt(v.toString()),
+  })
   promId: number;
 }
 
