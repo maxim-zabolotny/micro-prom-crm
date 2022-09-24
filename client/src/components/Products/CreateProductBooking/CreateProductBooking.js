@@ -4,17 +4,20 @@ import { useAxios } from "../../../hooks";
 import { API_URL } from "../../../api/baseURL";
 
 export function CreateProductBooking({ product, changeProduct }) {
+  // const navigate = useNavigate();
+
   const { data, loading, fetch } = useAxios(API_URL.PRODUCT_BOOKINGS.CREATE, {
     method: "post",
     data: {},
   });
 
-  const onFinish = (values) => {
-    console.log("values => ", values);
-    fetch({
+  const onFinish = async (values) => {
+    await fetch({
       ...values,
       productId: product._id,
     });
+
+    // todo notify
   };
 
   useEffect(() => {
@@ -24,8 +27,7 @@ export function CreateProductBooking({ product, changeProduct }) {
         quantity: product.quantity - data.count,
       });
 
-      console.log("reqult => ", data);
-      // todo: redirect
+      // navigate(`booking/${data._id}`);
     }
   }, [data]);
 
