@@ -1,22 +1,31 @@
 import { CurrentUser } from "../CurrentUser";
+import { Auth } from "../Auth";
+import { Navigation } from "../Navigation";
+import { Outlet } from "react-router-dom";
+import React from "react";
 
-export function Main({ children }) {
+export function Main() {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <CurrentUser />
-      <p
+    <Auth>
+      <div
         style={{
-          height: "200px",
-          margin: "30px 0",
-          backgroundColor: "aqua",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
-      ></p>
-      {children}
-    </div>
+      >
+        <CurrentUser />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            height: "100%",
+          }}
+        >
+          <Navigation />
+          <Outlet />
+        </div>
+      </div>
+    </Auth>
   );
 }
