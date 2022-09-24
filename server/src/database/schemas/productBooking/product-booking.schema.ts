@@ -61,7 +61,7 @@ export class ProductBooking {
   })
   status: ProductBookingStatus;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, default: '' })
   description: string;
 
   @Prop({ type: Number, required: true })
