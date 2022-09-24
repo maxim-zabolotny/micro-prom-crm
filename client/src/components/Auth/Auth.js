@@ -1,6 +1,7 @@
 /*external modules*/
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 /*utils*/
 /*styles*/
 /*api*/
@@ -12,15 +13,16 @@ const SERVER_URL_KEY = "serverUrl";
 const AUTH_TOKEN_KEY = "authToken";
 
 export function Auth({ children }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [currentUser, setCurrentUser] = useState(null);
   const [serverUrl, setServerUrl] = useState(null);
   const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
     const [queryToken, queryServerUrl] = [
-      queryParams.get("token"),
-      queryParams.get("server_url"),
+      searchParams.get("token"),
+      searchParams.get("server_url"),
     ];
 
     let authToken;
@@ -30,11 +32,7 @@ export function Auth({ children }) {
       authToken = queryToken;
       serverUrl = queryServerUrl;
 
-      window.history.replaceState(
-        {},
-        null,
-        window.location.href.replace(window.location.search, "")
-      );
+      setSearchParams("");
     } else {
       ({ authToken, serverUrl } = getLocalCreds());
     }
