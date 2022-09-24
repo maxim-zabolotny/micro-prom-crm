@@ -15,7 +15,7 @@ export function Products() {
     method: "post",
     data: requestData,
   };
-  const [data, error, loading, fetch] = useAxios(
+  const { data, error, loading, fetch } = useAxios(
     API_URL.PRODUCTS.SEARCH,
     config
   );
@@ -24,13 +24,14 @@ export function Products() {
     fetch();
   }, [config.data]);
 
-  const products = _.isEmpty(data) ? null : (
-    <div>
-      {data.map((item) => (
-        <Product key={item._id} data={item} />
-      ))}
-    </div>
-  );
+  const products =
+    _.isEmpty(data) || error ? null : (
+      <div>
+        {data.map((item) => (
+          <Product key={item._id} data={item} />
+        ))}
+      </div>
+    );
 
   return (
     <div>

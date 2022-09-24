@@ -16,7 +16,7 @@ export function useAxios(url, config, initFetch = false) {
     }
   }, []);
 
-  async function fetch() {
+  async function fetch(reqData, reqParams) {
     setLoading(true);
 
     try {
@@ -24,14 +24,24 @@ export function useAxios(url, config, initFetch = false) {
         ? url
         : `${context.serverUrl}${url}`;
 
-      const { data } = await axios.request({
+      const reqConfig = {
         url: fetchUrl,
         ...config,
         headers: {
           Authorization: `Bearer ${context.authToken}`,
           ...config.headers,
         },
-      });
+      };
+
+      if (reqData) {
+        reqConfig.data = reqData;
+      }
+
+      if (reqParams) {
+        reqConfig.params = reqParams;
+      }
+
+      const { data } = await axios.request(reqConfig);
 
       setData(data);
       setError(null);
@@ -48,5 +58,10 @@ export function useAxios(url, config, initFetch = false) {
     }
   }
 
-  return [data, error, loading, fetch];
+  return {
+    data,
+    error,
+    loading,
+    fetch,
+  };
 }
