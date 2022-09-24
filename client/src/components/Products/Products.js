@@ -35,7 +35,7 @@ export function Products() {
     );
 
   return (
-    <div>
+    <div style={{ width: "100%" }}>
       <FindProducts
         data={requestData}
         fetch={(data) => setRequestData(data)}
