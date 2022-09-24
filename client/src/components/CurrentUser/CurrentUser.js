@@ -8,11 +8,11 @@ export function CurrentUser() {
     <div
       style={{
         display: "flex",
-        justifyContent: "flex-end",
+        flexDirection: "column",
+        alignItems: "flex-end",
       }}
     >
       <span>Name: {currentUser.name}</span>
-      ----|----
       <span>Role: {currentUser.role}</span>
     </div>
   );
