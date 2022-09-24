@@ -14,7 +14,7 @@ export class NotificationBotService {
 
   private buildButtonsWithUrl(buttons: Array<[string, string]>) {
     const markupButtons = buttons.map(([title, url]) =>
-      Markup.button.url(title, url),
+      Markup.button.url(MarkdownHelper.escape(title), url),
     );
 
     return Markup.inlineKeyboard(markupButtons);
@@ -51,7 +51,7 @@ export class NotificationBotService {
       const objectMessage = MarkdownHelper.italic('Обьект: ');
 
       const json = JSON.stringify(data.jsonObject, null, 2);
-      const jsonMessage = '```json\n' + json + '\n```';
+      const jsonMessage = MarkdownHelper.json(json);
 
       message += `\n\n${objectMessage}\n${jsonMessage}`;
     }
