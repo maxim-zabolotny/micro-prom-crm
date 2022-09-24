@@ -228,6 +228,25 @@ export class CrmProductBookingsService {
         session,
       );
 
+      const updatedProduct = await this.productModel.updateProduct(
+        product._id,
+        {
+          quantity: product.quantity - productBooking.count,
+          'sync.prom': false,
+        },
+        session,
+      );
+
+      const updateInPromResult =
+        await this.syncPromService.syncProductsWithProm(
+          [updatedProduct],
+          session,
+        );
+      this.logger.debug('Sync Prom Result:', {
+        ...updateInPromResult,
+        updatedProducts: updateInPromResult.updatedProducts.length,
+      });
+
       await this.notifyProvider(
         productBooking._id.toString(),
         Object.entries({
@@ -301,25 +320,6 @@ export class CrmProductBookingsService {
         session,
       );
 
-      const updatedProduct = await this.productModel.updateProduct(
-        productBooking.product._id,
-        {
-          quantity: productBooking.product.quantity - productBooking.count,
-          'sync.prom': false,
-        },
-        session,
-      );
-
-      const updateInPromResult =
-        await this.syncPromService.syncProductsWithProm(
-          [updatedProduct],
-          session,
-        );
-      this.logger.debug('Sync Prom Result:', {
-        ...updateInPromResult,
-        updatedProducts: updateInPromResult.updatedProducts.length,
-      });
-
       await this.notifySales(
         {
           productBookingId: updatedProductBooking._id.toString(),
@@ -392,6 +392,25 @@ export class CrmProductBookingsService {
             },
             session,
           );
+
+        const updatedProduct = await this.productModel.updateProduct(
+          productBooking.product._id,
+          {
+            quantity: productBooking.product.quantity + productBooking.count,
+            'sync.prom': false,
+          },
+          session,
+        );
+
+        const updateInPromResult =
+          await this.syncPromService.syncProductsWithProm(
+            [updatedProduct],
+            session,
+          );
+        this.logger.debug('Sync Prom Result:', {
+          ...updateInPromResult,
+          updatedProducts: updateInPromResult.updatedProducts.length,
+        });
 
         await this.notifySales(
           {
