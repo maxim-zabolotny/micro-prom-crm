@@ -1,4 +1,4 @@
-import { CreateProductBooking } from "../../CreateProductBooking/CreateProductBooking";
+import { CreateBookingForm } from "../CreateBookingForm/CreateBookingForm";
 import { useState } from "react";
 import { Button } from "antd";
 
@@ -44,7 +44,7 @@ export function FullProduct({ changeView, ...props }) {
       <Button size={"default"} onClick={changeView}>
         Скрыть
       </Button>
-      <CreateProductBooking
+      <CreateBookingForm
         product={product}
         changeProduct={(newData) => setProduct(newData)}
       />

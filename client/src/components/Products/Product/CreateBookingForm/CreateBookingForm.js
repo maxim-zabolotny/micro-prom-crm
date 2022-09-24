@@ -1,9 +1,9 @@
 import { Button, Form, Input, InputNumber } from "antd";
 import React, { useEffect } from "react";
-import { useAxios } from "../../../hooks";
-import { API_URL } from "../../../api/baseURL";
+import { useAxios } from "../../../../hooks";
+import { API_URL } from "../../../../api/baseURL";
 
-export function CreateProductBooking({ product, changeProduct }) {
+export function CreateBookingForm({ product, changeProduct }) {
   // const navigate = useNavigate();
 
   const { data, loading, fetch } = useAxios(API_URL.PRODUCT_BOOKINGS.CREATE, {
