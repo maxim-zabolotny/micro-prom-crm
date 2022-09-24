@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Button } from "antd";
+import { CreateProductBooking } from "../CreateProductBooking/CreateProductBooking";
 
 export function Product({ data }) {
+  const [product, setProduct] = useState(data);
   const [globalView, setGlobalView] = useState(false);
 
   const changeViewButton = (
@@ -23,31 +25,35 @@ export function Product({ data }) {
             width: 120,
             height: 120,
           }}
-          src={data.images[0]}
+          src={product.images[0]}
         />
         <div>
-          <span>id: {data._id}</span>
+          <span>id: {product._id}</span>
           <br />
-          <span>microtronId: {data.microtronId}</span>
+          <span>microtronId: {product.microtronId}</span>
           <br />
-          <span>name: {data.name}</span>
+          <span>name: {product.name}</span>
           <br />
-          <span>price: {data.ourPrice} грн</span>
+          <span>price: {product.ourPrice} грн</span>
           <br />
-          <span>quantity: {data.quantity} шт</span>
+          <span>quantity: {product.quantity} шт</span>
           <br />
-          <span>warranty: {data.warranty} мес</span>
+          <span>warranty: {product.warranty} мес</span>
           <br />
           <span>
-            url: <a href={data.url}>{data.url}</a>
+            url: <a href={product.url}>{product.url}</a>
           </span>
           <br />
-          <span>new: {data.new ? "Да" : "Нет"}</span>
+          <span>new: {product.new ? "Да" : "Нет"}</span>
           <br />
-          <span>available: {data.available ? "Да" : "Нет"}</span>
+          <span>available: {product.available ? "Да" : "Нет"}</span>
           <br />
         </div>
         {changeViewButton}
+        <CreateProductBooking
+          product={product}
+          changeProduct={(newData) => setProduct(newData)}
+        />
       </div>
     );
   } else {
@@ -66,12 +72,12 @@ export function Product({ data }) {
               width: 75,
               height: 75,
             }}
-            src={data.images[0]}
+            src={product.images[0]}
           />
-          <span>microtronId: {data.microtronId}</span> |
-          <span>price: {data.ourPrice} грн</span> |
-          <span>quantity: {data.quantity} шт</span> |{" "}
-          <span>name: {data.name}</span>
+          <span>microtronId: {product.microtronId}</span> |
+          <span>price: {product.ourPrice} грн</span> |
+          <span>quantity: {product.quantity} шт</span> |{" "}
+          <span>name: {product.name}</span>
         </div>
         {changeViewButton}
       </div>
