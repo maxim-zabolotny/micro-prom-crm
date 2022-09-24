@@ -158,7 +158,11 @@ type TStaticMethods = {
   // MAIN
   findProducts: (
     this: ProductModel,
-    data: Partial<Pick<Product, 'name' | 'microtronId' | 'promId'>>,
+    data: Partial<
+      Pick<Product, 'name' | 'microtronId' | 'promId'> & {
+        loadedOnProm: boolean;
+      }
+    >,
     pagination: { limit: number; offset: number },
     session?: ClientSession | null,
   ) => Promise<ProductDocument[]>;
@@ -292,6 +296,10 @@ ProductSchema.statics.findProducts = async function (
         },
       ],
     });
+  }
+
+  if ('loadedOnProm' in data) {
+    searchData.push({ 'sync.loaded': data.loadedOnProm });
   }
 
   if (_.isNumber(data.microtronId)) {
