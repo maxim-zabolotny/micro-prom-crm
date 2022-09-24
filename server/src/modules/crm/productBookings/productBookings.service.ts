@@ -250,17 +250,17 @@ export class CrmProductBookingsService {
       await this.notifyProvider(
         productBooking._id.toString(),
         Object.entries({
-          'Время бронирования': _.get(
-            productBooking,
-            'createdAt',
-          ).toLocaleString(),
-          'Имя продукта': product.name,
+          'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
             String(product.microtronId),
           ),
           Колличество: data.count,
-          Сведения: data.description,
+          Сведения: MarkdownHelper.escape(data.description),
           Продавец: currentUser.name,
+          'Время бронирования': _.get(
+            productBooking,
+            'createdAt',
+          ).toLocaleString(),
         }),
       );
 
@@ -328,10 +328,6 @@ export class CrmProductBookingsService {
           userTelegramId: sales.telegramId,
         },
         Object.entries({
-          'Время бронирования': _.get(
-            productBooking,
-            'createdAt',
-          ).toLocaleString(),
           'Имя продукта': MarkdownHelper.monospaced(
             productBooking.product.name,
           ),
@@ -339,7 +335,11 @@ export class CrmProductBookingsService {
             String(productBooking.product.microtronId),
           ),
           Колличество: updatedProductBooking.count,
-          Сведения: updatedProductBooking.description,
+          Сведения: MarkdownHelper.escape(updatedProductBooking.description),
+          'Время бронирования': _.get(
+            productBooking,
+            'createdAt',
+          ).toLocaleString(),
         }),
       );
 
@@ -419,17 +419,17 @@ export class CrmProductBookingsService {
             userTelegramId: sales.telegramId,
           },
           Object.entries({
-            'Время бронирования': _.get(
-              productBooking,
-              'createdAt',
-            ).toLocaleString(),
             'Имя продукта': MarkdownHelper.monospaced(
               productBooking.product.name,
             ),
             'Код продукта': MarkdownHelper.monospaced(
               String(productBooking.product.microtronId),
             ),
-            Причина: data.disapproveReason,
+            Причина: MarkdownHelper.escape(data.disapproveReason),
+            'Время бронирования': _.get(
+              productBooking,
+              'createdAt',
+            ).toLocaleString(),
           }),
         );
 

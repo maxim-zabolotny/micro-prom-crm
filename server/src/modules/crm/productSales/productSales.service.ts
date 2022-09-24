@@ -274,7 +274,7 @@ export class CrmProductSalesService {
         updatedProductSale._id.toString(),
         updatedProductSale.status,
         Object.entries({
-          'Имя продукта': product.name,
+          'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
             String(product.microtronId),
           ),
@@ -324,12 +324,12 @@ export class CrmProductSalesService {
         updatedProductSale._id.toString(),
         updatedProductSale.status,
         Object.entries({
-          'Имя продукта': product.name,
+          'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
             String(product.microtronId),
           ),
           Колличество: updatedProductSale.count,
-          'Причина Отказа': data.canceledReason,
+          'Причина Отказа': MarkdownHelper.escape(data.canceledReason),
           'Время Отказа': updatedProductSale.canceledAt.toLocaleString(),
         }),
       );
