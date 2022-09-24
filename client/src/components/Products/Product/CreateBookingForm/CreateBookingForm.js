@@ -37,12 +37,14 @@ export function CreateBookingForm({ product, changeProduct }) {
       labelCol={{ span: 2 }}
       wrapperCol={{ span: 10 }}
       onFinish={onFinish}
+      initialValues={{
+        count: product.quantity > 0 ? 1 : 0,
+      }}
     >
       <Form.Item label="Количество" name={"count"}>
         <InputNumber
           min={product.quantity > 0 ? 1 : 0}
           max={product.quantity}
-          defaultValue={product.quantity > 0 ? 1 : 0}
         />
       </Form.Item>
 
