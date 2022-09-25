@@ -1,23 +1,23 @@
 import { Button, Form, Input, InputNumber } from "antd";
 import React, { useEffect } from "react";
-import { useAxios } from "../../../../hooks";
+import { useAxios, useRequestAccess } from "../../../../hooks";
 import { API_URL } from "../../../../api/baseURL";
 
-export function CreateBookingForm({ product, changeProduct }) {
-  // const navigate = useNavigate();
+const REQUEST_URL = API_URL.PRODUCT_BOOKINGS.CREATE;
 
-  const { data, loading, fetch } = useAxios(API_URL.PRODUCT_BOOKINGS.CREATE, {
+export function CreateBookingForm({ product, changeProduct }) {
+  const [userHaveAccess] = useRequestAccess(REQUEST_URL);
+
+  const { data, loading, fetch } = useAxios(REQUEST_URL, {
     method: "post",
     data: {},
   });
 
-  const onFinish = async (values) => {
-    await fetch({
+  const onFinish = (values) => {
+    fetch({
       ...values,
       productId: product._id,
     });
-
-    // todo notify
   };
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function CreateBookingForm({ product, changeProduct }) {
         quantity: product.quantity - data.count,
       });
 
-      // navigate(`booking/${data._id}`);
+      // todo notify
     }
   }, [data]);
 
@@ -69,7 +69,7 @@ export function CreateBookingForm({ product, changeProduct }) {
     </Form>
   );
 
-  return (
+  return userHaveAccess ? (
     <div
       style={{
         margin: "20px",
@@ -78,5 +78,5 @@ export function CreateBookingForm({ product, changeProduct }) {
     >
       {loading ? <p>LOADING..</p> : form}
     </div>
-  );
+  ) : null;
 }
