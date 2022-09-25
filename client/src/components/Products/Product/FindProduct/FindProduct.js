@@ -38,7 +38,11 @@ export function FindProduct({ url, productId }) {
   );
 
   const productInfo = product ? (
-    <FullProduct product={product} changeViewAble={false} />
+    <FullProduct
+      changeViewAble={false}
+      product={product}
+      setProduct={setProduct}
+    />
   ) : null;
 
   return (
