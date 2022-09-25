@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import _ from "lodash";
 import { useAxios } from "../../hooks";
 import { API_URL } from "../../api/baseURL";
-import { Product } from "./Product/Product";
+import { Product } from "./Product";
 
 export function Products() {
   const [requestData, setRequestData] = useState({

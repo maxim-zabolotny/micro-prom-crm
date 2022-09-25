@@ -1,23 +1,40 @@
 import { Button, Form, Input } from "antd";
-import React from "react";
+import _ from "lodash";
+import React, { useEffect } from "react";
 import "./FindProductsForm.css";
 import { strIsNumberRule } from "../../../utils/formRules/strIsNumberRule";
+import { useSearchParams } from "react-router-dom";
+
+const buildNextData = (data, values) => {
+  const nextData = {
+    ...data,
+    ...values,
+  };
+
+  nextData.microtronId
+    ? (nextData.microtronId = Number(nextData.microtronId))
+    : (nextData.microtronId = null);
+
+  nextData.promId
+    ? (nextData.promId = Number(nextData.promId))
+    : (nextData.promId = null);
+
+  return nextData;
+};
 
 export function FindProductsForm({ data, fetch, productsSize }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObj = Object.fromEntries(searchParams.entries());
+
+  useEffect(() => {
+    if (Object.keys(searchParamsObj).length > 0) {
+      const nextData = buildNextData(data, searchParamsObj);
+      fetch(nextData);
+    }
+  }, []);
+
   const onFinish = (values) => {
-    const nextData = {
-      ...data,
-      ...values,
-    };
-
-    nextData.microtronId
-      ? (nextData.microtronId = Number(nextData.microtronId))
-      : (nextData.microtronId = null);
-
-    nextData.promId
-      ? (nextData.promId = Number(nextData.promId))
-      : (nextData.promId = null);
-
+    const nextData = buildNextData(data, values);
     fetch(nextData);
   };
 
@@ -47,6 +64,20 @@ export function FindProductsForm({ data, fetch, productsSize }) {
         labelCol={{ span: 2 }}
         wrapperCol={{ span: 10 }}
         onFinish={onFinish}
+        initialValues={searchParamsObj}
+        onValuesChange={(v) => {
+          const newSearchParams = new URLSearchParams(searchParamsObj);
+
+          Object.entries(v).forEach(([key, value]) => {
+            if (_.isEmpty(value)) {
+              newSearchParams.delete(key);
+            } else {
+              newSearchParams.set(key, value);
+            }
+          });
+
+          setSearchParams(newSearchParams);
+        }}
       >
         <Form.Item label="Имя товара" name="name">
           <Input placeholder={"Введите имя товара"} />
