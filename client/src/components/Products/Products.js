@@ -1,15 +1,10 @@
 import { FindProductsForm } from "./FindProductsForm/FindProductsForm";
 import { useEffect, useState } from "react";
 import _ from "lodash";
-import { useAxios, useRequestAccess } from "../../hooks";
-import { API_URL } from "../../api/baseURL";
+import { useAxios } from "../../hooks";
 import { GeneralProduct } from "./Product";
 
-const REQUEST_URL = API_URL.PRODUCTS.SEARCH;
-
-export function Products() {
-  const [userHaveAccess, errorAccessMessage] = useRequestAccess(REQUEST_URL);
-
+export function Products({ url }) {
   const [requestData, setRequestData] = useState({
     offset: 0,
     limit: 30,
@@ -20,7 +15,7 @@ export function Products() {
     method: "post",
     data: requestData,
   };
-  const { data, error, loading, fetch } = useAxios(REQUEST_URL, config);
+  const { data, error, loading, fetch } = useAxios(url, config);
 
   useEffect(() => {
     fetch();
@@ -35,7 +30,7 @@ export function Products() {
       </div>
     );
 
-  return userHaveAccess ? (
+  return (
     <div style={{ width: "100%" }}>
       <FindProductsForm
         data={requestData}
@@ -44,7 +39,5 @@ export function Products() {
       />
       {loading ? <p>LOADING..</p> : products}
     </div>
-  ) : (
-    errorAccessMessage
   );
 }

@@ -1,6 +1,8 @@
 import { CreateBookingForm } from "../CreateBookingForm/CreateBookingForm";
 import { useState } from "react";
 import { Button } from "antd";
+import { RequestAccess } from "../../../RequestAccess";
+import { API_URL } from "../../../../api/baseURL";
 
 export function FullProduct({ changeView, changeViewAble, ...props }) {
   const [product, setProduct] = useState(props.product);
@@ -48,10 +50,12 @@ export function FullProduct({ changeView, changeViewAble, ...props }) {
         <br />
       </div>
       {changeViewButton}
-      <CreateBookingForm
-        product={product}
-        changeProduct={(newData) => setProduct(newData)}
-      />
+      <RequestAccess url={API_URL.PRODUCT_BOOKINGS.CREATE}>
+        <CreateBookingForm
+          product={product}
+          changeProduct={(newData) => setProduct(newData)}
+        />
+      </RequestAccess>
     </div>
   );
 }

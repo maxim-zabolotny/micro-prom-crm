@@ -1,14 +1,9 @@
 import { Button, Form, Input, InputNumber } from "antd";
 import React, { useEffect } from "react";
-import { useAxios, useRequestAccess } from "../../../../hooks";
-import { API_URL } from "../../../../api/baseURL";
+import { useAxios } from "../../../../hooks";
 
-const REQUEST_URL = API_URL.PRODUCT_BOOKINGS.CREATE;
-
-export function CreateBookingForm({ product, changeProduct }) {
-  const [userHaveAccess] = useRequestAccess(REQUEST_URL);
-
-  const { data, loading, fetch } = useAxios(REQUEST_URL, {
+export function CreateBookingForm({ url, product, changeProduct }) {
+  const { data, loading, fetch } = useAxios(url, {
     method: "post",
     data: {},
   });
@@ -69,7 +64,7 @@ export function CreateBookingForm({ product, changeProduct }) {
     </Form>
   );
 
-  return userHaveAccess ? (
+  return (
     <div
       style={{
         margin: "20px",
@@ -78,5 +73,5 @@ export function CreateBookingForm({ product, changeProduct }) {
     >
       {loading ? <p>LOADING..</p> : form}
     </div>
-  ) : null;
+  );
 }

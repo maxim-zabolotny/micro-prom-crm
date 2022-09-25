@@ -3,6 +3,8 @@ import { useLoaderData, useLocation, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import { Button } from "antd";
 import { getRawPathname } from "../../utils/navigation/getRawPathname";
+import { RequestAccess } from "../../components/RequestAccess";
+import { API_URL } from "../../api/baseURL";
 
 export function ProductsPage() {
   const location = useLocation();
@@ -26,11 +28,19 @@ export function ProductsPage() {
   let children;
   switch (viewType) {
     case "single": {
-      children = <FindProduct productId={loaderData.id} />;
+      children = (
+        <RequestAccess url={API_URL.PRODUCTS.BASE} showMessage={true}>
+          <FindProduct productId={loaderData.id} />
+        </RequestAccess>
+      );
       break;
     }
     case "multiple": {
-      children = <Products />;
+      children = (
+        <RequestAccess url={API_URL.PRODUCTS.SEARCH} showMessage={true}>
+          <Products />
+        </RequestAccess>
+      );
       break;
     }
     default: {

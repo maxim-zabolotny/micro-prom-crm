@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useAxios, useRequestAccess } from "../../../../hooks";
+import { useAxios } from "../../../../hooks";
 import { useLocation, useNavigate } from "react-router-dom";
-import { API_URL } from "../../../../api/baseURL";
 import { FullProduct } from "../FullProduct/FullProduct";
 import { FindProductForm } from "../FindProductForm/FindProductForm";
 import { getRawPathname } from "../../../../utils/navigation/getRawPathname";
 
-const REQUEST_URL = API_URL.PRODUCTS.BASE;
-
-export function FindProduct({ productId }) {
-  const [userHaveAccess, errorAccessMessage] = useRequestAccess(REQUEST_URL);
-
+export function FindProduct({ url, productId }) {
   const location = useLocation();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const { data, loading, fetch } = useAxios(
-    REQUEST_URL,
+    url,
     {
       method: "get",
       params: {
         id: productId,
       },
     },
-    Boolean(productId) && userHaveAccess
+    Boolean(productId)
   );
 
   useEffect(() => {
@@ -46,12 +41,10 @@ export function FindProduct({ productId }) {
     <FullProduct product={product} changeViewAble={false} />
   ) : null;
 
-  return userHaveAccess ? (
+  return (
     <div>
       {formInfo}
       {productInfo}
     </div>
-  ) : (
-    errorAccessMessage
   );
 }
