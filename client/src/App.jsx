@@ -7,16 +7,7 @@ import { Main } from "./components/Main";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./pages/error";
 import { ProductsPage } from "./pages/products";
-
-// export function Booking() {
-//   const loaderData = useLoaderData();
-//
-//   return (
-//     <>
-//       <div>Бронирование - {JSON.stringify(loaderData)}</div>
-//     </>
-//   );
-// }
+import { Bookings } from "./components/Bookings";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +17,12 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
+        loader: ({ params }) => ({ id: params["*"] }),
+        element: <ProductsPage />,
+      },
+      {
+        path: "/:id",
+        loader: ({ params }) => ({ id: params["id"] }),
         element: <ProductsPage />,
       },
       {
