@@ -1,14 +1,27 @@
 import { FindProduct, Products } from "../../components/Products";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useLocation, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import { Button } from "antd";
+import { getRawPathname } from "../../utils/navigation/getRawPathname";
 
 export function ProductsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const loaderData = useLoaderData();
 
   const [viewType, setViewType] = useState(
     loaderData.id ? "single" : "multiple"
   );
+
+  const changeView = (viewType) => {
+    return () => {
+      setViewType(viewType);
+
+      if (viewType === "multiple") {
+        navigate(getRawPathname(location.pathname));
+      }
+    };
+  };
 
   let children;
   switch (viewType) {
@@ -30,14 +43,14 @@ export function ProductsPage() {
       <Button
         style={{ marginRight: "10px" }}
         type={viewType === "single" ? "primary" : "default"}
-        onClick={() => setViewType("single")}
+        onClick={changeView("single")}
       >
         Продукт
       </Button>
 
       <Button
         type={viewType === "multiple" ? "primary" : "default"}
-        onClick={() => setViewType("multiple")}
+        onClick={changeView("multiple")}
       >
         Поиск
       </Button>
