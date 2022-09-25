@@ -2,8 +2,14 @@ import { CreateBookingForm } from "../CreateBookingForm/CreateBookingForm";
 import { useState } from "react";
 import { Button } from "antd";
 
-export function FullProduct({ changeView, ...props }) {
+export function FullProduct({ changeView, changeViewAble, ...props }) {
   const [product, setProduct] = useState(props.product);
+
+  const changeViewButton = changeViewAble ? (
+    <Button size={"default"} onClick={changeView}>
+      Скрыть
+    </Button>
+  ) : null;
 
   return (
     <div
@@ -41,9 +47,7 @@ export function FullProduct({ changeView, ...props }) {
         <span>available: {product.available ? "Да" : "Нет"}</span>
         <br />
       </div>
-      <Button size={"default"} onClick={changeView}>
-        Скрыть
-      </Button>
+      {changeViewButton}
       <CreateBookingForm
         product={product}
         changeProduct={(newData) => setProduct(newData)}
