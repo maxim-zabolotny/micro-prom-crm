@@ -1,6 +1,7 @@
 import { Button, Form, Input } from "antd";
 import React from "react";
 import "./FindProductsForm.css";
+import { strIsNumberRule } from "../../../utils/formRules/strIsNumberRule";
 
 export function FindProductsForm({ data, fetch, productsSize }) {
   const onFinish = (values) => {
@@ -34,15 +35,6 @@ export function FindProductsForm({ data, fetch, productsSize }) {
     fetch(nextData);
   };
 
-  const strToNumberRule = {
-    message: "Должно быть числом",
-    type: "number",
-    transform: (v) => {
-      const result = Number(v);
-      return Number.isNaN(result) ? v : result;
-    },
-  };
-
   return (
     <div
       style={{
@@ -63,12 +55,12 @@ export function FindProductsForm({ data, fetch, productsSize }) {
         <Form.Item
           label="Microtron ID"
           name="microtronId"
-          rules={[strToNumberRule]}
+          rules={[strIsNumberRule]}
         >
           <Input placeholder={"Введите Microtron ID"} />
         </Form.Item>
 
-        <Form.Item label="Prom ID" name="promId" rules={[strToNumberRule]}>
+        <Form.Item label="Prom ID" name="promId" rules={[strIsNumberRule]}>
           <Input placeholder={"Введите Prom ID"} />
         </Form.Item>
 
