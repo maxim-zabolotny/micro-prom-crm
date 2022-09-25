@@ -72,7 +72,7 @@ export function Auth({ children }) {
   async function getCurrentUser(serverUrl, authToken) {
     if (!serverUrl && !authToken) return;
 
-    const url = API_URL.getUsersURL(serverUrl);
+    const url = `${serverUrl}${API_URL.USERS.BASE}`;
 
     try {
       const { data } = await axios.get(`${url}/current`, {

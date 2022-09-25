@@ -49,19 +49,4 @@ export const API_URL = {
   PRODUCT_SALES: {
     BASE: PRODUCT_SALES_URL,
   },
-  getUsersURL(baseUrl) {
-    return `${baseUrl}${this.USERS.BASE}`;
-  },
-  getCategoriesURL(baseUrl) {
-    return `${baseUrl}${this.CATEGORIES.BASE}`;
-  },
-  getProductsURL(baseUrl) {
-    return `${baseUrl}${this.PRODUCTS.BASE}`;
-  },
-  getProductBookingsURL(baseUrl) {
-    return `${baseUrl}${this.PRODUCT_BOOKINGS.BASE}`;
-  },
-  getProductSalesURL(baseUrl) {
-    return `${baseUrl}${this.PRODUCT_SALES.BASE}`;
-  },
 };
