@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product } from '@schemas/product';
 import { ProductModel } from '@schemas/product/product.schema';
 import { SearchProductsDto } from './dto/search-products.dto';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class CrmProductsService {
@@ -14,7 +15,20 @@ export class CrmProductsService {
     @InjectModel(Product.name) private productModel: ProductModel,
   ) {}
 
+  public async getById(id: Types.ObjectId) {
+    this.logger.debug('Get Product by id:', { id });
+
+    const product = await this.productModel.findById(id).exec();
+    if (!product) {
+      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+    }
+
+    return product;
+  }
+
   public async getAllProducts() {
+    this.logger.debug('Get All Products');
+
     return this.productModel.getAllProducts();
   }
 
