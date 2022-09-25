@@ -30,12 +30,6 @@ export function FindProduct({ productId }) {
     }
   }, [data]);
 
-  useEffect(() => {
-    return () => {
-      navigate(getRawPathname(location.pathname));
-    };
-  }, []);
-
   if (loading) {
     return <p>LOADING..</p>;
   }
