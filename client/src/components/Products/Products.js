@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import _ from "lodash";
 import { useAxios } from "../../hooks";
 import { API_URL } from "../../api/baseURL";
-import { Product } from "./Product";
+import { GeneralProduct } from "./Product";
 
 export function Products() {
   const [requestData, setRequestData] = useState({
@@ -29,7 +29,7 @@ export function Products() {
     _.isEmpty(data) || error ? null : (
       <div>
         {data.map((item) => (
-          <Product key={item._id} data={item} />
+          <GeneralProduct key={item._id} product={item} />
         ))}
       </div>
     );
