@@ -10,7 +10,7 @@ export const API_URL = {
   USERS: {
     BASE: USERS_URL,
     $PERMISSIONS: {
-      [USERS_URL]: [Object.values(UserRole)],
+      [USERS_URL]: [...Object.values(UserRole)],
     },
   },
   CATEGORIES: {
@@ -24,9 +24,9 @@ export const API_URL = {
     ALL: `${PRODUCTS_URL}/all`,
     SEARCH: `${PRODUCTS_URL}/search`,
     $PERMISSIONS: {
-      [PRODUCTS_URL]: [Object.values(UserRole)],
-      [`${PRODUCTS_URL}/all`]: [Object.values(UserRole)],
-      [`${PRODUCTS_URL}/search`]: [Object.values(UserRole)],
+      [PRODUCTS_URL]: [...Object.values(UserRole)],
+      [`${PRODUCTS_URL}/all`]: [...Object.values(UserRole)],
+      [`${PRODUCTS_URL}/search`]: [...Object.values(UserRole)],
     },
   },
   PRODUCT_BOOKINGS: {
@@ -36,8 +36,8 @@ export const API_URL = {
     APPROVE: `${PRODUCT_BOOKINGS_URL}/approve`,
     DISAPPROVE: `${PRODUCT_BOOKINGS_URL}/disapprove`,
     $PERMISSIONS: {
-      [PRODUCT_BOOKINGS_URL]: [Object.values(UserRole)],
-      [`${PRODUCT_BOOKINGS_URL}/search`]: [Object.values(UserRole)],
+      [PRODUCT_BOOKINGS_URL]: [...Object.values(UserRole)],
+      [`${PRODUCT_BOOKINGS_URL}/search`]: [...Object.values(UserRole)],
       [`${PRODUCT_BOOKINGS_URL}/create`]: [UserRole.Sales, UserRole.Admin],
       [`${PRODUCT_BOOKINGS_URL}/approve`]: [UserRole.Provider, UserRole.Admin],
       [`${PRODUCT_BOOKINGS_URL}/disapprove`]: [
@@ -48,5 +48,35 @@ export const API_URL = {
   },
   PRODUCT_SALES: {
     BASE: PRODUCT_SALES_URL,
+  },
+  getPermissions(path) {
+    let permissions;
+    switch (true) {
+      case path.startsWith(USERS_URL): {
+        permissions = this.USERS.$PERMISSIONS;
+        break;
+      }
+      case path.startsWith(CATEGORIES_URL): {
+        permissions = this.CATEGORIES.$PERMISSIONS;
+        break;
+      }
+      case path.startsWith(PRODUCTS_URL): {
+        permissions = this.PRODUCTS.$PERMISSIONS;
+        break;
+      }
+      case path.startsWith(PRODUCT_BOOKINGS_URL): {
+        permissions = this.PRODUCT_BOOKINGS.$PERMISSIONS;
+        break;
+      }
+      case path.startsWith(PRODUCT_SALES_URL): {
+        permissions = this.PRODUCT_SALES.$PERMISSIONS;
+        break;
+      }
+      default: {
+        throw new Error(`Invalid path: "${path}"`);
+      }
+    }
+
+    return permissions[path];
   },
 };
