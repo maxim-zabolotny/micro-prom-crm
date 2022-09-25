@@ -7,7 +7,6 @@ const PRODUCT_SALES_URL = "/crm/product-sales";
 export const API_URL = {
   USERS: {
     BASE: USERS_URL,
-    ALL: `${USERS_URL}/all`,
   },
   CATEGORIES: {
     BASE: CATEGORIES_URL,
@@ -21,6 +20,8 @@ export const API_URL = {
     BASE: PRODUCT_BOOKINGS_URL,
     SEARCH: `${PRODUCT_BOOKINGS_URL}/search`,
     CREATE: `${PRODUCT_BOOKINGS_URL}/create`,
+    APPROVE: `${PRODUCT_BOOKINGS_URL}/approve`,
+    DISAPPROVE: `${PRODUCT_BOOKINGS_URL}/disapprove`,
   },
   PRODUCT_SALES: {
     BASE: PRODUCT_SALES_URL,
