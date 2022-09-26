@@ -812,12 +812,16 @@ export class MicrotronProductsService {
       forceParse,
     });
 
-    /// CACHE
-    this.logger.debug('Load parse products cache');
-    await this.loadProductsParseCacheFromFile(this.productsParseCacheFilePath);
+    if (this.productsParseCache.size === 0) {
+      /// CACHE
+      this.logger.debug('Load parse products cache');
+      await this.loadProductsParseCacheFromFile(
+        this.productsParseCacheFilePath,
+      );
 
-    this.logger.debug('Remove empty parse results');
-    this.removeEmptyProductsParseResults();
+      this.logger.debug('Remove empty parse results');
+      this.removeEmptyProductsParseResults();
+    }
 
     /// MAIN
     const course = await this.microtronCourseService.getCoursesByAPI(true);
