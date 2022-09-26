@@ -1,10 +1,13 @@
 /*external modules*/
 import _ from 'lodash';
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  Axios, AxiosError, AxiosRequestConfig, AxiosResponse,
+} from 'axios';
 import urlJoin from 'url-join';
 /*lib*/
 /*types*/
 import { HttpMethods } from './HttpMethods';
+import { ErrorCase } from './ErrorCase';
 import { ILibraryResponse } from '../types/api';
 import { AxiosExtendedError, PromAPIError } from '../error';
 import { TObject } from '../types';
@@ -12,15 +15,53 @@ import { TObject } from '../types';
 
 export {
   HttpMethods,
+  ErrorCase,
 };
 
 export abstract class Request {
   protected config: AxiosRequestConfig;
+  protected axios: Axios;
+
   protected token: string;
 
   constructor({ token, config }: { token: string, config?: AxiosRequestConfig }) {
     this.token = token;
     this.config = config ?? {};
+
+    this.axios = axios.create();
+    this.axios.interceptors.response.use(
+      (response) => response,
+      this.resolveRequestError(),
+    );
+  }
+
+  private resolveRequestError() {
+    return async (error: any) => {
+      if (error.response && error.response.status === 429) {
+        const errorCase = error.config.url.includes('import_url') ? ErrorCase.ImportSheet : ErrorCase.Default;
+        const timeToSleep = errorCase === ErrorCase.ImportSheet ? 1000 * 60 * 5 : 1000 * 20;
+
+        console.error('Request limit Prom API error:', {
+          message: error.message,
+          status: error.response.status,
+          statusText: error.response.statusText,
+          error: error.response.data.error ?? error.response.data,
+          case: errorCase,
+        });
+
+        console.log('Sleep and repeat request:', {
+          timeToSleep: timeToSleep / 1000,
+        });
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, timeToSleep);
+        });
+
+        return this.axios.request(error.config);
+      }
+
+      return Promise.reject(error);
+    };
   }
 
   public getToken() {
@@ -57,7 +98,7 @@ export abstract class Request {
     const path = urlJoin(Request.API_VERSION, resource);
 
     try {
-      const response = await axios({
+      const response = await this.axios.request({
         ...this.config,
         method,
         data: data ?? {},
