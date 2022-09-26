@@ -1,14 +1,17 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { Axios, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { HttpMethods } from './HttpMethods';
+import { ErrorCase } from './ErrorCase';
 import { ILibraryResponse } from '../types/api';
-export { HttpMethods, };
+export { HttpMethods, ErrorCase, };
 export declare abstract class Request {
     protected config: AxiosRequestConfig;
+    protected axios: Axios;
     protected token: string;
     constructor({ token, config }: {
         token: string;
         config?: AxiosRequestConfig;
     });
+    private resolveRequestError;
     getToken(): string;
     getConfig(): AxiosRequestConfig<any>;
     setConfig(config: AxiosRequestConfig): this;
