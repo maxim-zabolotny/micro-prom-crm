@@ -1,5 +1,5 @@
 /*external modules*/
-import { escapeMarkdown, md } from 'telegram-escape';
+import { md } from 'telegram-escape';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class MarkdownHelper {
     return md`${text}`;
   }
 
-  static json(text: string): string {
-    return escapeMarkdown('```json\n' + text + '\n```');
+  static json(json: string): string {
+    return '```json\n' + json + '\n```';
   }
 }
