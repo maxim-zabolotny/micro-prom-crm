@@ -19,6 +19,7 @@ import { HttpException, HttpStatus, Logger, Type } from '@nestjs/common';
 import { DataGenerateHelper } from '@common/helpers';
 import { IProductFullInfo } from '@common/interfaces/product';
 import { AppConstants } from '../../../app.constants';
+import { Data } from '../../../data';
 
 // TYPES
 export type TProductTranslate = Pick<Product, 'name' | 'description'>;
@@ -466,6 +467,29 @@ ProductSchema.statics.addProduct = async function (productData, session) {
     name: productData.name,
     categoryMicrotronId: productData.category.microtronId,
   });
+
+  productLogger.debug('Find product');
+  const oldProduct = await this.findOne({ microtronId: productData.id })
+    .session(session)
+    .exec();
+  if (oldProduct) {
+    productLogger.error('Product already exist. Return old version', {
+      productByAPI: productData,
+      productByDB: oldProduct,
+    });
+
+    await Data.Logs.push({
+      type: 'Duplicate',
+      message: 'Product already exist',
+      time: new Date(),
+      data: {
+        productByAPI: productData,
+        productByDB: oldProduct,
+      },
+    });
+
+    return oldProduct;
+  }
 
   const { parse, translate, category } = productData;
 
