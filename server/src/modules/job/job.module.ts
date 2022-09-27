@@ -124,6 +124,10 @@ const buildDefaultJobOptions = (
     // STATIC
     BullModule.registerQueue({
       name: syncProductsName,
+      settings: {
+        lockDuration: ms('25m'),
+        maxStalledCount: 0,
+      },
       defaultJobOptions: {
         attempts: 2,
         timeout: ms('25m'),
@@ -140,6 +144,10 @@ const buildDefaultJobOptions = (
     }),
     BullModule.registerQueue({
       name: reloadSheetName,
+      settings: {
+        lockDuration: ms('40m'),
+        maxStalledCount: 0,
+      },
       defaultJobOptions: {
         attempts: 2,
         timeout: ms('2h'),
