@@ -533,8 +533,12 @@ export class SyncLocalService {
         intersection: productIds,
         removed: removedProductIds,
       } = this.dataUtilsHelper.getDiff(
-        _.map(productsFromAPIByCategory, 'id'),
-        _.map(productsFromDB, 'microtronId'),
+        _.map(productsFromAPIByCategory, (p) => Number(p.id)).filter(
+          (id) => !Number.isNaN(id),
+        ),
+        _.map(productsFromDB, (p) => Number(p.microtronId)).filter(
+          (id) => !Number.isNaN(id),
+        ),
       );
 
       if (add) {
