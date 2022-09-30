@@ -49,7 +49,7 @@ export class MicrotronProductsService {
   private readonly isValidProduct = (
     product: Pick<
       IProductFull,
-      'url' | 'price' | 'price_s' | 'quantity' | 'quantity_s'
+      'url' | 'brand' | 'price' | 'price_s' | 'quantity' | 'quantity_s'
     >,
   ) => {
     // DATA
@@ -58,20 +58,29 @@ export class MicrotronProductsService {
       ? product.quantity
       : product.quantity_s;
 
+    const excludeBrands = ['imou', 'hikvision', 'dahua'];
+
     // CHECKS
-    const baseCheck = _.conformsTo<Pick<IProductFull, 'url'>>(product, {
-      url: (url: string) => {
-        const isEmptyUrl = _.isEmpty(url);
-        if (isEmptyUrl) return false;
+    const baseCheck = _.conformsTo<Pick<IProductFull, 'url' | 'brand'>>(
+      product,
+      {
+        url: (url: string) => {
+          const isEmptyUrl = _.isEmpty(url);
+          if (isEmptyUrl) return false;
 
-        const isInvalidUrl = url
-          .slice(0, url.lastIndexOf('/p'))
-          .endsWith('microtron.ua');
-        if (isInvalidUrl) return false;
+          const isInvalidUrl = url
+            .slice(0, url.lastIndexOf('/p'))
+            .endsWith('microtron.ua');
+          if (isInvalidUrl) return false;
 
-        return true;
+          return true;
+        },
+        brand: (brand: string) => {
+          const isExcluded = excludeBrands.includes(brand.toLowerCase());
+          return !isExcluded;
+        },
       },
-    });
+    );
 
     const minPriceCheck = price > 0;
     const minQuantityCheck = quantity >= 1; // TODO: temp solution
