@@ -14,7 +14,7 @@ import { CategoryDocument } from '@schemas/category';
 import { HttpException, HttpStatus, Logger, Type } from '@nestjs/common';
 
 // TYPES
-export type TInnerProduct = { id: Types.ObjectId } & Pick<
+export type TInnerProduct = { id: Types.ObjectId; image?: string } & Pick<
   Product,
   'name' | 'microtronId'
 >;
@@ -79,6 +79,7 @@ export class ProductBooking {
       id: { type: SchemaTypes.ObjectId, ref: 'products', required: true },
       name: { type: String, required: true },
       microtronId: { type: Number, required: true },
+      image: { type: String },
     }),
     required: true,
   })
@@ -232,6 +233,7 @@ ProductBookingSchema.statics.addBooking = async function (
       id: productBookingData.product._id,
       name: productBookingData.product.name,
       microtronId: productBookingData.product.microtronId,
+      image: productBookingData.product.images[0],
     },
     history: [
       {
