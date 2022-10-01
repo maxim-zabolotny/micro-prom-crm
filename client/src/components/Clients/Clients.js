@@ -23,6 +23,7 @@ export function Clients({ url }) {
         fetch={(data) => fetch({}, data)}
         clientsSize={(data ?? []).length}
         modifyUrl={true}
+        showResult={true}
       />
       {loading ? <p>LOADING..</p> : clients}
     </div>

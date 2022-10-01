@@ -3,7 +3,7 @@ import _ from "lodash";
 import React, { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
-export function FindClientsForm({ fetch, clientsSize, modifyUrl }) {
+export function FindClientsForm({ fetch, clientsSize, modifyUrl, showResult }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = Object.fromEntries(searchParams.entries());
 
@@ -61,9 +61,13 @@ export function FindClientsForm({ fetch, clientsSize, modifyUrl }) {
           </Button>
         </Form.Item>
 
-        <Form.Item label="Результат">
-          <span className="ant-form-text">Найдено клиентов: {clientsSize}</span>
-        </Form.Item>
+        {showResult ? (
+          <Form.Item label="Результат">
+            <span className="ant-form-text">
+              Найдено клиентов: {clientsSize}
+            </span>
+          </Form.Item>
+        ) : null}
       </Form>
     </div>
   );
