@@ -1,7 +1,7 @@
 import { useAxios } from "../../hooks";
 import _ from "lodash";
 import { ShortClient } from "./Client";
-import { FindClientsForm } from "./FindClientsForm/FindClientsForm";
+import { FindClientsForm } from "./Forms/FindClientsForm/FindClientsForm";
 
 export function Clients({ url }) {
   const { data, error, loading, fetch } = useAxios(url, {
