@@ -1,5 +1,6 @@
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import React from "react";
 
 export function ShortBooking({ booking, changeView }) {
   const navigate = useNavigate();
@@ -37,6 +38,13 @@ export function ShortBooking({ booking, changeView }) {
 
   const productInfo = (
     <div>
+      <img
+        style={{
+          width: 75,
+          height: 75,
+        }}
+        src={product.image}
+      />
       <span>microtronId: {product.microtronId}</span> |
       <span>name: {product.name}</span>
       <Button
