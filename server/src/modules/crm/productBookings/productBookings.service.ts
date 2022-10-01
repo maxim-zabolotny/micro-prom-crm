@@ -8,7 +8,7 @@ import {
   ProductBookingStatus,
 } from '@schemas/productBooking';
 import { CreateProductBookingDto } from './dto/create-product-booking.dto';
-import { User, UserDocument, UserModel } from '@schemas/user';
+import { User, UserDocument, UserModel, UserRole } from '@schemas/user';
 import { Product, ProductModel } from '@schemas/product';
 import { ClientSession, Connection, Types } from 'mongoose';
 import { NotificationBotService } from '../../telegram/crm-bot/notification/notification.service';
@@ -296,9 +296,16 @@ export class CrmProductBookingsService {
       },
     });
 
-    return await this.withTransaction(async (session) => {
-      const sales = await this.getProductBookingSalesUser(productBooking);
+    const sales = await this.getProductBookingSalesUser(productBooking);
 
+    const isCurrentUserProvider = currentUser.role === UserRole.Provider;
+    const isCurrentUserCreator = sales._id === currentUser._id;
+
+    if (!isCurrentUserProvider && !isCurrentUserCreator) {
+      throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+    }
+
+    return await this.withTransaction(async (session) => {
       const updatedProductBooking =
         await this.productBookingModel.updateBooking(
           productBooking._id,
@@ -320,12 +327,15 @@ export class CrmProductBookingsService {
         session,
       );
 
+      const userTelegramId = (
+        isCurrentUserCreator ? await this.userModel.getAdmin() : sales
+      ).telegramId; // TODO: getProvider
       await this.notifySales(
         {
+          userTelegramId,
           productBookingId: updatedProductBooking._id.toString(),
           productSaleId: productSale._id.toString(),
           productBookingStatus: updatedProductBooking.status,
-          userTelegramId: sales.telegramId,
         },
         Object.entries({
           'Имя продукта': MarkdownHelper.monospaced(
@@ -378,10 +388,17 @@ export class CrmProductBookingsService {
       },
     });
 
+    const sales = await this.getProductBookingSalesUser(productBooking);
+
+    const isCurrentUserProvider = currentUser.role === UserRole.Provider;
+    const isCurrentUserCreator = sales._id === currentUser._id;
+
+    if (!isCurrentUserProvider && !isCurrentUserCreator) {
+      throw new HttpException('Permission denied', HttpStatus.FORBIDDEN);
+    }
+
     const updatedProductBooking = await this.withTransaction(
       async (session) => {
-        const sales = await this.getProductBookingSalesUser(productBooking);
-
         const updatedProductBooking =
           await this.productBookingModel.updateBooking(
             productBooking._id,
@@ -412,11 +429,14 @@ export class CrmProductBookingsService {
           updatedProducts: updateInPromResult.updatedProducts.length,
         });
 
+        const userTelegramId = (
+          isCurrentUserCreator ? await this.userModel.getAdmin() : sales
+        ).telegramId; // TODO: getProvider
         await this.notifySales(
           {
+            userTelegramId,
             productBookingId: updatedProductBooking._id.toString(),
             productBookingStatus: updatedProductBooking.status,
-            userTelegramId: sales.telegramId,
           },
           Object.entries({
             'Имя продукта': MarkdownHelper.monospaced(

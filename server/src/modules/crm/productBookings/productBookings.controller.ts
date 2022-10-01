@@ -60,7 +60,7 @@ export class CrmProductBookingsController {
 
   @Put('/approve')
   @HttpCode(201)
-  @Auth(UserRole.Provider)
+  @Auth(UserRole.Provider, UserRole.Sales)
   approveProductBooking(
     @Body() data: ApproveProductBookingDto,
     @CurrentUser() currentUser: UserDocument,
@@ -73,7 +73,7 @@ export class CrmProductBookingsController {
 
   @Put('/disapprove')
   @HttpCode(201)
-  @Auth(UserRole.Provider)
+  @Auth(UserRole.Provider, UserRole.Sales)
   disapproveProductBooking(
     @Body() data: DisapproveProductBookingDto,
     @CurrentUser() currentUser: UserDocument,
