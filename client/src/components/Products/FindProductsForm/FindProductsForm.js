@@ -27,10 +27,8 @@ export function FindProductsForm({ data, fetch, productsSize }) {
   const searchParamsObj = Object.fromEntries(searchParams.entries());
 
   useEffect(() => {
-    if (Object.keys(searchParamsObj).length > 0) {
-      const nextData = buildNextData(data, searchParamsObj);
-      fetch(nextData);
-    }
+    const nextData = buildNextData(data, searchParamsObj);
+    fetch(nextData);
   }, []);
 
   const onFinish = (values) => {

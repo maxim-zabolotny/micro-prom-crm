@@ -1,5 +1,5 @@
 import { FindProductsForm } from "./FindProductsForm/FindProductsForm";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import _ from "lodash";
 import { useAxios } from "../../hooks";
 import { GeneralProduct } from "./Product";
@@ -11,15 +11,10 @@ export function Products({ url }) {
     loadedOnProm: true,
   });
 
-  const config = {
+  const { data, error, loading, fetch } = useAxios(url, {
     method: "post",
     data: requestData,
-  };
-  const { data, error, loading, fetch } = useAxios(url, config);
-
-  useEffect(() => {
-    fetch();
-  }, [config.data]);
+  });
 
   const products =
     _.isEmpty(data) || error ? null : (
@@ -34,7 +29,10 @@ export function Products({ url }) {
     <div style={{ width: "100%" }}>
       <FindProductsForm
         data={requestData}
-        fetch={(data) => setRequestData(data)}
+        fetch={(data) => {
+          setRequestData(data);
+          fetch(data);
+        }}
         productsSize={(data ?? []).length}
       />
       {loading ? <p>LOADING..</p> : products}
