@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import React, { useEffect } from "react";
 import { Button, Form, Select } from "antd";
 import "./FindBookingsForm.css";
-import { BookingStatus } from "../utils";
+import { BookingStatus } from "../../utils";
 
 export function FindBookingsForm({ data, fetch, bookingsSize }) {
   const [searchParams, setSearchParams] = useSearchParams();

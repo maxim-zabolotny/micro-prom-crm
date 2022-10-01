@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Form, Select } from "antd";
 import { BookingStatus } from "../../utils";
-import { ApproveBookingForm } from "../ApproveBookingForm/ApproveBookingForm";
+import { ApproveBookingForm } from "../Froms/ApproveBookingForm/ApproveBookingForm";
 import { BookingProduct } from "../BookingProduct/BookingProduct";
 import { RequestAccess } from "../../../RequestAccess";
 import { API_URL } from "../../../../api/baseURL";
-import { DisapproveBookingForm } from "../DisapproveBookingForm/DisapproveBookingForm";
+import { DisapproveBookingForm } from "../Froms/DisapproveBookingForm/DisapproveBookingForm";
 
 export function FullBooking({ booking, setBooking }) {
   const [bookingStatus, setBookingStatus] = useState(booking.status);

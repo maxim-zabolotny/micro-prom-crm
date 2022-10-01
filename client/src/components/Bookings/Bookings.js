@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAxios } from "../../hooks";
 import _ from "lodash";
 import { ShortBooking } from "./Booking/ShortBooking/ShortBooking";
-import { FindBookingsForm } from "./FindBookingsForm/FindBookingsForm";
+import { FindBookingsForm } from "./Forms/FindBookingsForm/FindBookingsForm";
 
 export function Bookings({ url, changeView }) {
   const [requestData, setRequestData] = useState({

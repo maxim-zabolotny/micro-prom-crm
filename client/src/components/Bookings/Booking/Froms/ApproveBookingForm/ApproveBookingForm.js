@@ -1,7 +1,7 @@
-import { useAxios } from "../../../../hooks";
+import { useAxios } from "../../../../../hooks";
 import React, { useEffect } from "react";
 import { Button, Form, Input } from "antd";
-import { strIsNumberRule } from "../../../../utils/formRules/strIsNumberRule";
+import { strIsNumberRule } from "../../../../../utils/formRules/strIsNumberRule";
 
 export function ApproveBookingForm({ url, booking, changeBooking }) {
   const { data, loading, fetch } = useAxios(url, {

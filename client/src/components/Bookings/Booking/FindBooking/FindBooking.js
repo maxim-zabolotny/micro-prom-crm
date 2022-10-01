@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAxios } from "../../../../hooks";
-import { FindBookingForm } from "../FindBookingForm/FindBookingForm";
+import { FindBookingForm } from "../Froms/FindBookingForm/FindBookingForm";
 import { useNavigate } from "react-router-dom";
 import { FullBooking } from "../FullBooking/FullBooking";
 
