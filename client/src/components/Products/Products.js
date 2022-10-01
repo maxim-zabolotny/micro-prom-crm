@@ -1,4 +1,4 @@
-import { FindProductsForm } from "./FindProductsForm/FindProductsForm";
+import { FindProductsForm } from "./Forms/FindProductsForm/FindProductsForm";
 import { useState } from "react";
 import _ from "lodash";
 import { useAxios } from "../../hooks";

@@ -1,4 +1,4 @@
-import { CreateBookingForm } from "../CreateBookingForm/CreateBookingForm";
+import { CreateBookingForm } from "../Forms/CreateBookingForm/CreateBookingForm";
 import { Button } from "antd";
 import { RequestAccess } from "../../../RequestAccess";
 import { API_URL } from "../../../../api/baseURL";

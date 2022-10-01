@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAxios } from "../../../../hooks";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FullProduct } from "../FullProduct/FullProduct";
-import { FindProductForm } from "../FindProductForm/FindProductForm";
+import { FindProductForm } from "../Forms/FindProductForm/FindProductForm";
 import { getRawPathname } from "../../../../utils/navigation/getRawPathname";
 
 export function FindProduct({ url, productId }) {

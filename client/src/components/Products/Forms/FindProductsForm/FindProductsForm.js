@@ -2,7 +2,7 @@ import { Button, Form, Input } from "antd";
 import _ from "lodash";
 import React, { useEffect } from "react";
 import "./FindProductsForm.css";
-import { strIsNumberRule } from "../../../utils/formRules/strIsNumberRule";
+import { strIsNumberRule } from "../../../../utils/formRules/strIsNumberRule";
 import { useSearchParams } from "react-router-dom";
 
 const buildNextData = (data, values) => {
