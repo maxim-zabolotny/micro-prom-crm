@@ -14,6 +14,34 @@ export class PromClientsService {
     });
   }
 
+  public async getById(clientId: number) {
+    this.logger.debug('Get client by id:', {
+      clientId,
+    });
+
+    try {
+      const { client } = await this.clientsAPI.getById(clientId);
+
+      this.logger.debug('Found client:', {
+        client,
+      });
+
+      return client;
+    } catch (err: unknown) {
+      const isNotFoundError = err['statusCode'] === 404;
+
+      if (isNotFoundError) {
+        this.logger.debug('Client not found:', {
+          clientId,
+        });
+
+        return null;
+      }
+
+      throw err;
+    }
+  }
+
   public async search(query: string) {
     this.logger.debug('Search clients by query:', {
       query,

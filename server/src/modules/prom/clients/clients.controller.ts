@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  ParseIntPipe,
   Query,
   UseFilters,
   UseInterceptors,
@@ -17,6 +18,13 @@ import { UserRole } from '@schemas/user';
 @UseInterceptors(LoggingInterceptor)
 export class PromClientsController {
   constructor(private readonly promClientsService: PromClientsService) {}
+
+  @Get('/')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  async getById(@Query('id', ParseIntPipe) clientId: number) {
+    return this.promClientsService.getById(clientId);
+  }
 
   @Get('/search')
   @HttpCode(200)
