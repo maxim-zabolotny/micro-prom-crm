@@ -8,6 +8,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./pages/error";
 import { ProductsPage } from "./pages/products";
 import { BookingsPage } from "./pages/bookings";
+import { ClientsPage } from "./pages/clients";
 
 const router = createBrowserRouter([
   {
@@ -37,7 +38,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/client",
-        element: <div>Клиенты</div>,
+        element: <ClientsPage />,
       },
     ],
   },
