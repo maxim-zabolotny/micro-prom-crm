@@ -34,6 +34,7 @@ import { TelegramModule } from '../telegram/telegram.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@schemas/user';
 import { PromModule } from '../prom/prom.module';
+import { MicrotronModule } from '../microtron/microtron.module';
 /*modules*/
 /*services*/
 /*controllers*/
@@ -69,6 +70,7 @@ const buildDefaultJobOptions = (
     SyncModule,
     TelegramModule,
     PromModule,
+    MicrotronModule,
     MongooseModule.forFeature([
       {
         name: User.name,

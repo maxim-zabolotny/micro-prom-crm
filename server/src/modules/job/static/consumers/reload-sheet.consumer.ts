@@ -16,6 +16,7 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CommonSyncConsumer } from '../../consumers/CommonSync';
 import { Connection } from 'mongoose';
 import { PromProductsService } from '../../../prom/products/products.service';
+import { MicrotronProductsService } from '../../../microtron/products/products.service';
 
 export type TReloadSheetProcessorData = void;
 export type TReloadSheetProcessorQueue = Queue<TReloadSheetProcessorData>;
@@ -31,6 +32,7 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
     private readonly syncLocalService: SyncLocalService,
     private readonly syncPromService: SyncPromService,
     private readonly promProductsService: PromProductsService,
+    private readonly microtronProductsService: MicrotronProductsService,
     protected readonly notificationBotService: NotificationBotService,
     @InjectModel(User.name)
     protected readonly userModel: UserModel,
@@ -48,10 +50,14 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
     // 1. Actualize
     await this.unionLogger(job, '1. Actualize products');
 
+    const removedEmptyParseProductResults =
+      this.microtronProductsService.removeEmptyProductsParseResults();
+
     const { added, updated, removed } =
       await this.syncLocalService.actualizeAllProducts(session);
 
     await this.unionLogger(job, '1. Actualize products result:', {
+      removedEmptyParseProductResultsCount: removedEmptyParseProductResults,
       addedProductsCount: added.length,
       updatedProductsCount: updated.length,
       removedProductsCount: removed.length,
@@ -119,6 +125,7 @@ export class ReloadSheetConsumer extends CommonSyncConsumer {
 
     await this.notifyAdmin(this.getReadableQueueName(), {
       actualizeProducts: {
+        removedEmptyParseProductResultsCount: removedEmptyParseProductResults,
         addedProductsCount: added.length,
         updatedProductsCount: updated.length,
         removedProductsCount: removed.length,
