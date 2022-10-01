@@ -5,6 +5,7 @@ const CATEGORIES_URL = "/crm/categories";
 const PRODUCTS_URL = "/crm/products";
 const PRODUCT_BOOKINGS_URL = "/crm/product-bookings";
 const PRODUCT_SALES_URL = "/crm/product-sales";
+const CLIENTS_URL = "/prom/clients";
 
 export const API_URL = {
   USERS: {
@@ -49,6 +50,14 @@ export const API_URL = {
   PRODUCT_SALES: {
     BASE: PRODUCT_SALES_URL,
   },
+  CLIENTS: {
+    BASE: CLIENTS_URL,
+    SEARCH: `${CLIENTS_URL}/search`,
+    $PERMISSIONS: {
+      [CLIENTS_URL]: [...Object.values(UserRole)],
+      [`${CLIENTS_URL}/search`]: [...Object.values(UserRole)],
+    },
+  },
   getPermissions(path) {
     let permissions;
     switch (true) {
@@ -70,6 +79,10 @@ export const API_URL = {
       }
       case path.startsWith(PRODUCT_SALES_URL): {
         permissions = this.PRODUCT_SALES.$PERMISSIONS;
+        break;
+      }
+      case path.startsWith(CLIENTS_URL): {
+        permissions = this.CLIENTS.$PERMISSIONS;
         break;
       }
       default: {
