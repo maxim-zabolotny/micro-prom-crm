@@ -200,7 +200,7 @@ ProductBookingSchema.statics.findBookings = async function (
 ) {
   const searchData = {};
 
-  if ('status' in data) {
+  if (data.status) {
     searchData['status'] = data.status;
   }
 
