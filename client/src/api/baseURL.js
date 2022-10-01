@@ -49,6 +49,26 @@ export const API_URL = {
   },
   PRODUCT_SALES: {
     BASE: PRODUCT_SALES_URL,
+    SEARCH: `${PRODUCT_SALES_URL}/search`,
+    SET_DESCRIPTION: `${PRODUCT_SALES_URL}/set-description`,
+    SET_ORDER: `${PRODUCT_SALES_URL}/set-order`,
+    SET_CLIENT: `${PRODUCT_SALES_URL}/set-client`,
+    DELIVERY: `${PRODUCT_SALES_URL}/delivery`,
+    SALE: `${PRODUCT_SALES_URL}/sale`,
+    CANCEL: `${PRODUCT_SALES_URL}/cancel`,
+    $PERMISSIONS: {
+      [PRODUCT_SALES_URL]: [...Object.values(UserRole)],
+      [`${PRODUCT_SALES_URL}/search`]: [...Object.values(UserRole)],
+      [`${PRODUCT_SALES_URL}/set-description`]: [
+        UserRole.Sales,
+        UserRole.Admin,
+      ],
+      [`${PRODUCT_SALES_URL}/set-order`]: [UserRole.Sales, UserRole.Admin],
+      [`${PRODUCT_SALES_URL}/set-client`]: [UserRole.Sales, UserRole.Admin],
+      [`${PRODUCT_SALES_URL}/delivery`]: [UserRole.Sales, UserRole.Admin],
+      [`${PRODUCT_SALES_URL}/sale`]: [UserRole.Sales, UserRole.Admin],
+      [`${PRODUCT_SALES_URL}/cancel`]: [UserRole.Sales, UserRole.Admin],
+    },
   },
   CLIENTS: {
     BASE: CLIENTS_URL,
