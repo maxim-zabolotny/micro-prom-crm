@@ -20,7 +20,7 @@ export function ProductsPage() {
       setViewType(viewType);
 
       if (viewType === "multiple") {
-        navigate(getRawPathname(location.pathname));
+        navigate(getRawPathname(location.pathname) + location.search);
       }
     };
   };
