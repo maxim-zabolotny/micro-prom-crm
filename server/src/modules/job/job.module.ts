@@ -125,27 +125,27 @@ const buildDefaultJobOptions = (
     BullModule.registerQueue({
       name: syncProductsName,
       settings: {
-        lockDuration: ms('25m'),
+        lockDuration: ms('10m'),
         maxStalledCount: 0,
       },
       defaultJobOptions: {
         attempts: 2,
-        timeout: ms('25m'),
+        timeout: ms('10m'),
         removeOnFail: 8,
         removeOnComplete: 16,
         repeat: {
-          cron: '*/30 7-22 * * *', // At every 30th minute past every hour from 7 through 22.
+          cron: '*/15 7-22 * * *', // At every 30th minute past every hour from 7 through 22.
         },
         backoff: {
           type: 'fixed',
-          delay: ms('5m'),
+          delay: ms('2m'),
         },
       },
     }),
     BullModule.registerQueue({
       name: reloadSheetName,
       settings: {
-        lockDuration: ms('40m'),
+        lockDuration: ms('1h'),
         maxStalledCount: 0,
       },
       defaultJobOptions: {
