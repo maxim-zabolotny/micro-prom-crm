@@ -7,7 +7,7 @@ import { Main } from "./components/Main";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorPage } from "./pages/error";
 import { ProductsPage } from "./pages/products";
-import { Bookings } from "./components/Bookings";
+import { BookingsPage } from "./pages/bookings";
 
 const router = createBrowserRouter([
   {
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
       {
         path: "/booking/*",
         loader: ({ params }) => ({ id: params["*"] }),
-        element: <div>Бронирование</div>,
+        element: <BookingsPage />,
       },
       {
         path: "/sale/*",
