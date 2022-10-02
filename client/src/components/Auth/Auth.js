@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { API_URL } from "../../api/baseURL";
 import { GlobalContext } from "../../contexts/global";
 import { isUnauthorizedError } from "../../utils";
+import { NotificationManager } from "react-notifications";
 
 const SERVER_URL_KEY = "serverUrl";
 const AUTH_TOKEN_KEY = "authToken";
@@ -86,10 +87,17 @@ export function Auth({ children }) {
       console.error("App Request Error:", err);
 
       if (isUnauthorizedError(err)) {
+        NotificationManager.error(
+          `Ошибка авторизации`,
+          <>
+            Запросите <b>ссылку для авторизации</b> в Telegram Bot -{" "}
+            <b>/get_login_url</b>
+          </>,
+          12000
+        );
+
         resetCreds();
       }
-
-      // TODO: notify user about err
     }
   }
 
@@ -110,7 +118,6 @@ export function Auth({ children }) {
       </GlobalContext.Provider>
     );
   } else {
-    // TODO: use only notify instead
     return (
       <div>
         <p>Ошибка авторизации</p>
