@@ -10,7 +10,7 @@ export function LoaderSpinner({ width = 50, height = 50 }) {
         width={width}
         strokeWidth={5}
         strokeWidthSecondary={1}
-        color="blue"
+        color="#1890ff"
         secondaryColor="white"
       />
     </div>
