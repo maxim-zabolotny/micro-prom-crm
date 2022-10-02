@@ -5,25 +5,14 @@ import { Outlet } from "react-router-dom";
 import React from "react";
 import { NotificationContainer } from "react-notifications";
 import "react-notifications/lib/notifications.css";
+import "./Main.css";
 
 export function Main() {
   return (
     <Auth>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
+      <div className={"main"}>
         <CurrentUser />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            height: "100%",
-          }}
-        >
+        <div className={"body"}>
           <Navigation />
           <Outlet />
         </div>
