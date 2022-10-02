@@ -1,6 +1,10 @@
 import React from "react";
+import { Button } from "antd";
+import { useNavigate } from "react-router-dom";
 
 export function BookingProduct({ product }) {
+  const navigate = useNavigate();
+
   return (
     <div>
       <p>Product</p>
@@ -16,6 +20,13 @@ export function BookingProduct({ product }) {
       <span>microtronId: {product.microtronId}</span>
       <br />
       <span>name: {product.name}</span>
+      <Button
+        size={"default"}
+        type={"default"}
+        onClick={() => navigate(`/${product.id}`)}
+      >
+        Показать Продукт
+      </Button>
     </div>
   );
 }
