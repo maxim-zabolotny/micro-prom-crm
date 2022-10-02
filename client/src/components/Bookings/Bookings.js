@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useAxios } from "../../hooks";
 import _ from "lodash";
-import { ShortBooking } from "./Booking/ShortBooking/ShortBooking";
+import { ShortBooking } from "./Booking";
 import { FindBookingsForm } from "./Forms/FindBookingsForm/FindBookingsForm";
+import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
 
 export function Bookings({ url, changeView }) {
   const [requestData, setRequestData] = useState({
@@ -16,7 +17,9 @@ export function Bookings({ url, changeView }) {
   });
 
   const bookings =
-    _.isEmpty(data) || error ? null : (
+    _.isEmpty(data) || error ? (
+      <div>Пусто</div>
+    ) : (
       <div>
         {data.map((item) => (
           <ShortBooking key={item._id} booking={item} changeView={changeView} />
@@ -34,7 +37,7 @@ export function Bookings({ url, changeView }) {
         }}
         bookingsSize={(data ?? []).length}
       />
-      {loading ? <p>LOADING..</p> : bookings}
+      {loading ? <LoaderSpinner height={75} width={75} /> : bookings}
     </div>
   );
 }
