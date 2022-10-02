@@ -9,6 +9,7 @@ import { ErrorPage } from "./pages/error";
 import { ProductsPage } from "./pages/products";
 import { BookingsPage } from "./pages/bookings";
 import { ClientsPage } from "./pages/clients";
+import { SalesPage } from "./pages/sales";
 
 const router = createBrowserRouter([
   {
@@ -34,7 +35,7 @@ const router = createBrowserRouter([
       {
         path: "/sale/*",
         loader: ({ params }) => ({ id: params["*"] }),
-        element: <div>Продажи</div>,
+        element: <SalesPage />,
       },
       {
         path: "/client",
