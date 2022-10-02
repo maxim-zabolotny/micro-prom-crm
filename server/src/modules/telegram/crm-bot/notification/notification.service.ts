@@ -73,11 +73,21 @@ export class NotificationBotService {
   }
 
   public async send(data: ISendNotification) {
-    await this.bot.telegram.sendMessage(data.to, this.buildMessage(data), {
-      parse_mode: 'MarkdownV2',
-      ...(_.isEmpty(data.buttons)
-        ? null
-        : this.buildButtonsWithUrl(data.buttons)),
-    });
+    if (data.photo) {
+      await this.bot.telegram.sendPhoto(data.to, data.photo, {
+        caption: this.buildMessage(data),
+        parse_mode: 'MarkdownV2',
+        ...(_.isEmpty(data.buttons)
+          ? null
+          : this.buildButtonsWithUrl(data.buttons)),
+      });
+    } else {
+      await this.bot.telegram.sendMessage(data.to, this.buildMessage(data), {
+        parse_mode: 'MarkdownV2',
+        ...(_.isEmpty(data.buttons)
+          ? null
+          : this.buildButtonsWithUrl(data.buttons)),
+      });
+    }
   }
 }
