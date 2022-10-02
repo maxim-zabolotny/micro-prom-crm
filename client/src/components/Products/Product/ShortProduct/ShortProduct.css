@@ -1,0 +1,28 @@
+.short-product-container {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+    border: #1890ff 2px solid;
+    border-radius: 5px;
+}
+
+.short-product-container button {
+    width: 300px;
+    margin: 10px 0 10px 10px;
+}
+
+.short-product {
+    display: flex;
+    flex-direction: row;
+}
+
+.short-product-image {
+    width: 125px;
+    height: 125px;
+}
+
+.short-product-info {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}

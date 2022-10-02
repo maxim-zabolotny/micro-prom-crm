@@ -1,0 +1,36 @@
+.full-product-container {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 10px 10px 0;
+    border: #1890ff 2px solid;
+    border-radius: 5px;
+}
+
+.full-product {
+    display: flex;
+    flex-direction: row;
+}
+
+.full-product button {
+    margin: auto 0;
+    margin-left: 50px;
+}
+
+.full-product-info {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.full-product-image {
+    width: 325px;
+    height: 325px;
+}
+
+.full-products-line {
+    border: #1890ff 1px solid;
+    border-radius: 5px;
+    width: 95%;
+    margin: 20px auto;
+}

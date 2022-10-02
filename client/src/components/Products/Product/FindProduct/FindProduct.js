@@ -5,6 +5,7 @@ import { FullProduct } from "../FullProduct/FullProduct";
 import { FindProductForm } from "../Forms/FindProductForm/FindProductForm";
 import { getRawPathname } from "../../../../utils/navigation/getRawPathname";
 import { LoaderSpinner } from "../../../LoaderSpinner/LoaderSpinner";
+import "./FindProduct.css";
 
 export function FindProduct({ url, productId }) {
   const location = useLocation();
@@ -47,7 +48,7 @@ export function FindProduct({ url, productId }) {
   ) : null;
 
   return (
-    <div>
+    <div className={"find-product-container"}>
       {formInfo}
       {productInfo}
     </div>

@@ -1,0 +1,13 @@
+.products-container {
+    width: 100%;
+}
+
+.products-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.products-empty-result {
+    font-size: 22px;
+    font-weight: bold;
+}

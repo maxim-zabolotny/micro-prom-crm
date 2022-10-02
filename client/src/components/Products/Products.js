@@ -4,6 +4,7 @@ import _ from "lodash";
 import { useAxios } from "../../hooks";
 import { GeneralProduct } from "./Product";
 import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
+import "./Products.css";
 
 export function Products({ url }) {
   const [requestData, setRequestData] = useState({
@@ -19,9 +20,9 @@ export function Products({ url }) {
 
   const products =
     _.isEmpty(data) || error ? (
-      <div>Пусто</div>
+      <div className={"products-empty-result"}>Пусто</div>
     ) : (
-      <div>
+      <div className={"products-list "}>
         {data.map((item) => (
           <GeneralProduct key={item._id} product={item} />
         ))}
@@ -29,7 +30,7 @@ export function Products({ url }) {
     );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"products-container"}>
       <FindProductsForm
         data={requestData}
         fetch={(data) => {

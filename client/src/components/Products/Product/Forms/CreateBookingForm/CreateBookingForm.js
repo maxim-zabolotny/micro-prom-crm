@@ -33,47 +33,40 @@ export function CreateBookingForm({ url, product, changeProduct }) {
   }
 
   return (
-    <div
-      style={{
-        margin: "20px",
-        border: "2px solid black",
+    <Form
+      name="create-product-booking"
+      labelCol={{ span: 2 }}
+      wrapperCol={{ span: 10 }}
+      onFinish={onFinish}
+      initialValues={{
+        count: product.quantity > 0 ? 1 : 0,
       }}
     >
-      <Form
-        name="create-product-booking"
-        labelCol={{ span: 2 }}
-        wrapperCol={{ span: 10 }}
-        onFinish={onFinish}
-        initialValues={{
-          count: product.quantity > 0 ? 1 : 0,
+      <Form.Item label="Количество" name={"count"}>
+        <InputNumber
+          min={product.quantity > 0 ? 1 : 0}
+          max={product.quantity}
+        />
+      </Form.Item>
+
+      <Form.Item label="Заметки" hasFeedback name={"description"}>
+        <Input.TextArea allowClear showCount />
+      </Form.Item>
+
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
         }}
       >
-        <Form.Item label="Количество" name={"count"}>
-          <InputNumber
-            min={product.quantity > 0 ? 1 : 0}
-            max={product.quantity}
-          />
-        </Form.Item>
-
-        <Form.Item label="Описание" hasFeedback name={"description"}>
-          <Input.TextArea allowClear showCount />
-        </Form.Item>
-
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
+        <Button
+          type="primary"
+          htmlType="submit"
+          disabled={product.quantity === 0}
         >
-          <Button
-            type="primary"
-            htmlType="submit"
-            disabled={product.quantity === 0}
-          >
-            Создать бронирование
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+          Создать бронирование
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }

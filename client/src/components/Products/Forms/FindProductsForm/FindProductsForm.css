@@ -1,3 +1,48 @@
+#find-products {
+    border: #1890ff 2px solid;
+    border-radius: 5px;
+    padding: 10px 0;
+}
+
+#find-products .ant-col.ant-form-item-label {
+    width: 120px;
+}
+
 #find-products .ant-btn {
     margin-right: 8px;
+}
+
+.find-products-buttons div {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.find-products-result-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.find-products-result-line {
+    border: #1890ff 1px solid;
+    border-radius: 5px;
+    width: 95%;
+    margin: 0 auto;
+}
+
+.find-products-result {
+    display: flex;
+    flex-direction: column;
+    margin: 15px 0 0 25px;
+}
+
+.find-products-result p {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.find-products-result span b {
+    color: #1890ff;
+    padding-left: 20px;
 }

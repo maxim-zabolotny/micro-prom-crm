@@ -1,0 +1,9 @@
+#get-product {
+    display: flex;
+    flex-direction: row;
+}
+
+#get-product input {
+    width: 300px;
+    margin-right: 10px;
+}

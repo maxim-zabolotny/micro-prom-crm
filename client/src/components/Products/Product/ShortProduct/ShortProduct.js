@@ -1,30 +1,28 @@
 import { Button } from "antd";
+import "./ShortProduct.css";
 
 export function ShortProduct({ product, changeView }) {
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        margin: "10px 5px",
-        display: "flex",
-        flexDirection: "row",
-      }}
-    >
-      <div>
-        <img
-          style={{
-            width: 75,
-            height: 75,
-          }}
-          src={product.images[0]}
-        />
-        <span>microtronId: {product.microtronId}</span> |
-        <span>price: {product.ourPrice} грн</span> |
-        <span>quantity: {product.quantity} шт</span> |{" "}
-        <span>name: {product.name}</span>
+    <div className={"short-product-container"}>
+      <div className={"short-product"}>
+        <img className={"short-product-image"} src={product.images[0]} />
+        <div className={"short-product-info"}>
+          <span>
+            <b>Название:</b> {product.name}
+          </span>
+          <span>
+            <b>Цена:</b> {product.ourPrice} грн
+          </span>
+          <span>
+            <b>Колличевство:</b> {product.quantity} шт
+          </span>
+          <span>
+            <b>microtronId:</b> {product.microtronId}
+          </span>
+        </div>
       </div>
-      <Button size={"default"} onClick={changeView}>
-        Показать
+      <Button type={"primary"} size={"default"} onClick={changeView}>
+        Создать бронирование
       </Button>
     </div>
   );

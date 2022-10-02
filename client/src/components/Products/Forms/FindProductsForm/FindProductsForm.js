@@ -51,83 +51,78 @@ export function FindProductsForm({ data, fetch, productsSize }) {
   };
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
+    <Form
+      name="find-products"
+      // labelCol={{ span: 3 }}
+      wrapperCol={{ span: 20 }}
+      onFinish={onFinish}
+      initialValues={searchParamsObj}
+      onValuesChange={(v) => {
+        const newSearchParams = new URLSearchParams(searchParamsObj);
+
+        Object.entries(v).forEach(([key, value]) => {
+          if (_.isEmpty(value)) {
+            newSearchParams.delete(key);
+          } else {
+            newSearchParams.set(key, value);
+          }
+        });
+
+        setSearchParams(newSearchParams);
       }}
     >
-      <Form
-        name="find-products"
-        labelCol={{ span: 2 }}
-        wrapperCol={{ span: 10 }}
-        onFinish={onFinish}
-        initialValues={searchParamsObj}
-        onValuesChange={(v) => {
-          const newSearchParams = new URLSearchParams(searchParamsObj);
+      <Form.Item label="Имя товара" name="name">
+        <Input placeholder={"Введите имя товара"} />
+      </Form.Item>
 
-          Object.entries(v).forEach(([key, value]) => {
-            if (_.isEmpty(value)) {
-              newSearchParams.delete(key);
-            } else {
-              newSearchParams.set(key, value);
-            }
-          });
-
-          setSearchParams(newSearchParams);
-        }}
+      <Form.Item
+        label="Microtron ID"
+        name="microtronId"
+        rules={[strIsNumberRule]}
       >
-        <Form.Item label="Имя товара" name="name">
-          <Input placeholder={"Введите имя товара"} />
-        </Form.Item>
+        <Input placeholder={"Введите Microtron ID"} />
+      </Form.Item>
 
-        <Form.Item
-          label="Microtron ID"
-          name="microtronId"
-          rules={[strIsNumberRule]}
+      <Form.Item label="Prom ID" name="promId" rules={[strIsNumberRule]}>
+        <Input placeholder={"Введите Prom ID"} />
+      </Form.Item>
+
+      <Form.Item className={"find-products-buttons"}>
+        <Button type="primary" htmlType="submit">
+          Искать
+        </Button>
+
+        <Button
+          htmlType="button"
+          disabled={productsSize < data.limit}
+          onClick={fetchNextProducts}
         >
-          <Input placeholder={"Введите Microtron ID"} />
-        </Form.Item>
+          Следующие товары
+        </Button>
 
-        <Form.Item label="Prom ID" name="promId" rules={[strIsNumberRule]}>
-          <Input placeholder={"Введите Prom ID"} />
-        </Form.Item>
-
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
+        <Button
+          htmlType="button"
+          disabled={data.offset === 0}
+          onClick={fetchPreviousProducts}
         >
-          <Button type="primary" htmlType="submit">
-            Искать
-          </Button>
+          Предыдущие товары
+        </Button>
+      </Form.Item>
 
-          <Button
-            htmlType="button"
-            disabled={productsSize < data.limit}
-            onClick={fetchNextProducts}
-          >
-            Следующие товары
-          </Button>
+      <div className={"find-products-result-container"}>
+        <div className={"find-products-result-line"} />
 
-          <Button
-            htmlType="button"
-            disabled={data.offset === 0}
-            onClick={fetchPreviousProducts}
-          >
-            Предыдущие товары
-          </Button>
-        </Form.Item>
-
-        <Form.Item label="Результат">
-          <span className="ant-form-text">
-            Показаные товары: {data.offset} - {data.offset + productsSize}
+        <div className={"find-products-result"}>
+          <p>Результат:</p>
+          <span>
+            <b>Показаные товары:</b> {data.offset} -{" "}
+            {data.offset + productsSize}
           </span>
-          <br />
-          <span className="ant-form-text">Найдено товаров: {productsSize}</span>
-        </Form.Item>
-      </Form>
-    </div>
+          <span>
+            <b>Найдено товаров:</b> {productsSize}
+          </span>
+        </div>
+      </div>
+    </Form>
   );
 }
