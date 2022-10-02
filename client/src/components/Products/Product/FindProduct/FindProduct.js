@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FullProduct } from "../FullProduct/FullProduct";
 import { FindProductForm } from "../Forms/FindProductForm/FindProductForm";
 import { getRawPathname } from "../../../../utils/navigation/getRawPathname";
+import { LoaderSpinner } from "../../../LoaderSpinner/LoaderSpinner";
 
 export function FindProduct({ url, productId }) {
   const location = useLocation();
@@ -30,7 +31,7 @@ export function FindProduct({ url, productId }) {
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner height={75} width={75} />;
   }
 
   const formInfo = (

@@ -3,6 +3,7 @@ import { useState } from "react";
 import _ from "lodash";
 import { useAxios } from "../../hooks";
 import { GeneralProduct } from "./Product";
+import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
 
 export function Products({ url }) {
   const [requestData, setRequestData] = useState({
@@ -17,7 +18,9 @@ export function Products({ url }) {
   });
 
   const products =
-    _.isEmpty(data) || error ? null : (
+    _.isEmpty(data) || error ? (
+      <div>Пусто</div>
+    ) : (
       <div>
         {data.map((item) => (
           <GeneralProduct key={item._id} product={item} />
@@ -35,7 +38,7 @@ export function Products({ url }) {
         }}
         productsSize={(data ?? []).length}
       />
-      {loading ? <p>LOADING..</p> : products}
+      {loading ? <LoaderSpinner height={75} width={75} /> : products}
     </div>
   );
 }
