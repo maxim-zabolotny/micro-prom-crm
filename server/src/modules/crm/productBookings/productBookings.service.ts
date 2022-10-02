@@ -79,6 +79,7 @@ export class CrmProductBookingsService {
 
   private async notifyProvider(
     productBookingId: string,
+    photoURL: string | undefined,
     details: Array<TArray.Pair<string, string | number>>,
   ) {
     const provider = await this.userModel.getAdmin(); // TODO: getProvider
@@ -95,6 +96,7 @@ export class CrmProductBookingsService {
 
     await this.notificationBotService.send({
       to: String(provider.telegramId),
+      photo: photoURL,
       title: 'Запрос Бронирования',
       buttons: [['Подтвердить / Отклонить бронирование', url]],
       details,
@@ -107,11 +109,13 @@ export class CrmProductBookingsService {
       productBookingStatus,
       productBookingId,
       productSaleId,
+      photoURL,
     }: {
       userTelegramId: UserDocument['telegramId'];
       productBookingStatus: ProductBookingStatus;
       productBookingId: string;
       productSaleId?: string;
+      photoURL?: string;
     },
     details: Array<TArray.Pair<string, string | number>>,
   ) {
@@ -147,6 +151,7 @@ export class CrmProductBookingsService {
 
     await this.notificationBotService.send({
       to: String(sales.telegramId),
+      photo: photoURL,
       title: `${title} Бронирования`,
       buttons,
       details,
@@ -249,6 +254,7 @@ export class CrmProductBookingsService {
 
       await this.notifyProvider(
         productBooking._id.toString(),
+        product.images[0],
         Object.entries({
           'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
@@ -336,6 +342,7 @@ export class CrmProductBookingsService {
           productBookingId: updatedProductBooking._id.toString(),
           productSaleId: productSale._id.toString(),
           productBookingStatus: updatedProductBooking.status,
+          photoURL: productBooking.product.images[0],
         },
         Object.entries({
           'Имя продукта': MarkdownHelper.monospaced(
@@ -437,6 +444,7 @@ export class CrmProductBookingsService {
             userTelegramId,
             productBookingId: updatedProductBooking._id.toString(),
             productBookingStatus: updatedProductBooking.status,
+            photoURL: productBooking.product.images[0],
           },
           Object.entries({
             'Имя продукта': MarkdownHelper.monospaced(

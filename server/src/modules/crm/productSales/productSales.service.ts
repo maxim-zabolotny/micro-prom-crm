@@ -57,6 +57,7 @@ export class CrmProductSalesService {
   private async notifyProvider(
     productSaleId: string,
     productSaleStatus: ProductSaleStatus,
+    photoURL: string | undefined,
     details: Array<TArray.Pair<string, string | number>>,
   ) {
     const provider = await this.userModel.getAdmin(); // TODO: getProvider
@@ -88,6 +89,7 @@ export class CrmProductSalesService {
 
     await this.notificationBotService.send({
       to: String(provider.telegramId),
+      photo: photoURL,
       buttons: [['Просмотреть продажу', url]],
       title,
       details,
@@ -275,6 +277,7 @@ export class CrmProductSalesService {
       await this.notifyProvider(
         updatedProductSale._id.toString(),
         updatedProductSale.status,
+        productSale.product.images[0],
         Object.entries({
           'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
@@ -325,6 +328,7 @@ export class CrmProductSalesService {
       await this.notifyProvider(
         updatedProductSale._id.toString(),
         updatedProductSale.status,
+        productSale.product.images[0],
         Object.entries({
           'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
