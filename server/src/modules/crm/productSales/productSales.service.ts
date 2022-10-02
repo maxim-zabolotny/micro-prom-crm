@@ -202,12 +202,12 @@ export class CrmProductSalesService {
       throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
     }
 
-    if (!productSale.promOrderId) {
-      throw new HttpException(
-        'You should set Prom Order Id before Delivering',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (!productSale.promOrderId) {
+    //   throw new HttpException(
+    //     'You should set Prom Order Id before Delivering',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
     this.logger.debug('Delivery Product Sale:', {
       productSaleId: productSale._id,
@@ -230,11 +230,13 @@ export class CrmProductSalesService {
         session,
       );
 
-      await this.promOrdersService.setDeclaration({
-        order_id: updatedProductSale.promOrderId,
-        delivery_type: data.provider,
-        declaration_id: data.declarationId,
-      });
+      if (updatedProductSale.promOrderId) {
+        await this.promOrdersService.setDeclaration({
+          order_id: updatedProductSale.promOrderId,
+          delivery_type: data.provider,
+          declaration_id: data.declarationId,
+        });
+      }
 
       return updatedProductSale;
     });
