@@ -3,6 +3,7 @@ import { Button } from "antd";
 import { RequestAccess } from "../../components/RequestAccess";
 import { API_URL } from "../../api/baseURL";
 import { Clients } from "../../components/Clients";
+import "./clients.css";
 
 export function ClientsPage() {
   const [viewType] = useState("multiple");
@@ -23,7 +24,7 @@ export function ClientsPage() {
   }
 
   const buttons = (
-    <div style={{ margin: "10px" }}>
+    <div className={"clients-page-buttons"}>
       <Button type={"primary"} disabled={true}>
         Поиск
       </Button>
@@ -31,7 +32,7 @@ export function ClientsPage() {
   );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"clients-page-container"}>
       {buttons}
       {children}
     </div>

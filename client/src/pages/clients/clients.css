@@ -1,0 +1,11 @@
+.clients-page-container {
+    width: 100%;
+}
+
+.clients-page-buttons {
+    margin-bottom: 10px
+}
+
+.clients-page-buttons button:nth-child(1) {
+    margin-right: 10px
+}
