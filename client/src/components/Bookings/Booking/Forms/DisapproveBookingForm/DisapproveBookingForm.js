@@ -1,6 +1,8 @@
 import { useAxios } from "../../../../../hooks";
 import React, { useEffect } from "react";
 import { Button, Form, Input } from "antd";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
+import { NotificationManager } from "react-notifications";
 
 export function DisapproveBookingForm({ url, booking, changeBooking }) {
   const { data, loading, fetch } = useAxios(url, {
@@ -18,12 +20,12 @@ export function DisapproveBookingForm({ url, booking, changeBooking }) {
     if (data) {
       changeBooking(data);
 
-      // TODO notify: disapproved
+      NotificationManager.success(`Успех`, "Бронирование отклоненое", 5000);
     }
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (

@@ -3,6 +3,7 @@ import { useAxios } from "../../../../hooks";
 import { FindBookingForm } from "../Forms/FindBookingForm/FindBookingForm";
 import { useNavigate } from "react-router-dom";
 import { FullBooking } from "../FullBooking/FullBooking";
+import { LoaderSpinner } from "../../../LoaderSpinner/LoaderSpinner";
 
 export function FindBooking({ url, bookingId }) {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export function FindBooking({ url, bookingId }) {
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner height={75} width={75} />;
   }
 
   const formInfo = (

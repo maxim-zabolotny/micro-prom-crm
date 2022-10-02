@@ -2,6 +2,8 @@ import { useAxios } from "../../../../../hooks";
 import React, { useEffect } from "react";
 import { Button, Form, Input } from "antd";
 import { strIsNumberRule } from "../../../../../utils/formRules/strIsNumberRule";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
+import { NotificationManager } from "react-notifications";
 
 export function ApproveBookingForm({ url, booking, changeBooking }) {
   const { data, loading, fetch } = useAxios(url, {
@@ -19,12 +21,12 @@ export function ApproveBookingForm({ url, booking, changeBooking }) {
     if (data) {
       changeBooking(data.booking);
 
-      // TODO notify: sale created
+      NotificationManager.success(`Успех`, "Бронирование подтверждено", 5000);
     }
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (
