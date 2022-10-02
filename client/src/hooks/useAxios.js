@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { GlobalContext } from "../contexts/global";
 import axios from "axios";
+import { NotificationManager } from "react-notifications";
 import { isUnauthorizedError } from "../utils";
 
 export function useAxios(url, config, initFetch = false) {
@@ -50,6 +51,15 @@ export function useAxios(url, config, initFetch = false) {
 
       if (isUnauthorizedError(err)) {
         context.resetCreds();
+      }
+
+      if (err.response) {
+        const { response } = err;
+
+        const code = response.status;
+        const text = response?.data?.message ?? response.statusText;
+
+        NotificationManager.error(`Ошибка`, `${code} - ${text}`, 12000);
       }
 
       setError(err);
