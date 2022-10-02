@@ -5,6 +5,7 @@ import { Button } from "antd";
 import { getRawPathname } from "../../utils/navigation/getRawPathname";
 import { RequestAccess } from "../../components/RequestAccess";
 import { API_URL } from "../../api/baseURL";
+import "./products.css";
 
 export function ProductsPage() {
   const location = useLocation();
@@ -49,9 +50,8 @@ export function ProductsPage() {
   }
 
   const buttons = (
-    <div style={{ margin: "10px" }}>
+    <div className={"products-page-buttons"}>
       <Button
-        style={{ marginRight: "10px" }}
         type={viewType === "single" ? "primary" : "default"}
         onClick={changeView("single")}
       >
@@ -68,7 +68,7 @@ export function ProductsPage() {
   );
 
   return (
-    <div>
+    <div className={"products-page-container"}>
       {buttons}
       {children}
     </div>

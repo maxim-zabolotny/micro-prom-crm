@@ -1,0 +1,11 @@
+.products-page-container {
+    width: 100%;
+}
+
+.products-page-buttons {
+    margin-bottom: 10px
+}
+
+.products-page-buttons button:nth-child(1) {
+    margin-right: 10px
+}
