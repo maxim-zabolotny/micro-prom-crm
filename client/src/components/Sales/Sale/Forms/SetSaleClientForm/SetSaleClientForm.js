@@ -4,6 +4,8 @@ import { Button } from "antd";
 import { RequestAccess } from "../../../../RequestAccess";
 import { API_URL } from "../../../../../api/baseURL";
 import { SelectClient } from "./SelectClient/SelectClient";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
+import { NotificationManager } from "react-notifications";
 
 export function SetSaleClientForm({ url, haveAccess, sale, changeSale }) {
   const [client, setClient] = useState(sale.client);
@@ -26,12 +28,12 @@ export function SetSaleClientForm({ url, haveAccess, sale, changeSale }) {
     if (data) {
       changeSale(data);
 
-      // TODO notify: updated
+      NotificationManager.success(`Успех`, "Клиент сохранен", 5000);
     }
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (

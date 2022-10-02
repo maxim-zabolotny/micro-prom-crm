@@ -2,6 +2,8 @@ import { useAxios } from "../../../../../hooks";
 import React, { useEffect } from "react";
 import { Button, Form, Input } from "antd";
 import { strIsNumberRule } from "../../../../../utils/formRules/strIsNumberRule";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
+import { NotificationManager } from "react-notifications";
 
 export function SetSaleOrderForm({ url, haveAccess, sale, changeSale }) {
   const [form] = Form.useForm();
@@ -21,7 +23,7 @@ export function SetSaleOrderForm({ url, haveAccess, sale, changeSale }) {
     if (data) {
       changeSale(data);
 
-      // TODO notify: updated
+      NotificationManager.success(`Успех`, "Номер заказа сохранен", 5000);
     }
   }, [data]);
 
@@ -30,7 +32,7 @@ export function SetSaleOrderForm({ url, haveAccess, sale, changeSale }) {
   }, [sale.promOrderId]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (

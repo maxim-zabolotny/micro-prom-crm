@@ -3,6 +3,7 @@ import { useAxios } from "../../hooks";
 import _ from "lodash";
 import { FindSalesForm } from "./Forms/FindSalesForm/FindSalesForm";
 import { ShortSale } from "./Sale";
+import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
 
 export function Sales({ url, changeView }) {
   const [requestData, setRequestData] = useState({
@@ -16,7 +17,9 @@ export function Sales({ url, changeView }) {
   });
 
   const sales =
-    _.isEmpty(data) || error ? null : (
+    _.isEmpty(data) || error ? (
+      <div>Пусто</div>
+    ) : (
       <div>
         {data.map((item) => (
           <ShortSale key={item._id} sale={item} changeView={changeView} />
@@ -34,7 +37,7 @@ export function Sales({ url, changeView }) {
         }}
         salesSize={(data ?? []).length}
       />
-      {loading ? <p>LOADING..</p> : sales}
+      {loading ? <LoaderSpinner height={75} width={75} /> : sales}
     </div>
   );
 }

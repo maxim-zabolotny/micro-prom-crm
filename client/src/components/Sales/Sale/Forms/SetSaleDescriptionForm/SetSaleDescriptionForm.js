@@ -1,6 +1,8 @@
 import { useAxios } from "../../../../../hooks";
 import React, { useEffect } from "react";
 import { Button, Form, Input } from "antd";
+import { NotificationManager } from "react-notifications";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
 
 export function SetSaleDescriptionForm({ url, haveAccess, sale, changeSale }) {
   const [form] = Form.useForm();
@@ -20,7 +22,7 @@ export function SetSaleDescriptionForm({ url, haveAccess, sale, changeSale }) {
     if (data) {
       changeSale(data);
 
-      // TODO notify: updated
+      NotificationManager.success(`Успех`, "Описание сохранено", 5000);
     }
   }, [data]);
 
@@ -29,7 +31,7 @@ export function SetSaleDescriptionForm({ url, haveAccess, sale, changeSale }) {
   }, [sale.description]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (

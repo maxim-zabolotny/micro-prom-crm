@@ -3,6 +3,7 @@ import { useAxios } from "../../../../hooks";
 import { FindSaleForm } from "../Forms/FindSaleForm/FindSaleForm";
 import { useNavigate } from "react-router-dom";
 import { FullSale } from "../FullSale/FullSale";
+import { LoaderSpinner } from "../../../LoaderSpinner/LoaderSpinner";
 
 export function FindSale({ url, saleId }) {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export function FindSale({ url, saleId }) {
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner height={75} width={75} />;
   }
 
   const formInfo = (

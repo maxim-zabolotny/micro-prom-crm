@@ -3,6 +3,7 @@ import _ from "lodash";
 import { FindClientsForm } from "../../../../../Clients";
 import { Select } from "antd";
 import React from "react";
+import { LoaderSpinner } from "../../../../../LoaderSpinner/LoaderSpinner";
 
 export function SelectClient({ url, client, setClient }) {
   const { data, error, loading, fetch } = useAxios(url, {
@@ -52,7 +53,7 @@ export function SelectClient({ url, client, setClient }) {
     });
   };
 
-  const defaultClient = client ? buildClientsList([client]) : null;
+  const defaultClient = client ? buildClientsList([client]) : <div>Пусто</div>;
 
   const clients =
     _.isEmpty(data) || error
@@ -67,7 +68,7 @@ export function SelectClient({ url, client, setClient }) {
         modifyUrl={false}
         showResult={false}
       />
-      {loading ? <p>LOADING..</p> : clients}
+      {loading ? <LoaderSpinner height={45} width={45} /> : clients}
     </div>
   );
 }

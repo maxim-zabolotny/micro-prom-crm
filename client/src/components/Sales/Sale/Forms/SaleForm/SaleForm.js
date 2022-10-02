@@ -1,6 +1,8 @@
 import { useAxios } from "../../../../../hooks";
 import React, { useEffect } from "react";
 import { Button, DatePicker, Form } from "antd";
+import { NotificationManager } from "react-notifications";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
 
 export function SaleForm({ url, sale, changeSale }) {
   const { data, loading, fetch } = useAxios(url, {
@@ -18,12 +20,12 @@ export function SaleForm({ url, sale, changeSale }) {
     if (data) {
       changeSale(data);
 
-      // TODO notify: delivery
+      NotificationManager.success(`Успех`, "Успешная продажа", 5000);
     }
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (

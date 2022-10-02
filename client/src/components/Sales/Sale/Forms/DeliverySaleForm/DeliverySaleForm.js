@@ -2,6 +2,8 @@ import { useAxios } from "../../../../../hooks";
 import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Select } from "antd";
 import { DeliveryProvider } from "../../../utils";
+import { LoaderSpinner } from "../../../../LoaderSpinner/LoaderSpinner";
+import { NotificationManager } from "react-notifications";
 
 export function DeliverySaleForm({ url, sale, changeSale }) {
   const [deliveryProvider, setDeliveryProvider] = useState(
@@ -24,12 +26,12 @@ export function DeliverySaleForm({ url, sale, changeSale }) {
     if (data) {
       changeSale(data);
 
-      // TODO notify: delivery
+      NotificationManager.success(`Успех`, "Продажа отправлена", 5000);
     }
   }, [data]);
 
   if (loading) {
-    return <p>LOADING..</p>;
+    return <LoaderSpinner />;
   }
 
   return (
