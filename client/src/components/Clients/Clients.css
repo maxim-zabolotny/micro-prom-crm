@@ -1,0 +1,13 @@
+.clients-container {
+    width: 100%;
+}
+
+.clients-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.clients-empty-result {
+    font-size: 22px;
+    font-weight: bold;
+}

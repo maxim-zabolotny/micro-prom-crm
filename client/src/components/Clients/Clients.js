@@ -3,6 +3,7 @@ import _ from "lodash";
 import { ShortClient } from "./Client";
 import { FindClientsForm } from "./Forms/FindClientsForm/FindClientsForm";
 import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
+import "./Clients.css";
 
 export function Clients({ url }) {
   const { data, error, loading, fetch } = useAxios(url, {
@@ -11,9 +12,9 @@ export function Clients({ url }) {
 
   const clients =
     _.isEmpty(data) || error ? (
-      <div>Пусто</div>
+      <div className={"clients-empty-result"}>Пусто</div>
     ) : (
-      <div>
+      <div className={"clients-list"}>
         {data.map((item) => (
           <ShortClient key={item._id} client={item} />
         ))}
@@ -21,7 +22,7 @@ export function Clients({ url }) {
     );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"clients-container"}>
       <FindClientsForm
         fetch={(data) => fetch({}, data)}
         clientsSize={(data ?? []).length}
