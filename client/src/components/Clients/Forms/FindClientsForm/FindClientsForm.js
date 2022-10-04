@@ -34,8 +34,8 @@ export function FindClientsForm({ fetch, clientsSize, modifyUrl, showResult }) {
   return (
     <Form
       name="find-clients"
-      labelCol={{ span: 2 }}
-      wrapperCol={{ span: 10 }}
+      // labelCol={{ span: 1, offset: 0 }}
+      // wrapperCol={{ span: 10 }}
       onFinish={onFinish}
       initialValues={searchParamsObj}
       onValuesChange={(v) => {
@@ -58,10 +58,10 @@ export function FindClientsForm({ fetch, clientsSize, modifyUrl, showResult }) {
         label="Информация про клиента"
         name="query"
         labelCol={{
-          span: 6,
+          span: 3,
         }}
         wrapperCol={{
-          span: 12,
+          span: 8,
         }}
       >
         <Input placeholder={"Введите имя, номер телефона или email"} />

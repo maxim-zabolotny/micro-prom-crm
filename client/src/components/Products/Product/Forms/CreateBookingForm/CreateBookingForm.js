@@ -49,7 +49,7 @@ export function CreateBookingForm({ url, product, changeProduct }) {
         />
       </Form.Item>
 
-      <Form.Item label="Заметки" hasFeedback name={"description"}>
+      <Form.Item label="Комментарий" hasFeedback name={"description"}>
         <Input.TextArea allowClear showCount />
       </Form.Item>
 
