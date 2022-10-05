@@ -22,6 +22,7 @@ import { SaleProductSaleDto } from './dto/sale-product-sale.dto';
 import { MarkdownHelper } from '../../telegram/common/helpers';
 import { CancelProductSaleDto } from './dto/cancel-product-sale.dto';
 import { Types as PromTypes } from '@lib/prom';
+import { SetProductSalePaidDto } from './dto/set-product-sale-paid.dto';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -193,6 +194,38 @@ export class CrmProductSalesService {
     const updatedProductSale = await this.productSaleModel.setSaleClient(
       productSale._id,
       client,
+    );
+
+    return updatedProductSale;
+  }
+
+  public async setProductSalePaid(data: SetProductSalePaidDto) {
+    const productSale = await this.productSaleModel
+      .findById(new Types.ObjectId(data.productSaleId))
+      .exec();
+    if (!productSale) {
+      throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (
+      [ProductSaleStatus.Sale, ProductSaleStatus.Canceled].includes(
+        productSale.status,
+      )
+    ) {
+      throw new HttpException(
+        "Can't change paid status after Sale or Cancel",
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    this.logger.debug('Set Product Sale Paid:', {
+      productSaleId: data.productSaleId,
+      paid: data.paid,
+    });
+
+    const updatedProductSale = await this.productSaleModel.setSalePaid(
+      productSale._id,
+      data.paid,
     );
 
     return updatedProductSale;

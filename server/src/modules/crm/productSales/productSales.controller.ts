@@ -23,6 +23,7 @@ import { SearchProductSalesDto } from './dto/search-product-sales.dto';
 import { DeliveryProductSaleDto } from './dto/delivery-product-sale.dto';
 import { SaleProductSaleDto } from './dto/sale-product-sale.dto';
 import { CancelProductSaleDto } from './dto/cancel-product-sale.dto';
+import { SetProductSalePaidDto } from './dto/set-product-sale-paid.dto';
 
 @Controller('/crm/product-sales')
 @UseFilters(MongoExceptionFilter)
@@ -65,6 +66,13 @@ export class CrmProductSalesController {
   @Auth(UserRole.Sales)
   setProductSaleClient(@Body() data: SetProductSaleClientDto) {
     return this.crmProductSalesService.setProductSaleClient(data);
+  }
+
+  @Put('/set-paid')
+  @HttpCode(201)
+  @Auth(UserRole.Sales)
+  setProductSalePaid(@Body() data: SetProductSalePaidDto) {
+    return this.crmProductSalesService.setProductSalePaid(data);
   }
 
   @Put('/delivery')
