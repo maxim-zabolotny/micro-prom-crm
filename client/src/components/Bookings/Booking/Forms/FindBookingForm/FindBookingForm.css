@@ -1,0 +1,9 @@
+#get-booking {
+    display: flex;
+    flex-direction: row;
+}
+
+#get-booking input {
+    width: 300px;
+    margin-right: 10px;
+}

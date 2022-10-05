@@ -4,6 +4,7 @@ import { FindBookingForm } from "../Forms/FindBookingForm/FindBookingForm";
 import { useNavigate } from "react-router-dom";
 import { FullBooking } from "../FullBooking/FullBooking";
 import { LoaderSpinner } from "../../../LoaderSpinner/LoaderSpinner";
+import "./FindBooking.css";
 
 export function FindBooking({ url, bookingId }) {
   const navigate = useNavigate();
@@ -41,13 +42,7 @@ export function FindBooking({ url, bookingId }) {
   ) : null;
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        margin: "10px 5px",
-        padding: "10px",
-      }}
-    >
+    <div className={"find-booking-container"}>
       {formInfo}
       {bookingInfo}
     </div>

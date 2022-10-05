@@ -1,0 +1,13 @@
+.bookings-container {
+    width: 100%;
+}
+
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.bookings-empty-result {
+    font-size: 22px;
+    font-weight: bold;
+}

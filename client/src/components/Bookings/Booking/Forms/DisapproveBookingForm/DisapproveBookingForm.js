@@ -29,42 +29,35 @@ export function DisapproveBookingForm({ url, booking, changeBooking }) {
   }
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
-      }}
+    <Form
+      name="disapprove-booking"
+      labelCol={{ span: 2 }}
+      wrapperCol={{ span: 10 }}
+      onFinish={onFinish}
     >
-      <Form
-        name="disapprove-booking"
-        labelCol={{ span: 2 }}
-        wrapperCol={{ span: 10 }}
-        onFinish={onFinish}
+      <Form.Item
+        label="Причина"
+        name="disapproveReason"
+        rules={[
+          {
+            required: true,
+            message: "Поле обязательное",
+          },
+        ]}
       >
-        <Form.Item
-          label="Причина"
-          name="disapproveReason"
-          rules={[
-            {
-              required: true,
-              message: "Поле обязательное",
-            },
-          ]}
-        >
-          <Input placeholder={"Введите причину отказа"} />
-        </Form.Item>
+        <Input placeholder={"Введите причину отказа"} />
+      </Form.Item>
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
-        >
-          <Button type="primary" htmlType="submit">
-            Поддтвердить
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
+        }}
+      >
+        <Button type="primary" htmlType="submit">
+          Поддтвердить
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }

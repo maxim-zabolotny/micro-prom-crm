@@ -30,43 +30,36 @@ export function ApproveBookingForm({ url, booking, changeBooking }) {
   }
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
-      }}
+    <Form
+      name="approve-booking"
+      labelCol={{ span: 2 }}
+      wrapperCol={{ span: 10 }}
+      onFinish={onFinish}
     >
-      <Form
-        name="approve-booking"
-        labelCol={{ span: 2 }}
-        wrapperCol={{ span: 10 }}
-        onFinish={onFinish}
+      <Form.Item
+        label="Цена"
+        name="rawPrice"
+        rules={[
+          strIsNumberRule,
+          {
+            required: true,
+            message: "Поле обязательное",
+          },
+        ]}
       >
-        <Form.Item
-          label="Цена"
-          name="rawPrice"
-          rules={[
-            strIsNumberRule,
-            {
-              required: true,
-              message: "Поле обязательное",
-            },
-          ]}
-        >
-          <Input placeholder={"Введите цену со склада"} />
-        </Form.Item>
+        <Input placeholder={"Введите цену со склада"} />
+      </Form.Item>
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
-        >
-          <Button type="primary" htmlType="submit">
-            Поддтвердить
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
+        }}
+      >
+        <Button type="primary" htmlType="submit">
+          Поддтвердить
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }

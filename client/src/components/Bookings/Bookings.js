@@ -4,6 +4,7 @@ import _ from "lodash";
 import { ShortBooking } from "./Booking";
 import { FindBookingsForm } from "./Forms/FindBookingsForm/FindBookingsForm";
 import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
+import "./Bookings.css";
 
 export function Bookings({ url, changeView }) {
   const [requestData, setRequestData] = useState({
@@ -18,9 +19,9 @@ export function Bookings({ url, changeView }) {
 
   const bookings =
     _.isEmpty(data) || error ? (
-      <div>Пусто</div>
+      <div className={"bookings-empty-result"}>Пусто</div>
     ) : (
-      <div>
+      <div className={"bookings-list"}>
         {data.map((item) => (
           <ShortBooking key={item._id} booking={item} changeView={changeView} />
         ))}
@@ -28,7 +29,7 @@ export function Bookings({ url, changeView }) {
     );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"bookings-container"}>
       <FindBookingsForm
         data={requestData}
         fetch={(data) => {

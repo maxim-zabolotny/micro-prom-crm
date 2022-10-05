@@ -1,5 +1,6 @@
 import { Button, Form, Input } from "antd";
 import React, { useEffect } from "react";
+import "./FindBookingForm.css";
 
 export function FindBookingForm({ booking, fetch }) {
   const [form] = Form.useForm();
@@ -15,10 +16,6 @@ export function FindBookingForm({ booking, fetch }) {
       name="get-booking"
       form={form}
       onFinish={(values) => fetch(values.bookingId)}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-      }}
     >
       <Form.Item
         name={"bookingId"}
@@ -29,12 +26,7 @@ export function FindBookingForm({ booking, fetch }) {
           },
         ]}
       >
-        <Input
-          style={{
-            width: "300px",
-            marginRight: "10px",
-          }}
-        />
+        <Input />
       </Form.Item>
 
       <Form.Item>

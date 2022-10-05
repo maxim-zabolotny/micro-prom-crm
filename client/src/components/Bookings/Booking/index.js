@@ -3,5 +3,4 @@ export { DisapproveBookingForm } from "./Forms/DisapproveBookingForm/DisapproveB
 export { FindBookingForm } from "./Forms/FindBookingForm/FindBookingForm";
 export { FullBooking } from "./FullBooking/FullBooking";
 export { ShortBooking } from "./ShortBooking/ShortBooking";
-export { BookingProduct } from "./BookingProduct/BookingProduct";
 export { FindBooking } from "./FindBooking/FindBooking";

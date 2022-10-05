@@ -43,71 +43,70 @@ export function FindBookingsForm({ data, fetch, bookingsSize }) {
   };
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
-      }}
+    <Form
+      name="find-bookings"
+      labelCol={{ span: 2 }}
+      wrapperCol={{ span: 10 }}
+      initialValues={searchParamsObj}
     >
-      <Form
-        name="find-bookings"
+      <Form.Item
+        label={"Статус"}
         labelCol={{ span: 2 }}
         wrapperCol={{ span: 10 }}
-        initialValues={searchParamsObj}
       >
-        <Form.Item
-          label={"status"}
-          labelCol={{ span: 2 }}
-          wrapperCol={{ span: 10 }}
+        <Select
+          name={"status"}
+          value={searchParams.get("status")}
+          onSelect={onSelect}
         >
-          <Select
-            name={"status"}
-            value={searchParams.get("status")}
-            onSelect={onSelect}
-          >
-            <Select.Option value={BookingStatus.Wait}>В ожидании</Select.Option>
-            <Select.Option value={BookingStatus.Approve}>
-              Подтверждён
-            </Select.Option>
-            <Select.Option value={BookingStatus.Disapprove}>
-              Отклонён
-            </Select.Option>
-          </Select>
-        </Form.Item>
+          <Select.Option value={BookingStatus.Wait}>В ожидании</Select.Option>
+          <Select.Option value={BookingStatus.Approve}>
+            Подтверждён
+          </Select.Option>
+          <Select.Option value={BookingStatus.Disapprove}>
+            Отклонён
+          </Select.Option>
+        </Select>
+      </Form.Item>
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
+        }}
+        className={"find-bookings-buttons"}
+      >
+        <Button
+          htmlType="button"
+          disabled={bookingsSize < data.limit}
+          onClick={fetchNextProducts}
         >
-          <Button
-            htmlType="button"
-            disabled={bookingsSize < data.limit}
-            onClick={fetchNextProducts}
-          >
-            Следующие бронирования
-          </Button>
+          Следующие бронирования
+        </Button>
 
-          <Button
-            htmlType="button"
-            disabled={data.offset === 0}
-            onClick={fetchPreviousProducts}
-          >
-            Предыдущие бронирования
-          </Button>
-        </Form.Item>
+        <Button
+          htmlType="button"
+          disabled={data.offset === 0}
+          onClick={fetchPreviousProducts}
+        >
+          Предыдущие бронирования
+        </Button>
+      </Form.Item>
 
-        <Form.Item label="Результат">
-          <span className="ant-form-text">
-            Показаные бронирования: {data.offset} - {data.offset + bookingsSize}
+      <div className={"find-bookings-result-container"}>
+        <div className={"find-bookings-result-line"} />
+
+        <div className={"find-bookings-result"}>
+          <p>Результат:</p>
+          <span>
+            <b>Показаные бронирования:</b> {data.offset} -{" "}
+            {data.offset + bookingsSize}
           </span>
-          <br />
-          <span className="ant-form-text">
-            Найдено бронирований: {bookingsSize}
+          <span>
+            <b>Найдено бронирований:</b> {bookingsSize}
           </span>
-        </Form.Item>
-      </Form>
-    </div>
+        </div>
+      </div>
+    </Form>
   );
 }
