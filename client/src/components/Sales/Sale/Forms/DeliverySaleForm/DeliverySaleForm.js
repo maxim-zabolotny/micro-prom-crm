@@ -77,12 +77,15 @@ export function DeliverySaleForm({ url, sale, changeSale }) {
           name="declarationId"
           rules={[
             {
-              required: true,
+              required: deliveryProvider === DeliveryProvider.NovaPoshta,
               message: "Поле обязательное",
             },
           ]}
         >
-          <Input placeholder={"Введите номер декларации"} />
+          <Input
+            placeholder={"Введите номер декларации"}
+            disabled={deliveryProvider === DeliveryProvider.UkrPoshta}
+          />
         </Form.Item>
 
         <Form.Item
