@@ -1,0 +1,15 @@
+FROM node:16-bullseye
+
+ENV HOME_DIR /home/app
+ENV WEB_DIR $HOME_DIR/crm_web
+
+COPY ./client $WEB_DIR
+
+WORKDIR $WEB_DIR
+
+COPY package*.json ./
+RUN npm install
+
+EXPOSE $PORT
+
+CMD ["npm", "run" ,"start"]
