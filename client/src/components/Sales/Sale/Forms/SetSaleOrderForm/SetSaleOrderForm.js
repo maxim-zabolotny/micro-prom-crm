@@ -36,46 +36,37 @@ export function SetSaleOrderForm({ url, haveAccess, sale, changeSale }) {
   }
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
-        width: "100%",
-        margin: "10px",
-      }}
+    <Form
+      name="set-sale-order"
+      labelCol={{ span: 5 }}
+      wrapperCol={{ span: 10 }}
+      form={form}
+      onFinish={onFinish}
     >
-      <Form
-        name="set-sale-order"
-        labelCol={{ span: 2 }}
-        wrapperCol={{ span: 10 }}
-        form={form}
-        onFinish={onFinish}
+      <Form.Item
+        label="Номер заказа"
+        name="promOrderId"
+        rules={[
+          {
+            required: true,
+            message: "Поле обязательное",
+          },
+          strIsNumberRule,
+        ]}
       >
-        <Form.Item
-          label="Номер заказа"
-          name="promOrderId"
-          rules={[
-            {
-              required: true,
-              message: "Поле обязательное",
-            },
-            strIsNumberRule,
-          ]}
-        >
-          <Input placeholder={"Введите номер заказа"} />
-        </Form.Item>
+        <Input placeholder={"Введите номер заказа"} />
+      </Form.Item>
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
-        >
-          <Button type="primary" htmlType="submit" disabled={!haveAccess}>
-            Сохранить
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
+        }}
+      >
+        <Button type="primary" htmlType="submit" disabled={!haveAccess}>
+          Сохранить
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }

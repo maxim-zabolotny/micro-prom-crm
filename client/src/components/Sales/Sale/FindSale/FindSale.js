@@ -4,6 +4,7 @@ import { FindSaleForm } from "../Forms/FindSaleForm/FindSaleForm";
 import { useNavigate } from "react-router-dom";
 import { FullSale } from "../FullSale/FullSale";
 import { LoaderSpinner } from "../../../LoaderSpinner/LoaderSpinner";
+import "./FindSale.css";
 
 export function FindSale({ url, saleId }) {
   const navigate = useNavigate();
@@ -39,13 +40,7 @@ export function FindSale({ url, saleId }) {
   const saleInfo = sale ? <FullSale sale={sale} setSale={setSale} /> : null;
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        margin: "10px 5px",
-        padding: "10px",
-      }}
-    >
+    <div className={"find-sale-container"}>
       {formInfo}
       {saleInfo}
     </div>

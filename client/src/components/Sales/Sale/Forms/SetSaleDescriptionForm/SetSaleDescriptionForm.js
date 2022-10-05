@@ -35,49 +35,40 @@ export function SetSaleDescriptionForm({ url, haveAccess, sale, changeSale }) {
   }
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
-        width: "100%",
-        margin: "10px",
-      }}
+    <Form
+      name="set-sale-description"
+      labelCol={{ span: 4 }}
+      wrapperCol={{ span: 12 }}
+      form={form}
+      onFinish={onFinish}
     >
-      <Form
-        name="set-sale-description"
-        labelCol={{ span: 2 }}
-        wrapperCol={{ span: 10 }}
-        form={form}
-        onFinish={onFinish}
+      <Form.Item
+        label="Заметки"
+        name="description"
+        rules={[
+          {
+            required: true,
+            message: "Поле обязательное",
+          },
+        ]}
       >
-        <Form.Item
-          label="Описание"
-          name="description"
-          rules={[
-            {
-              required: true,
-              message: "Поле обязательное",
-            },
-          ]}
-        >
-          <Input.TextArea
-            allowClear
-            showCount
-            placeholder={"Введите дополнительное описание"}
-          />
-        </Form.Item>
+        <Input.TextArea
+          allowClear
+          showCount
+          placeholder={"Введите дополнительные заметки"}
+        />
+      </Form.Item>
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
-        >
-          <Button type="primary" htmlType="submit" disabled={!haveAccess}>
-            Сохранить
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
+        }}
+      >
+        <Button type="primary" htmlType="submit" disabled={!haveAccess}>
+          Сохранить
+        </Button>
+      </Form.Item>
+    </Form>
   );
 }

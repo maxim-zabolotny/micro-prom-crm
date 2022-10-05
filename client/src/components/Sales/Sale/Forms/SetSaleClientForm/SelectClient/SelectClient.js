@@ -17,7 +17,7 @@ export function SelectClient({ url, client, setClient }) {
       onSelect={(clientId) =>
         setClient(data.find((client) => client.id === clientId))
       }
-      style={{ width: "100%" }}
+      style={{ width: "100%", maxWidth: "620px", marginTop: "10px" }}
     >
       {clients}
     </Select>
@@ -27,13 +27,17 @@ export function SelectClient({ url, client, setClient }) {
     return clients.map((item) => {
       const phones = !_.isEmpty(item.phones) ? (
         <span style={{ marginRight: "10px" }}>
-          <b>Phones:</b> {item.phones.join(", ")}
+          <span>
+            <b>Телефоны:</b> {item.phones.join(", ")}
+          </span>
         </span>
       ) : null;
 
       const emails = !_.isEmpty(item.emails) ? (
         <span>
-          <b>Emails:</b> {item.emails.join(", ")}
+          <span>
+            <b>Emails:</b> {item.emails.join(", ")}
+          </span>
         </span>
       ) : null;
 
@@ -44,7 +48,7 @@ export function SelectClient({ url, client, setClient }) {
           style={{ display: "flex", justifyContent: "space-around" }}
         >
           <span style={{ marginRight: "10px" }}>
-            <b>name:</b> {item.client_full_name ?? item.name}
+            <b>Имя:</b> {item.client_full_name ?? item.name}
           </span>
           {phones}
           {emails}
@@ -61,12 +65,16 @@ export function SelectClient({ url, client, setClient }) {
       : selectClients(buildClientsList(data));
 
   return (
-    <div style={{ width: "100%", margin: "10px" }}>
+    <div>
       <FindClientsForm
         fetch={(data) => fetch({}, data)}
         clientsSize={(data ?? []).length}
         modifyUrl={false}
         showResult={false}
+        formSettings={{
+          labelCol: { span: 9 },
+          wrapperCol: { span: 14 },
+        }}
       />
       {loading ? <LoaderSpinner height={45} width={45} /> : clients}
     </div>

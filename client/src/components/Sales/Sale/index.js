@@ -1,6 +1,4 @@
 export { FindSale } from "./FindSale/FindSale";
-export { SaleProduct } from "./SaleProduct/SaleProduct";
-export { SaleDelivery } from "./SaleDelivery/SaleDelivery";
 export { ShortSale } from "./ShortSale/ShortSale";
 export { FullSale } from "./FullSale/FullSale";
 export { CancelSaleForm } from "./Forms/CancelSaleForm/CancelSaleForm";

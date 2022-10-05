@@ -4,6 +4,7 @@ import _ from "lodash";
 import { FindSalesForm } from "./Forms/FindSalesForm/FindSalesForm";
 import { ShortSale } from "./Sale";
 import { LoaderSpinner } from "../LoaderSpinner/LoaderSpinner";
+import "./Sales.css";
 
 export function Sales({ url, changeView }) {
   const [requestData, setRequestData] = useState({
@@ -18,9 +19,9 @@ export function Sales({ url, changeView }) {
 
   const sales =
     _.isEmpty(data) || error ? (
-      <div>Пусто</div>
+      <div className={"sales-empty-result"}>Пусто</div>
     ) : (
-      <div>
+      <div className={"sales-list"}>
         {data.map((item) => (
           <ShortSale key={item._id} sale={item} changeView={changeView} />
         ))}
@@ -28,7 +29,7 @@ export function Sales({ url, changeView }) {
     );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"sales-container"}>
       <FindSalesForm
         data={requestData}
         fetch={(data) => {

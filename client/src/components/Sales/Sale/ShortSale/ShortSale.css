@@ -1,0 +1,64 @@
+.short-sale-container {
+    display: flex;
+    flex-direction: row;
+    margin: 10px 0;
+    padding: 5px;
+    border: #1890ff 2px solid;
+    border-radius: 5px;
+}
+
+.short-sale-image {
+    margin: auto 40px auto 0;
+    width: 170px;
+    height: 170px;
+}
+
+.short-sale-main-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 1000px;
+    padding: 0 20px;
+}
+
+.short-sale-item-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.short-sale-product-info {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.short-sale-main-info-split-line {
+    border: #1890ff 1px solid;
+    border-radius: 5px;
+    width: 95%;
+    margin: 20px auto;
+}
+
+.short-sale-info {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.short-sale-delivery-info {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.short-sale-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 240px;
+}
+
+.short-sale-buttons button {
+    margin-bottom: 10px;
+    margin-right: 20px;
+}

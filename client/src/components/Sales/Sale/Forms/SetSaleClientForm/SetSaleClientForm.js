@@ -39,9 +39,7 @@ export function SetSaleClientForm({ url, haveAccess, sale, changeSale }) {
   return (
     <div
       style={{
-        border: "2px solid black",
         padding: "10px",
-        width: "100%",
         margin: "10px",
       }}
     >
@@ -53,6 +51,7 @@ export function SetSaleClientForm({ url, haveAccess, sale, changeSale }) {
         htmlType="submit"
         onClick={onSubmit}
         disabled={!haveAccess || !client}
+        style={{ marginTop: "10px" }}
       >
         Сохранить
       </Button>

@@ -42,10 +42,8 @@ export function SetSalePaidForm({ url, haveAccess, sale, changeSale }) {
   return (
     <div
       style={{
-        border: "2px solid black",
         padding: "10px",
-        width: "100%",
-        margin: "10px",
+        margin: "0 10px",
       }}
     >
       <Checkbox

@@ -1,0 +1,13 @@
+.sales-container {
+    width: 100%;
+}
+
+.sales-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.sales-empty-result {
+    font-size: 22px;
+    font-weight: bold;
+}

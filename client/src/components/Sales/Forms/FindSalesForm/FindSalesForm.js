@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { strIsNumberRule } from "../../../../utils/formRules/strIsNumberRule";
 import { useSearchParams } from "react-router-dom";
 import { SaleStatus } from "../../utils";
+import "./FindSalesForm.css";
 
 const buildNextData = (data, values) => {
   const nextData = {
@@ -74,100 +75,93 @@ export function FindSalesForm({ data, fetch, salesSize }) {
   };
 
   return (
-    <div
-      style={{
-        border: "2px solid black",
-        padding: "10px",
-      }}
+    <Form
+      name="find-sales"
+      labelCol={{ span: 2 }}
+      wrapperCol={{ span: 10 }}
+      onFinish={onFinish}
+      initialValues={searchParamsObj}
+      onValuesChange={onValuesChange}
     >
-      <Form
-        name="find-sales"
+      <Form.Item
+        label={"Статус"}
         labelCol={{ span: 2 }}
         wrapperCol={{ span: 10 }}
-        onFinish={onFinish}
-        initialValues={searchParamsObj}
-        onValuesChange={onValuesChange}
       >
-        <Form.Item
-          label={"Статус"}
-          labelCol={{ span: 2 }}
-          wrapperCol={{ span: 10 }}
+        <Select
+          name={"status"}
+          value={searchParams.get("status")}
+          onSelect={(status) => onValuesChange({ status })}
         >
-          <Select
-            name={"status"}
-            value={searchParams.get("status")}
-            onSelect={(status) => onValuesChange({ status })}
-          >
-            <Select.Option value={SaleStatus.WaitDeliver}>
-              В ожидании отправки
-            </Select.Option>
-            <Select.Option value={SaleStatus.Delivering}>
-              Отправлен
-            </Select.Option>
-            <Select.Option value={SaleStatus.Sale}>Продан</Select.Option>
-            <Select.Option value={SaleStatus.Canceled}>Отменен</Select.Option>
-          </Select>
-        </Form.Item>
+          <Select.Option value={SaleStatus.WaitDeliver}>
+            В ожидании отправки
+          </Select.Option>
+          <Select.Option value={SaleStatus.Delivering}>Отправлен</Select.Option>
+          <Select.Option value={SaleStatus.Sale}>Продан</Select.Option>
+          <Select.Option value={SaleStatus.Canceled}>Отменен</Select.Option>
+        </Select>
+      </Form.Item>
 
-        <Form.Item label="Имя товара" name="productName">
-          <Input placeholder={"Введите имя товара"} />
-        </Form.Item>
+      <Form.Item label="Имя товара" name="productName">
+        <Input placeholder={"Введите имя товара"} />
+      </Form.Item>
 
-        <Form.Item
-          label="Microtron ID"
-          name="productMicrotronId"
-          rules={[strIsNumberRule]}
+      <Form.Item
+        label="Microtron ID"
+        name="productMicrotronId"
+        rules={[strIsNumberRule]}
+      >
+        <Input placeholder={"Введите Microtron ID"} />
+      </Form.Item>
+
+      <Form.Item label="Prom ID" name="productPromId" rules={[strIsNumberRule]}>
+        <Input placeholder={"Введите Prom ID"} />
+      </Form.Item>
+
+      <Form.Item label="Оплачен" name="paid" valuePropName="checked">
+        <Checkbox />
+      </Form.Item>
+
+      <Form.Item
+        wrapperCol={{
+          span: 12,
+          offset: 2,
+        }}
+      >
+        <Button type="primary" htmlType="submit">
+          Искать
+        </Button>
+
+        <Button
+          htmlType="button"
+          disabled={salesSize < data.limit}
+          onClick={fetchNextProducts}
         >
-          <Input placeholder={"Введите Microtron ID"} />
-        </Form.Item>
+          Следующие продажи
+        </Button>
 
-        <Form.Item
-          label="Prom ID"
-          name="productPromId"
-          rules={[strIsNumberRule]}
+        <Button
+          htmlType="button"
+          disabled={data.offset === 0}
+          onClick={fetchPreviousProducts}
         >
-          <Input placeholder={"Введите Prom ID"} />
-        </Form.Item>
+          Предыдущие продажи
+        </Button>
+      </Form.Item>
 
-        <Form.Item label="Оплачен" name="paid" valuePropName="checked">
-          <Checkbox />
-        </Form.Item>
+      <div className={"find-sales-result-container"}>
+        <div className={"find-sales-result-line"} />
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 2,
-          }}
-        >
-          <Button type="primary" htmlType="submit">
-            Искать
-          </Button>
-
-          <Button
-            htmlType="button"
-            disabled={salesSize < data.limit}
-            onClick={fetchNextProducts}
-          >
-            Следующие продажи
-          </Button>
-
-          <Button
-            htmlType="button"
-            disabled={data.offset === 0}
-            onClick={fetchPreviousProducts}
-          >
-            Предыдущие продажи
-          </Button>
-        </Form.Item>
-
-        <Form.Item label="Результат">
-          <span className="ant-form-text">
-            Показаные продажи: {data.offset} - {data.offset + salesSize}
+        <div className={"find-sales-result"}>
+          <p>Результат:</p>
+          <span>
+            <b>Показаные продажи:</b> {data.offset} - {data.offset + salesSize}
           </span>
-          <br />
-          <span className="ant-form-text">Найдено продаж: {salesSize}</span>
-        </Form.Item>
-      </Form>
-    </div>
+          <span>
+            <b>Найдено продаж:</b> {salesSize}
+          </span>
+        </div>
+      </div>
+    </Form>
   );
 }

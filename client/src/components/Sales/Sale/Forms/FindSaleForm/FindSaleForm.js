@@ -1,5 +1,6 @@
 import { Button, Form, Input } from "antd";
 import React, { useEffect } from "react";
+import "./FindSaleForm.css";
 
 export function FindSaleForm({ sale, fetch }) {
   const [form] = Form.useForm();
@@ -15,10 +16,6 @@ export function FindSaleForm({ sale, fetch }) {
       name="get-sale"
       form={form}
       onFinish={(values) => fetch(values.saleId)}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-      }}
     >
       <Form.Item
         name={"saleId"}
@@ -29,12 +26,7 @@ export function FindSaleForm({ sale, fetch }) {
           },
         ]}
       >
-        <Input
-          style={{
-            width: "300px",
-            marginRight: "10px",
-          }}
-        />
+        <Input />
       </Form.Item>
 
       <Form.Item>

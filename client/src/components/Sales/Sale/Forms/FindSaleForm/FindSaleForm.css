@@ -1,0 +1,9 @@
+#get-sale {
+    display: flex;
+    flex-direction: row;
+}
+
+#get-sale input {
+    width: 300px;
+    margin-right: 10px;
+}
