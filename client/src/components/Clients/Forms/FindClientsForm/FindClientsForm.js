@@ -4,7 +4,13 @@ import React, { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./FindClientsForm.css";
 
-export function FindClientsForm({ fetch, clientsSize, modifyUrl, showResult }) {
+export function FindClientsForm({
+  fetch,
+  clientsSize,
+  modifyUrl,
+  showResult,
+  formSettings,
+}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = Object.fromEntries(searchParams.entries());
 
@@ -34,8 +40,6 @@ export function FindClientsForm({ fetch, clientsSize, modifyUrl, showResult }) {
   return (
     <Form
       name="find-clients"
-      // labelCol={{ span: 1, offset: 0 }}
-      // wrapperCol={{ span: 10 }}
       onFinish={onFinish}
       initialValues={searchParamsObj}
       onValuesChange={(v) => {
@@ -63,6 +67,7 @@ export function FindClientsForm({ fetch, clientsSize, modifyUrl, showResult }) {
         wrapperCol={{
           span: 8,
         }}
+        {...formSettings}
       >
         <Input placeholder={"Введите имя, номер телефона или email"} />
       </Form.Item>
