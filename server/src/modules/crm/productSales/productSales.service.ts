@@ -27,6 +27,7 @@ import { SetProductSalePaidDto } from './dto/set-product-sale-paid.dto';
 @Injectable()
 export class CrmProductSalesService {
   private readonly logger = new Logger(this.constructor.name);
+  private readonly isDev: boolean;
 
   constructor(
     private configService: ConfigService,
@@ -39,7 +40,9 @@ export class CrmProductSalesService {
     private userModel: UserModel,
     @InjectConnection()
     private connection: Connection,
-  ) {}
+  ) {
+    this.isDev = configService.get('isDev');
+  }
 
   private async withTransaction<T>(cb: (session: ClientSession) => Promise<T>) {
     const session = await this.connection.startSession();
@@ -63,7 +66,10 @@ export class CrmProductSalesService {
     photoURL: string | undefined,
     details: Array<TArray.Pair<string, string | number>>,
   ) {
-    const provider = await this.userModel.getAdmin(); // TODO: getProvider
+    const provider = this.isDev
+      ? await this.userModel.getAdmin()
+      : await this.userModel.getProvider();
+
     const url = await this.botService.buildLoginURL(
       provider.telegramId,
       `/sale/${productSaleId}`,

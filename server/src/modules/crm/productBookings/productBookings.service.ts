@@ -29,6 +29,7 @@ import { SearchProductBookingsDto } from './dto/search-product-bookings.dto';
 @Injectable()
 export class CrmProductBookingsService {
   private readonly logger = new Logger(this.constructor.name);
+  private readonly isDev: boolean;
 
   constructor(
     private configService: ConfigService,
@@ -47,7 +48,9 @@ export class CrmProductBookingsService {
     protected connection: Connection,
     @InjectQueue(syncProductsByCategoryName)
     private syncProductsByCategoryQueue: TSyncProductsByCategoryProcessorQueue,
-  ) {}
+  ) {
+    this.isDev = configService.get('isDev');
+  }
 
   private async withTransaction<T>(cb: (session: ClientSession) => Promise<T>) {
     const session = await this.connection.startSession();
@@ -82,7 +85,10 @@ export class CrmProductBookingsService {
     photoURL: string | undefined,
     details: Array<TArray.Pair<string, string | number>>,
   ) {
-    const provider = await this.userModel.getAdmin(); // TODO: getProvider
+    const provider = this.isDev
+      ? await this.userModel.getAdmin()
+      : await this.userModel.getProvider();
+
     const url = await this.botService.buildLoginURL(
       provider.telegramId,
       `/booking/${productBookingId}`,
@@ -304,7 +310,9 @@ export class CrmProductBookingsService {
 
     const sales = await this.getProductBookingSalesUser(productBooking);
 
-    const isCurrentUserProvider = currentUser.role === UserRole.Provider;
+    const targetRole = this.isDev ? UserRole.Admin : UserRole.Provider;
+
+    const isCurrentUserProvider = currentUser.role === targetRole;
     const isCurrentUserCreator = sales._id === currentUser._id;
 
     if (!isCurrentUserProvider && !isCurrentUserCreator) {
@@ -334,8 +342,12 @@ export class CrmProductBookingsService {
       );
 
       const userTelegramId = (
-        isCurrentUserCreator ? await this.userModel.getAdmin() : sales
-      ).telegramId; // TODO: getProvider
+        isCurrentUserCreator
+          ? this.isDev
+            ? await this.userModel.getAdmin()
+            : await this.userModel.getProvider()
+          : sales
+      ).telegramId;
       await this.notifySales(
         {
           userTelegramId,
@@ -397,7 +409,7 @@ export class CrmProductBookingsService {
 
     const sales = await this.getProductBookingSalesUser(productBooking);
 
-    const isCurrentUserProvider = currentUser.role === UserRole.Provider;
+    const isCurrentUserProvider = currentUser.role === UserRole.Admin;
     const isCurrentUserCreator = sales._id === currentUser._id;
 
     if (!isCurrentUserProvider && !isCurrentUserCreator) {
@@ -437,8 +449,12 @@ export class CrmProductBookingsService {
         });
 
         const userTelegramId = (
-          isCurrentUserCreator ? await this.userModel.getAdmin() : sales
-        ).telegramId; // TODO: getProvider
+          isCurrentUserCreator
+            ? this.isDev
+              ? await this.userModel.getAdmin()
+              : await this.userModel.getProvider()
+            : sales
+        ).telegramId;
         await this.notifySales(
           {
             userTelegramId,
