@@ -160,7 +160,7 @@ type TStaticMethods = {
   findSales: (
     this: ProductSaleModel,
     data: Partial<
-      Pick<ProductSale, 'status'> & {
+      Pick<ProductSale, 'status' | 'paid'> & {
         productName: string;
         productMicrotronId: number;
         productPromId: number;
@@ -223,6 +223,10 @@ ProductSaleSchema.statics.findSales = async function (
 
   if (!_.isEmpty(data.status)) {
     searchData.push({ status: data.status });
+  }
+
+  if (_.isBoolean(data.paid)) {
+    searchData.push({ paid: data.paid });
   }
 
   if (!_.isEmpty(data.productName)) {
