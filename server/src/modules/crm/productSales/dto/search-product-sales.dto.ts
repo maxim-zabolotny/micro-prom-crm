@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -24,6 +25,10 @@ export class SearchProductSalesDto {
   @IsNumber()
   @IsOptional()
   productPromId?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  paid?: boolean;
 
   // PAGINATION
   @IsNumber()
