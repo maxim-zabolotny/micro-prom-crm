@@ -94,6 +94,12 @@ export class ProductSale {
   @Prop({ type: String })
   canceledReason?: string;
 
+  @Prop({ type: Boolean, required: true, default: false })
+  paid?: boolean;
+
+  @Prop({ type: Date })
+  paidAt?: Date;
+
   @Prop({
     type: raw({
       _id: false,
@@ -179,6 +185,12 @@ type TStaticMethods = {
     this: ProductSaleModel,
     productSaleId: Types.ObjectId,
     clientData: TProductClient,
+    session?: ClientSession | null,
+  ) => Promise<ProductSaleDocument>;
+  setSalePaid: (
+    this: ProductSaleModel,
+    productSaleId: Types.ObjectId,
+    paid: boolean,
     session?: ClientSession | null,
   ) => Promise<ProductSaleDocument>;
   addSale: (
@@ -348,6 +360,39 @@ ProductSaleSchema.statics.setSaleClient = async function (
   return updatedProductSale;
 } as TStaticMethods['setSaleClient'];
 
+ProductSaleSchema.statics.setSalePaid = async function (
+  productSaleId,
+  paid,
+  session,
+) {
+  productSaleLogger.debug('Process set Product Sale Paid:', {
+    productSaleId,
+  });
+
+  const updatedProductSale = await this.findOneAndUpdate(
+    {
+      _id: productSaleId,
+    },
+    {
+      $set: {
+        paid,
+        paidAt: paid ? new Date() : null,
+      },
+    },
+    {
+      returnOriginal: false,
+    },
+  )
+    .session(session)
+    .exec();
+
+  productSaleLogger.debug('Product Sale updated:', {
+    id: productSaleId,
+  });
+
+  return updatedProductSale;
+} as TStaticMethods['setSalePaid'];
+
 ProductSaleSchema.statics.addSale = async function (productSaleData, session) {
   productSaleLogger.debug('Process add Product Sale:', {
     count: productSaleData.count,
@@ -441,6 +486,11 @@ ProductSaleSchema.statics.updateSale = async function (
         status: data.status,
         saleAt: data.saleAt,
       };
+
+      if (!oldProductSale.paid) {
+        dataForUpdate['paid'] = true;
+        dataForUpdate['paidAt'] = new Date();
+      }
 
       break;
     }
