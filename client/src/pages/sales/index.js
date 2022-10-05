@@ -4,6 +4,7 @@ import { Button } from "antd";
 import { RequestAccess } from "../../components/RequestAccess";
 import { API_URL } from "../../api/baseURL";
 import { FindSale, Sales } from "../../components/Sales";
+import "./sales.css";
 
 export function SalesPage() {
   const location = useLocation();
@@ -55,9 +56,8 @@ export function SalesPage() {
   }
 
   const buttons = (
-    <div style={{ margin: "10px" }}>
+    <div className={"sales-page-buttons"}>
       <Button
-        style={{ marginRight: "10px" }}
         type={viewType === "single" ? "primary" : "default"}
         onClick={changeView("single")}
       >
@@ -74,7 +74,7 @@ export function SalesPage() {
   );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"sales-page-container"}>
       {buttons}
       {children}
     </div>

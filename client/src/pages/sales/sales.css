@@ -1,0 +1,11 @@
+.sales-page-container {
+    width: 100%;
+}
+
+.sales-page-buttons {
+    margin-bottom: 10px
+}
+
+.sales-page-buttons button:nth-child(1) {
+    margin-right: 10px
+}
