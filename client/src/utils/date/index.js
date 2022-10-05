@@ -1,0 +1,1 @@
+export { dateToStr } from "./dateToStr";
