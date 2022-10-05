@@ -11,3 +11,4 @@ export { SetSaleDescriptionForm } from "./Forms/SetSaleDescriptionForm/SetSaleDe
 export { SetSaleOrderForm } from "./Forms/SetSaleOrderForm/SetSaleOrderForm";
 export { SelectClient } from "./Forms/SetSaleClientForm/SelectClient/SelectClient";
 export { SetSaleClientForm } from "./Forms/SetSaleClientForm/SetSaleClientForm";
+export { SetSalePaidForm } from "./Forms/SetSalePaidForm/SetSalePaidForm";

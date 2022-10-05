@@ -13,6 +13,7 @@ import { SetSaleClientForm } from "../Forms/SetSaleClientForm/SetSaleClientForm"
 import { DeliverySaleForm } from "../Forms/DeliverySaleForm/DeliverySaleForm";
 import { SaleForm } from "../Forms/SaleForm/SaleForm";
 import { CancelSaleForm } from "../Forms/CancelSaleForm/CancelSaleForm";
+import { SetSalePaidForm } from "../Forms/SetSalePaidForm/SetSalePaidForm";
 
 export function FullSale({ sale, setSale }) {
   const { currentUser } = useContext(GlobalContext);
@@ -172,6 +173,10 @@ export function FullSale({ sale, setSale }) {
       <br />
       <span>date: {sale.createdAt}</span>
       <br />
+      <span>paid: {sale.paid}</span>
+      <br />
+      <span>paidAt: {sale.paidAt}</span>
+      <br />
       <RequestAccess
         url={API_URL.PRODUCT_SALES.SET_DESCRIPTION}
         showWithoutModifyAccess={true}
@@ -189,6 +194,12 @@ export function FullSale({ sale, setSale }) {
         showWithoutModifyAccess={true}
       >
         <SetSaleClientForm sale={sale} changeSale={setSale} />
+      </RequestAccess>
+      <RequestAccess
+        url={API_URL.PRODUCT_SALES.SET_PAID}
+        showWithoutModifyAccess={true}
+      >
+        <SetSalePaidForm sale={sale} changeSale={setSale} />
       </RequestAccess>
       {isChangeable ? changeStatusForm : null}
       <div>
