@@ -1,5 +1,6 @@
 import { Button } from "antd";
 import "./ShortProduct.css";
+import React from "react";
 
 export function ShortProduct({ product, changeView }) {
   return (
@@ -12,6 +13,12 @@ export function ShortProduct({ product, changeView }) {
           </span>
           <span>
             <b>Цена:</b> {product.ourPrice} грн
+          </span>
+          <span>
+            <b>Цена Microtron:</b> {product.sitePrice} грн
+          </span>
+          <span>
+            <b>Разница в цене:</b> {product.siteMarkup.toFixed(0)} %
           </span>
           <span>
             <b>Колличевство:</b> {product.quantity} шт

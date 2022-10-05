@@ -35,6 +35,12 @@ export function FullProduct({
             <b>Цена:</b> {product.ourPrice} грн
           </span>
           <span>
+            <b>Цена Microtron:</b> {product.sitePrice} грн
+          </span>
+          <span>
+            <b>Разница в цене:</b> {product.siteMarkup.toFixed(0)} %
+          </span>
+          <span>
             <b>Колличевство:</b> {product.quantity} шт
           </span>
           <span>
