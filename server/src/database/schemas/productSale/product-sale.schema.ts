@@ -28,12 +28,12 @@ export type TProductClient = {
 
 export type TDeliveryProvider = Extract<
   PromTypes.DeliveryProvider,
-  PromTypes.DeliveryProvider.NovaPoshta
+  PromTypes.DeliveryProvider.NovaPoshta | PromTypes.DeliveryProvider.UkrPoshta
 >;
 
 export type TProductDelivery = {
   provider: TDeliveryProvider;
-  declarationId: string;
+  declarationId?: string;
   time: Date;
 };
 
@@ -109,7 +109,7 @@ export class ProductSale {
     type: raw({
       _id: false,
       provider: { type: String, required: true },
-      declarationId: { type: String, required: true },
+      declarationId: { type: String },
       time: { type: Date, required: true },
     }),
   })
