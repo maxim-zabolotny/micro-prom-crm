@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select } from "antd";
+import { Button, Checkbox, Form, Input, Select } from "antd";
 import _ from "lodash";
 import React, { useEffect } from "react";
 import { strIsNumberRule } from "../../../../utils/formRules/strIsNumberRule";
@@ -18,6 +18,10 @@ const buildNextData = (data, values) => {
   nextData.productPromId
     ? (nextData.productPromId = Number(nextData.productPromId))
     : (nextData.productPromId = null);
+
+  if (typeof nextData.paid === "string") {
+    nextData.paid = nextData.paid === "true";
+  }
 
   return nextData;
 };
@@ -40,6 +44,11 @@ export function FindSalesForm({ data, fetch, salesSize }) {
     const newSearchParams = new URLSearchParams(searchParamsObj);
 
     Object.entries(values).forEach(([key, value]) => {
+      if (_.isBoolean(value)) {
+        value ? newSearchParams.set(key, value) : newSearchParams.delete(key);
+        return;
+      }
+
       if (_.isEmpty(value)) {
         newSearchParams.delete(key);
       } else {
@@ -118,6 +127,10 @@ export function FindSalesForm({ data, fetch, salesSize }) {
           rules={[strIsNumberRule]}
         >
           <Input placeholder={"Введите Prom ID"} />
+        </Form.Item>
+
+        <Form.Item label="Оплачен" name="paid" valuePropName="checked">
+          <Checkbox />
         </Form.Item>
 
         <Form.Item
