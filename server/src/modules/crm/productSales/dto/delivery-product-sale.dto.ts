@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Types as PromTypes } from '@lib/prom';
 
 export class DeliveryProductSaleDto {
@@ -6,11 +6,16 @@ export class DeliveryProductSaleDto {
   @IsNotEmpty()
   productSaleId: string;
 
-  @IsIn([PromTypes.DeliveryProvider.NovaPoshta])
+  @IsIn([
+    PromTypes.DeliveryProvider.NovaPoshta,
+    PromTypes.DeliveryProvider.UkrPoshta,
+  ])
   @IsNotEmpty()
-  provider: PromTypes.DeliveryProvider.NovaPoshta;
+  provider:
+    | PromTypes.DeliveryProvider.UkrPoshta
+    | PromTypes.DeliveryProvider.NovaPoshta;
 
   @IsString()
-  @IsNotEmpty()
-  declarationId: string;
+  @IsOptional()
+  declarationId?: string;
 }

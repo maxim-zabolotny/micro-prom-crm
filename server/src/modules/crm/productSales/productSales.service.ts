@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import * as _ from 'lodash';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { User, UserModel } from '@schemas/user';
@@ -20,6 +21,7 @@ import { PromOrdersService } from '../../prom/orders/orders.service';
 import { SaleProductSaleDto } from './dto/sale-product-sale.dto';
 import { MarkdownHelper } from '../../telegram/common/helpers';
 import { CancelProductSaleDto } from './dto/cancel-product-sale.dto';
+import { Types as PromTypes } from '@lib/prom';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -204,6 +206,16 @@ export class CrmProductSalesService {
       throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
     }
 
+    if (
+      data.provider === PromTypes.DeliveryProvider.NovaPoshta &&
+      _.isEmpty(data.declarationId)
+    ) {
+      throw new HttpException(
+        'Declaration Id is required for NovaPoshta',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     // if (!productSale.promOrderId) {
     //   throw new HttpException(
     //     'You should set Prom Order Id before Delivering',
@@ -232,10 +244,14 @@ export class CrmProductSalesService {
         session,
       );
 
-      if (updatedProductSale.promOrderId) {
+      if (
+        updatedProductSale.promOrderId &&
+        updatedProductSale.delivery.provider ===
+          PromTypes.DeliveryProvider.NovaPoshta
+      ) {
         await this.promOrdersService.setDeclaration({
           order_id: updatedProductSale.promOrderId,
-          delivery_type: data.provider,
+          delivery_type: data.provider as PromTypes.DeliveryProvider.NovaPoshta,
           declaration_id: data.declarationId,
         });
       }
