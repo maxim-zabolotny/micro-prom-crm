@@ -72,7 +72,8 @@ export class AppModule implements NestModule {
       .apply(
         cors({
           origin: function (origin, callback) {
-            if (whitelist.includes(origin) || isDev) {
+            if (whitelist.includes(origin) || /*isDev*/ true) {
+              // TODO: bug?
               callback(null, origin);
             } else {
               callback(new Error('Not allowed by CORS'));
