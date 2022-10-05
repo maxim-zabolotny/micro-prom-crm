@@ -5,7 +5,7 @@ services:
     container_name: crm_web
     build:
       context: ./
-      dockerfile: ./client/Dockerfile
+      dockerfile: ./client/Dockerfile-prod
     ports:
       - "3000:3000"
     #      - "80" # for dev we don't need to expose port
