@@ -118,7 +118,7 @@ export function FullBooking({ booking, setBooking }) {
               <b>Коментарий:</b> {booking.description}
             </span>
             <span>
-              <b>Дата: </b>
+              <b>Дата бронирования: </b>
               <b style={{ color: "#1890ff" }}>{dateToStr(booking.createdAt)}</b>
             </span>
             {changedBookingInfo}

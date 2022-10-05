@@ -47,7 +47,7 @@ export function ShortBooking({ booking, changeView }) {
             <b>Колличевство:</b> {booking.count} шт
           </span>
           <span>
-            <b>Дата: </b>
+            <b>Дата бронирования: </b>
             <b style={{ color: "#1890ff" }}>{dateToStr(booking.createdAt)}</b>
           </span>
           {bookingDescription}
