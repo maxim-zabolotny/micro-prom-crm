@@ -1,0 +1,11 @@
+.bookings-page-container {
+    width: 100%;
+}
+
+.bookings-page-buttons {
+    margin-bottom: 10px
+}
+
+.bookings-page-buttons button:nth-child(1) {
+    margin-right: 10px
+}

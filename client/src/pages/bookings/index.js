@@ -4,6 +4,7 @@ import { Button } from "antd";
 import { RequestAccess } from "../../components/RequestAccess";
 import { API_URL } from "../../api/baseURL";
 import { Bookings, FindBooking } from "../../components/Bookings";
+import "./bookings.css";
 
 export function BookingsPage() {
   const location = useLocation();
@@ -55,9 +56,8 @@ export function BookingsPage() {
   }
 
   const buttons = (
-    <div style={{ margin: "10px" }}>
+    <div className={"bookings-page-buttons"}>
       <Button
-        style={{ marginRight: "10px" }}
         type={viewType === "single" ? "primary" : "default"}
         onClick={changeView("single")}
       >
@@ -74,7 +74,7 @@ export function BookingsPage() {
   );
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={"bookings-page-container"}>
       {buttons}
       {children}
     </div>
