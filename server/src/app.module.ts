@@ -1,4 +1,5 @@
 import {
+  Logger,
   MiddlewareConsumer,
   Module,
   NestModule,
@@ -62,6 +63,8 @@ import { PromModule } from './modules/prom/prom.module';
   providers: [AppService],
 })
 export class AppModule implements NestModule {
+  private readonly logger = new Logger(this.constructor.name);
+
   constructor(private configService: ConfigService) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -71,8 +74,11 @@ export class AppModule implements NestModule {
     consumer
       .apply(
         cors({
-          origin: function (origin, callback) {
-            if (whitelist.includes(origin) || /*isDev*/ true) {
+          origin: (origin, callback) => {
+            this.logger.debug('Request from origin:', { origin });
+
+            // if(whitelist.includes(origin) || isDev)
+            if (true) {
               // TODO: bug?
               callback(null, origin);
             } else {
