@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import { TelegrafExecutionContext } from 'nestjs-telegraf';
 
 @Injectable()
-export class TelegramLoggingInterceptor implements NestInterceptor {
+export class TelegrafLoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(this.constructor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {

@@ -1,1 +1,1 @@
-export { TelegramLoggingInterceptor } from './logging.interceptor';
+export { TelegrafLoggingInterceptor } from './logging.interceptor';
