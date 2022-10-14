@@ -29,6 +29,11 @@ export class NovaposhtaOrdersService {
       maxContentLength: Infinity,
     });
 
+    this.logger.debug('Print making result:', {
+      size: result.data.byteLength,
+      isHTML: result.data.includes('<!DOCTYPE html>'),
+    });
+
     if (result.data.byteLength === 0) {
       throw new HttpException('Invalid Declaration ID', HttpStatus.NOT_FOUND);
     }
