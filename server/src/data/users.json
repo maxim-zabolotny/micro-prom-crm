@@ -18,5 +18,11 @@
     "chatId": 560731563,
     "name": "Алексей",
     "role": "provider"
+  },
+  {
+    "telegramId": 5533808809,
+    "chatId": 5533808809,
+    "name": "Lena",
+    "role": "sales"
   }
 ]
