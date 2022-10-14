@@ -25,6 +25,10 @@ export default () => {
     botName: process.env.TELEGRAM_BOT_NAME,
   };
 
+  const novaPoshta = {
+    token: process.env.NOVA_POSHTA_TOKEN,
+  };
+
   const ngrok = {
     token: process.env.NGROK_TOKEN,
     fileName: process.env.NGROK_FILE_NAME,
@@ -69,6 +73,7 @@ export default () => {
     redis,
     mongo,
     telegram,
+    novaPoshta,
     ngrok,
     google,
     jwtToken,
