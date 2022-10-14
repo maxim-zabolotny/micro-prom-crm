@@ -12,8 +12,9 @@ import { Context, Telegraf } from 'telegraf';
 import { CrmBotService } from './crm-bot.service';
 import { TelegrafExceptionFilter } from '../common/filters';
 import { Logger, UseFilters } from '@nestjs/common';
-import { CurrentTelegramUser } from '../common/decorators';
+import { CurrentTelegramUser, TelegramAuth } from '../common/decorators';
 import { TTelegramUser } from '../common/types';
+import { UserRole } from '@schemas/user';
 
 @Update()
 // @UseInterceptors(TelegramLoggingInterceptor)
@@ -50,6 +51,7 @@ export class CrmBotUpdate {
   }
 
   @Help()
+  @TelegramAuth(UserRole.General)
   async onHelp(): Promise<string> {
     const commands = [
       '/get_auth_token - Получить токен аутентификации',
@@ -66,6 +68,7 @@ export class CrmBotUpdate {
   }
 
   @Command('get_auth_token')
+  @TelegramAuth(UserRole.General)
   async onGetAuthTokenCommand(
     @CurrentTelegramUser() tgUser: TTelegramUser,
     @Ctx() ctx: Context,
@@ -75,18 +78,21 @@ export class CrmBotUpdate {
   }
 
   @Command('get_client_url')
+  @TelegramAuth(UserRole.General)
   async onGetClientUrlCommand(@Ctx() ctx: Context): Promise<void> {
     const message = this.crmBotService.getClientUrl();
     await ctx.replyWithMarkdown(message);
   }
 
   @Command('get_server_url')
+  @TelegramAuth(UserRole.General)
   async onGetServerUrlCommand(@Ctx() ctx: Context): Promise<void> {
     const message = await this.crmBotService.getServerUrl();
     await ctx.replyWithMarkdown(message);
   }
 
   @Command('get_login_url')
+  @TelegramAuth(UserRole.General)
   async onGetLoginUrlCommand(
     @CurrentTelegramUser() tgUser: TTelegramUser,
     @Ctx() ctx: Context,
