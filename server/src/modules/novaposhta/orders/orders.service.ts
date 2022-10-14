@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { Axios } from 'axios';
 
@@ -21,7 +21,7 @@ export class NovaposhtaOrdersService {
     });
 
     const authToken = this.configService.get('novaPoshta.token');
-    const result = await this.axios.request({
+    const result = await this.axios.request<Buffer>({
       method: 'get',
       url: `https://my.novaposhta.ua/orders/printMarking${size}/orders[]/${declarationId}/type/pdf/apiKey/${authToken}`,
       responseType: 'arraybuffer',
@@ -29,6 +29,14 @@ export class NovaposhtaOrdersService {
       maxContentLength: Infinity,
     });
 
-    return result.data as Buffer;
+    if (result.data.byteLength === 0) {
+      throw new HttpException('Invalid Declaration ID', HttpStatus.NOT_FOUND);
+    }
+
+    if (result.data.includes('<!DOCTYPE html>')) {
+      throw new HttpException('Invalid Auth Token', HttpStatus.UNAUTHORIZED);
+    }
+
+    return result.data;
   }
 }
