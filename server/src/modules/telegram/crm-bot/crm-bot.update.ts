@@ -1,14 +1,26 @@
-import { Command, Ctx, Help, InjectBot, Start, Update } from 'nestjs-telegraf';
+import {
+  Command,
+  Ctx,
+  Help,
+  InjectBot,
+  Next,
+  On,
+  Start,
+  Update,
+} from 'nestjs-telegraf';
 import { Context, Telegraf } from 'telegraf';
 import { CrmBotService } from './crm-bot.service';
 import { TelegrafExceptionFilter } from '../common/filters';
-import { UseFilters } from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import { CurrentTelegramUser } from '../common/decorators';
 import { TTelegramUser } from '../common/types';
 
 @Update()
+// @UseInterceptors(TelegramLoggingInterceptor)
 @UseFilters(TelegrafExceptionFilter)
 export class CrmBotUpdate {
+  private readonly logger = new Logger(this.constructor.name);
+
   constructor(
     @InjectBot()
     private readonly bot: Telegraf<Context>,
@@ -18,6 +30,23 @@ export class CrmBotUpdate {
   @Start()
   async onStart(@Ctx() ctx: Context): Promise<string> {
     return `Бот запущен`;
+  }
+
+  @On('message')
+  async onMessage(@Ctx() ctx: Context, @Next() next): Promise<void> {
+    const message = ctx.update['message'];
+    this.logger.log('Telegram Bot Message:', {
+      from: {
+        id: message.from.id,
+        firstName: message.from.first_name,
+        username: message.from.username,
+      },
+      data: {
+        text: message.text,
+      },
+    });
+
+    return next();
   }
 
   @Help()
