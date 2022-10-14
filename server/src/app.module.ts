@@ -24,6 +24,7 @@ import { CrmModule } from './modules/crm/crm.module';
 import { SyncModule } from './modules/sync/sync.module';
 import { NgrokModule } from './modules/ngrok/ngrok.module';
 import { PromModule } from './modules/prom/prom.module';
+import { NovaposhtaModule } from './modules/novaposhta/novaposhta.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PromModule } from './modules/prom/prom.module';
     TelegramModule,
     MicrotronModule,
     PromModule,
+    NovaposhtaModule,
     SyncModule,
     CrmModule,
     AdminModule,
@@ -77,9 +79,7 @@ export class AppModule implements NestModule {
           origin: (origin, callback) => {
             this.logger.debug('Request from origin:', { origin });
 
-            // if(whitelist.includes(origin) || isDev)
-            if (true) {
-              // TODO: bug?
+            if (whitelist.includes(origin) || isDev) {
               callback(null, origin);
             } else {
               callback(new Error('Not allowed by CORS'));
