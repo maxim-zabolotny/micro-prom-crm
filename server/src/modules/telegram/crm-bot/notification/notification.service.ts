@@ -73,21 +73,39 @@ export class NotificationBotService {
   }
 
   public async send(data: ISendNotification) {
+    const extra = {
+      parse_mode: 'MarkdownV2' as any,
+      ...(_.isEmpty(data.buttons)
+        ? {}
+        : this.buildButtonsWithUrl(data.buttons)),
+      ...(data.replyToMessage
+        ? { reply_to_message_id: data.replyToMessage }
+        : {}),
+    };
+
     if (data.photo) {
-      await this.bot.telegram.sendPhoto(data.to, data.photo, {
+      return await this.bot.telegram.sendPhoto(data.to, data.photo, {
         caption: this.buildMessage(data),
-        parse_mode: 'MarkdownV2',
-        ...(_.isEmpty(data.buttons)
-          ? null
-          : this.buildButtonsWithUrl(data.buttons)),
+        ...extra,
       });
+    } else if (data.fileBuffer) {
+      return await this.bot.telegram.sendDocument(
+        data.to,
+        {
+          source: data.fileBuffer.content,
+          filename: data.fileBuffer.name,
+        },
+        {
+          caption: this.buildMessage(data),
+          ...extra,
+        },
+      );
     } else {
-      await this.bot.telegram.sendMessage(data.to, this.buildMessage(data), {
-        parse_mode: 'MarkdownV2',
-        ...(_.isEmpty(data.buttons)
-          ? null
-          : this.buildButtonsWithUrl(data.buttons)),
-      });
+      return await this.bot.telegram.sendMessage(
+        data.to,
+        this.buildMessage(data),
+        extra,
+      );
     }
   }
 }
