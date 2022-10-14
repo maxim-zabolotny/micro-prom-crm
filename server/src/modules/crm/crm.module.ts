@@ -24,6 +24,7 @@ import { SyncModule } from '../sync/sync.module';
 import { CrmProductSalesController } from './productSales/productSales.controller';
 import { CrmProductSalesService } from './productSales/productSales.service';
 import { PromModule } from '../prom/prom.module';
+import { NovaposhtaModule } from '../novaposhta/novaposhta.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { PromModule } from '../prom/prom.module';
     MicrotronModule,
     TelegramModule,
     PromModule,
+    NovaposhtaModule,
     MongooseModule.forFeature([
       {
         name: User.name,

@@ -23,6 +23,7 @@ import { MarkdownHelper } from '../../telegram/common/helpers';
 import { CancelProductSaleDto } from './dto/cancel-product-sale.dto';
 import { Types as PromTypes } from '@lib/prom';
 import { SetProductSalePaidDto } from './dto/set-product-sale-paid.dto';
+import { NovaposhtaOrdersService } from '../../novaposhta/orders/orders.service';
 
 @Injectable()
 export class CrmProductSalesService {
@@ -34,6 +35,7 @@ export class CrmProductSalesService {
     private botService: CrmBotService,
     private notificationBotService: NotificationBotService,
     private promOrdersService: PromOrdersService,
+    private novaposhtaOrdersService: NovaposhtaOrdersService,
     @InjectModel(ProductSale.name)
     private productSaleModel: ProductSaleModel,
     @InjectModel(User.name)
@@ -60,12 +62,21 @@ export class CrmProductSalesService {
     }
   }
 
-  private async notifyProvider(
-    productSaleId: string,
-    productSaleStatus: ProductSaleStatus,
-    photoURL: string | undefined,
-    details: Array<TArray.Pair<string, string | number>>,
-  ) {
+  private async notifyProvider({
+    productSaleId,
+    productSaleStatus,
+    details,
+    photoURL,
+    deliveryPrint,
+    declarationId,
+  }: {
+    productSaleId: string;
+    productSaleStatus: ProductSaleStatus;
+    details: Array<TArray.Pair<string, string | number>>;
+    photoURL?: string;
+    deliveryPrint?: Buffer;
+    declarationId?: string;
+  }) {
     const provider = this.isDev
       ? await this.userModel.getAdmin()
       : await this.userModel.getProvider();
@@ -83,6 +94,10 @@ export class CrmProductSalesService {
 
     let title: string;
     switch (productSaleStatus) {
+      case ProductSaleStatus.Delivering: {
+        title = 'Продажа отправленна';
+        break;
+      }
       case ProductSaleStatus.Sale: {
         title = 'Успешная Продажа';
         break;
@@ -96,13 +111,25 @@ export class CrmProductSalesService {
       }
     }
 
-    await this.notificationBotService.send({
+    const mainMessage = await this.notificationBotService.send({
       to: String(provider.telegramId),
       photo: photoURL,
       buttons: [['Просмотреть продажу', url]],
       title,
       details,
     });
+
+    if (deliveryPrint) {
+      await this.notificationBotService.send({
+        title: 'TTH 100x100',
+        to: String(provider.telegramId),
+        fileBuffer: {
+          content: deliveryPrint,
+          name: `${declarationId}.pdf`,
+        },
+        replyToMessage: mainMessage.message_id,
+      });
+    }
   }
 
   public async getById(id: Types.ObjectId) {
@@ -238,6 +265,9 @@ export class CrmProductSalesService {
   }
 
   public async deliveryProductSale(data: DeliveryProductSaleDto) {
+    const isNovaPoshtaDelivery =
+      data.provider === PromTypes.DeliveryProvider.NovaPoshta;
+
     const productSale = await this.productSaleModel
       .findById(new Types.ObjectId(data.productSaleId))
       .exec();
@@ -245,10 +275,7 @@ export class CrmProductSalesService {
       throw new HttpException('Product Sale not found', HttpStatus.NOT_FOUND);
     }
 
-    if (
-      data.provider === PromTypes.DeliveryProvider.NovaPoshta &&
-      _.isEmpty(data.declarationId)
-    ) {
+    if (isNovaPoshtaDelivery && _.isEmpty(data.declarationId)) {
       throw new HttpException(
         'Declaration Id is required for NovaPoshta',
         HttpStatus.BAD_REQUEST,
@@ -261,6 +288,13 @@ export class CrmProductSalesService {
     //     HttpStatus.BAD_REQUEST,
     //   );
     // }
+
+    let deliveryPrint: Buffer | undefined;
+    if (isNovaPoshtaDelivery) {
+      deliveryPrint = await this.novaposhtaOrdersService.getPDFPrintMaking(
+        data.declarationId,
+      );
+    }
 
     this.logger.debug('Delivery Product Sale:', {
       productSaleId: productSale._id,
@@ -292,6 +326,27 @@ export class CrmProductSalesService {
           order_id: updatedProductSale.promOrderId,
           delivery_type: data.provider as PromTypes.DeliveryProvider.NovaPoshta,
           declaration_id: data.declarationId,
+        });
+      }
+
+      if (isNovaPoshtaDelivery) {
+        const product = updatedProductSale.product;
+        await this.notifyProvider({
+          productSaleId: updatedProductSale._id.toString(),
+          productSaleStatus: updatedProductSale.status,
+          details: Object.entries({
+            'Имя продукта': MarkdownHelper.escape(product.name),
+            'Код продукта': MarkdownHelper.monospaced(
+              String(product.microtronId),
+            ),
+            Колличество: updatedProductSale.count,
+            'Номер Декларации': MarkdownHelper.monospaced(
+              updatedProductSale.delivery.declarationId,
+            ),
+          }),
+          photoURL: productSale.product.images[0],
+          deliveryPrint: deliveryPrint,
+          declarationId: updatedProductSale.delivery.declarationId,
         });
       }
 
@@ -329,11 +384,10 @@ export class CrmProductSalesService {
       );
 
       const product = updatedProductSale.product;
-      await this.notifyProvider(
-        updatedProductSale._id.toString(),
-        updatedProductSale.status,
-        productSale.product.images[0],
-        Object.entries({
+      await this.notifyProvider({
+        productSaleId: updatedProductSale._id.toString(),
+        productSaleStatus: updatedProductSale.status,
+        details: Object.entries({
           'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
             String(product.microtronId),
@@ -343,7 +397,8 @@ export class CrmProductSalesService {
           'Общая выгода': updatedProductSale.benefitPrice,
           'Время Продажи': updatedProductSale.saleAt.toLocaleString(),
         }),
-      );
+        photoURL: productSale.product.images[0],
+      });
 
       return updatedProductSale;
     });
@@ -380,11 +435,10 @@ export class CrmProductSalesService {
       );
 
       const product = updatedProductSale.product;
-      await this.notifyProvider(
-        updatedProductSale._id.toString(),
-        updatedProductSale.status,
-        productSale.product.images[0],
-        Object.entries({
+      await this.notifyProvider({
+        productSaleId: updatedProductSale._id.toString(),
+        productSaleStatus: updatedProductSale.status,
+        details: Object.entries({
           'Имя продукта': MarkdownHelper.escape(product.name),
           'Код продукта': MarkdownHelper.monospaced(
             String(product.microtronId),
@@ -393,7 +447,8 @@ export class CrmProductSalesService {
           'Причина Отказа': MarkdownHelper.escape(data.canceledReason),
           'Время Отказа': updatedProductSale.canceledAt.toLocaleString(),
         }),
-      );
+        photoURL: productSale.product.images[0],
+      });
 
       return updatedProductSale;
     });
