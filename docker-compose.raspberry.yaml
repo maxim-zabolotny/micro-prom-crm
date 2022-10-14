@@ -31,6 +31,8 @@ services:
       - database-setup
     links:
       - database:database
+    volumes:
+      - ./server/src/data/cache:/home/app/crm_server/src/data/cache
     restart: "always"
 
   database:
