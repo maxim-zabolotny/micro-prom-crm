@@ -7,22 +7,15 @@ services:
       context: ./
       dockerfile: ./client/Dockerfile-prod
     ports:
-      - "3000:3000"
-    #      - "80" # for dev we don't need to expose port
+      - "80:80"
     environment:
-      PORT: 3000
+      PORT: 80
       NODE_ENV: production
     depends_on:
       - api
     links:
       - api:api
-    volumes:
-      - ./client:/home/app/crm_web
-      - /client/node_modules
-    tty: true
     restart: "always"
-    entrypoint: /bin/bash
-    command: -s
 
   api:
     container_name: crm_api
@@ -38,8 +31,6 @@ services:
       - database-setup
     links:
       - database:database
-    volumes:
-      - /server/node_modules
     restart: "always"
 
   database:
@@ -89,7 +80,7 @@ services:
       context: ./
       dockerfile: ./localtunnel/Dockerfile
     command:
-      --local-host web --port 3000 --subdomain micropromcrm
+      --local-host web --port 80 --subdomain micropromcrm
     links:
       - web
     depends_on:
