@@ -34,6 +34,11 @@ export default () => {
     fileName: process.env.NGROK_FILE_NAME,
   };
 
+  const microtron = {
+    rawToken: process.env.MICROTRON_RAW_TOKEN,
+    otpToken: process.env.MICROTRON_OTP_TOKEN,
+  };
+
   const google = {
     serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     privateKey: process.env.GOOGLE_PRIVATE_KEY,
@@ -52,7 +57,6 @@ export default () => {
   };
 
   const tokens = {
-    microtron: process.env.MICROTRON_TOKEN,
     prom: process.env.PROM_TOKEN,
   };
 
@@ -75,6 +79,7 @@ export default () => {
     telegram,
     novaPoshta,
     ngrok,
+    microtron,
     google,
     jwtToken,
     tokens,
