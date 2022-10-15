@@ -8,12 +8,12 @@ import {
 
 // ENTITY
 export enum OrderStatus {
-  Pending = 'pending',
-  Received = 'received',
-  Delivered = 'delivered',
-  Canceled = 'canceled',
+  Pending = 'pending', // Нове
+  Received = 'received', // Прийнято
+  Delivered = 'delivered', // Виконано
+  Canceled = 'canceled', // Скасовано
   Draft = 'draft',
-  Paid = 'paid',
+  Paid = 'paid', // Оплачено
 }
 
 export enum OrderSource {
@@ -40,10 +40,10 @@ export enum PaymentType {
 }
 
 export enum PaymentStatus {
-  Paid = 'paid',
-  Unpaid = 'unpaid',
-  Refunded = 'refunded',
-  PaidOut = 'paid_out',
+  Paid = 'paid', // оплачено покупателем
+  Unpaid = 'unpaid', // не оплачено
+  Refunded = 'refunded', // выполнен возврат покупателю
+  PaidOut = 'paid_out', // выплачено продавцу
 }
 
 export interface IOrderProduct {
