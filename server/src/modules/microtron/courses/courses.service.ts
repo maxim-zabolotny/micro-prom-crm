@@ -14,7 +14,7 @@ export class MicrotronCoursesService {
 
   constructor(private configService: ConfigService) {
     this.coursesAPI = new MicrotronAPI.Course({
-      token: configService.get('tokens.microtron'),
+      token: configService.get('microtron.otpToken'),
     });
   }
 

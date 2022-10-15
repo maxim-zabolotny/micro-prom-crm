@@ -36,12 +36,17 @@ export type TParseProductsConfig = {
   getAwaySleep: number;
 };
 
+export type TValidProductConfig = {
+  checkMinPrice: (v: number) => boolean;
+  checkMinQuantity: (v: number) => boolean;
+};
+
 @Injectable()
 export class MicrotronProductsService {
   private readonly logger = new Logger(this.constructor.name);
 
-  private readonly productsAPI: Product.Product;
-  private readonly productsAPIDefaultOptions: IProductRequestOptions = {
+  private productsAPI: Product.Product;
+  private productsAPIDefaultOptions: IProductRequestOptions = {
     local: true,
     lang: Types.Lang.UA,
   };
@@ -82,8 +87,8 @@ export class MicrotronProductsService {
       },
     );
 
-    const minPriceCheck = price > 0;
-    const minQuantityCheck = quantity >= 1; // TODO: temp solution
+    const minPriceCheck = this.validProductConfig.checkMinPrice(price);
+    const minQuantityCheck = this.validProductConfig.checkMinQuantity(quantity); // TODO: temp solution
 
     // VERIFY
     const conditions = [baseCheck, minPriceCheck, minQuantityCheck];
@@ -137,6 +142,11 @@ export class MicrotronProductsService {
     getAwaySleep: 1000 * 30,
   };
 
+  private validProductConfig: TValidProductConfig = {
+    checkMinPrice: (v) => v > 0,
+    checkMinQuantity: (v) => v >= 1,
+  };
+
   public readonly productsCacheFilePath = path
     .join(__dirname, '../../../data/cache/products-cache.json')
     .replace('dist', 'src');
@@ -153,7 +163,7 @@ export class MicrotronProductsService {
     private timeHelper: TimeHelper,
   ) {
     this.productsAPI = new MicrotronAPI.Product({
-      token: configService.get('tokens.microtron'),
+      token: configService.get('microtron.otpToken'),
     });
   }
 
@@ -366,6 +376,32 @@ export class MicrotronProductsService {
       count: Object.keys(cache).length,
     });
     this.productsParseCache = new ProductsParseMap(Object.entries(cache));
+  }
+
+  public setToken(token: string) {
+    this.productsAPI = new MicrotronAPI.Product({
+      token,
+    });
+
+    this.productsCache.clear();
+    this.productsParseCache.clear();
+
+    return this;
+  }
+
+  public setDefaultProductAPIOptions(options: IProductRequestOptions) {
+    this.productsAPIDefaultOptions = {
+      ...this.productsAPIDefaultOptions,
+      ...options,
+    };
+
+    return this;
+  }
+
+  public setValidProductConfig(config: TValidProductConfig) {
+    this.validProductConfig = config;
+
+    return this;
   }
 
   public async translateSentence(

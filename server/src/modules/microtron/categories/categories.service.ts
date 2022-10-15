@@ -31,7 +31,7 @@ export class MicrotronCategoriesService {
     @InjectModel(Constant.name) private constantModel: ConstantModel,
   ) {
     this.categoriesAPI = new MicrotronAPI.Category({
-      token: configService.get('tokens.microtron'),
+      token: configService.get('microtron.otpToken'),
     });
   }
 
