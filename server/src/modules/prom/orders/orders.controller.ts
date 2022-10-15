@@ -13,12 +13,20 @@ import { SearchOrdersDto } from './dto/search-orders.dto';
 import { SetOrderDeliveryDto } from './dto/set-order-delivery.dto';
 import { Auth } from '@common/decorators';
 import { UserRole } from '@schemas/user';
+import { GetOrdersListDto } from './dto/get-orders-list.dto';
 
 @Controller('/prom/orders')
 @UseFilters(PromExceptionFilter)
 @UseInterceptors(LoggingInterceptor)
 export class PromOrdersController {
   constructor(private readonly promOrdersService: PromOrdersService) {}
+
+  @Post('/list')
+  @HttpCode(201)
+  @Auth(UserRole.General)
+  getOrdersList(@Body() data: GetOrdersListDto) {
+    return this.promOrdersService.getOrdersList(data);
+  }
 
   @Post('/search')
   @HttpCode(201)

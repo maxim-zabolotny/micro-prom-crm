@@ -7,6 +7,7 @@ import PromAPI, {
 } from '@lib/prom';
 import { SearchOrdersDto } from './dto/search-orders.dto';
 import { SetOrderDeliveryDto } from './dto/set-order-delivery.dto';
+import { GetOrdersListDto } from './dto/get-orders-list.dto';
 
 @Injectable()
 export class PromOrdersService {
@@ -22,6 +23,80 @@ export class PromOrdersService {
     this.deliveryAPI = new PromAPI.Delivery({
       token: configService.get('tokens.prom'),
     });
+  }
+
+  public async getOrdersList(data: GetOrdersListDto) {
+    this.logger.debug('Get orders list by:', data);
+
+    const config = {
+      ...(data.limit ? { limit: data.limit } : {}),
+      ...(data.searchFrom ? { data_from: data.searchFrom } : {}),
+      ...(data.searchTo ? { data_to: data.searchTo } : {}),
+      ...(data.fromId ? { last_id: data.fromId } : {}),
+    };
+    const orders: PromOrder.IOrder[] = [];
+
+    if (_.isEmpty(data.statuses)) {
+      const { orders: promOrder } = await this.ordersAPI.getList(config);
+
+      orders.push(...promOrder);
+    } else {
+      orders.push(
+        ..._.flattenDeep(
+          await Promise.all(
+            _.map(
+              data.statuses.map((status) => ({
+                status,
+                ...config,
+              })),
+              async (data) => {
+                const { orders } = await this.ordersAPI.getList(data);
+                return orders;
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    const resultOrders = _.chain(orders)
+      .map((order) => {
+        return {
+          ..._.pick(order, [
+            'id',
+            'date_created',
+            'client_first_name',
+            'client_last_name',
+            'client_id',
+            'phone',
+            'email',
+            'price',
+            'status',
+            'payment_option',
+            'payment_data',
+          ]),
+          products: _.map(order.products, (product) =>
+            _.pick(product, [
+              'id',
+              'external_id',
+              'name',
+              'quantity',
+              'price',
+              'total_price',
+              'url',
+            ]),
+          ),
+        };
+      })
+      .uniqBy((order) => order.id)
+      .orderBy((order) => new Date(order.date_created).valueOf(), 'desc')
+      .value();
+
+    this.logger.debug('Found orders:', {
+      count: resultOrders.length,
+    });
+
+    return resultOrders;
   }
 
   public async search(data: SearchOrdersDto) {
