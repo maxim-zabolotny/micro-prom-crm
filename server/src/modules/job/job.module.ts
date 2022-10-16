@@ -26,6 +26,8 @@ import {
   reloadSheetName,
   SyncProductsConsumer,
   syncProductsName,
+  SyncPromOrdersConsumer,
+  syncPromOrdersName,
 } from './static/consumers';
 import { JobBoardService } from './board/job-board.service';
 import { SyncModule } from '../sync/sync.module';
@@ -50,7 +52,11 @@ const consumers = [
   SyncCourseConsumer,
   SyncProductsByCategoryConsumer,
 ];
-const staticConsumers = [SyncProductsConsumer, ReloadSheetConsumer];
+const staticConsumers = [
+  SyncProductsConsumer,
+  SyncPromOrdersConsumer,
+  ReloadSheetConsumer,
+];
 
 const allConsumers = [...consumers, ...staticConsumers];
 
@@ -137,6 +143,26 @@ const buildDefaultJobOptions = (
         removeOnComplete: 16,
         repeat: {
           cron: '*/15 7-22 * * *', // At every 30th minute past every hour from 7 through 22.
+        },
+        backoff: {
+          type: 'fixed',
+          delay: ms('2m'),
+        },
+      },
+    }),
+    BullModule.registerQueue({
+      name: syncPromOrdersName,
+      settings: {
+        lockDuration: ms('10m'),
+        maxStalledCount: 0,
+      },
+      defaultJobOptions: {
+        attempts: 2,
+        timeout: ms('10m'),
+        removeOnFail: 4,
+        removeOnComplete: 2,
+        repeat: {
+          cron: '*/10 7-22 * * *', // At every 10th minute past every hour from 7 through 22.
         },
         backoff: {
           type: 'fixed',
