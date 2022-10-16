@@ -1,4 +1,5 @@
 /*external modules*/
+import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import { Injectable } from '@nestjs/common';
 
@@ -35,5 +36,9 @@ export class DataUtilsHelper {
     if (currentArr.length > 0) result.push(currentArr);
 
     return result;
+  }
+
+  getSHA256(data: string) {
+    return crypto.createHmac('sha256', data).digest('hex');
   }
 }
