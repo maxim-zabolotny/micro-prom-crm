@@ -78,6 +78,13 @@ export class JobBoardController {
     return this.jobBoardService.addSyncProducts();
   }
 
+  @Post('/test-sync-prom-orders')
+  @HttpCode(201)
+  @Auth(UserRole.Admin)
+  addSyncPromOrders() {
+    return this.jobBoardService.addSyncPromOrders();
+  }
+
   @Post('/test-reload-sheet')
   @HttpCode(201)
   @Auth(UserRole.Admin)

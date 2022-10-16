@@ -25,8 +25,10 @@ import {
 import {
   reloadSheetName,
   syncProductsName,
+  syncPromOrdersName,
   TReloadSheetProcessorQueue,
   TSyncProductsProcessorQueue,
+  TSyncPromOrdersProcessorQueue,
 } from '../static/consumers';
 
 @Injectable()
@@ -57,6 +59,8 @@ export class JobBoardService {
     private syncProductsByCategoryQueue: TSyncProductsByCategoryProcessorQueue,
     @InjectQueue(syncProductsName)
     private syncProductsQueue: TSyncProductsProcessorQueue,
+    @InjectQueue(syncPromOrdersName)
+    private syncPromOrdersQueue: TSyncPromOrdersProcessorQueue,
     @InjectQueue(reloadSheetName)
     private reloadSheetQueue: TReloadSheetProcessorQueue,
   ) {
@@ -80,6 +84,7 @@ export class JobBoardService {
         new BullAdapter(this.initLoadSheetQueue),
         new BullAdapter(this.syncProductsByCategoryQueue),
         new BullAdapter(this.syncProductsQueue),
+        new BullAdapter(this.syncPromOrdersQueue),
         new BullAdapter(this.reloadSheetQueue),
       ],
       serverAdapter: this.serverAdapter,
@@ -170,6 +175,18 @@ export class JobBoardService {
 
   public async addSyncProducts() {
     const job = await this.syncProductsQueue.add(null, {
+      repeat: null,
+      attempts: 1,
+    });
+    return {
+      id: job.id,
+      name: job.queue.name,
+      data: job.data,
+    };
+  }
+
+  public async addSyncPromOrders() {
+    const job = await this.syncPromOrdersQueue.add(null, {
       repeat: null,
       attempts: 1,
     });
