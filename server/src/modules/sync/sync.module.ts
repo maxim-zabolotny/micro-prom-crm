@@ -9,6 +9,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Integration, IntegrationSchema } from '@schemas/integration';
 import { Category, CategorySchema } from '@schemas/category';
 import { Product, ProductSchema } from '@schemas/product';
+import { SyncPromOrdersService } from './prom/sync-prom-orders.service';
 
 @Module({
   imports: [
@@ -39,7 +40,13 @@ import { Product, ProductSchema } from '@schemas/product';
     SyncService,
     SyncLocalService,
     SyncPromService,
+    SyncPromOrdersService,
   ],
-  exports: [SyncService, SyncLocalService, SyncPromService],
+  exports: [
+    SyncService,
+    SyncLocalService,
+    SyncPromService,
+    SyncPromOrdersService,
+  ],
 })
 export class SyncModule {}
