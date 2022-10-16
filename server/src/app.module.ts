@@ -52,7 +52,7 @@ import { NovaposhtaModule } from './modules/novaposhta/novaposhta.module';
     NgrokModule, // global
     SpreadsheetModule, // global
     JobModule, // global
-    TranslateModule,
+    TranslateModule, // global
     TelegramModule,
     MicrotronModule,
     PromModule,
