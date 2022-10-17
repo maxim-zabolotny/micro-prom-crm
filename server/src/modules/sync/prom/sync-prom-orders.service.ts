@@ -136,10 +136,12 @@ export class SyncPromOrdersService implements OnModuleInit {
       promOrder.orderProducts,
       (orderProduct) => {
         return (
+          Boolean(orderProduct.internalId) &&
           !_.find(
             promOrder.microtronProducts,
-            (microtronProduct) => microtronProduct.name === orderProduct.name,
-          ) && Boolean(orderProduct.internalId)
+            (microtronProduct) =>
+              microtronProduct.internalId === orderProduct.internalId,
+          )
         );
       },
     );
@@ -162,8 +164,12 @@ export class SyncPromOrdersService implements OnModuleInit {
     if (_.isEmpty(productsFromDB)) return [];
 
     const { intersection } = this.dataUtilsHelper.getDiff(
-      _.map(microtronProducts, 'id'),
-      _.map(productsFromDB, 'microtronId'),
+      _.map(microtronProducts, (p) => Number(p.id)).filter(
+        (id) => !Number.isNaN(id),
+      ),
+      _.map(productsFromDB, (p) => Number(p.microtronId)).filter(
+        (id) => !Number.isNaN(id),
+      ),
     );
 
     this.logger.debug(`Found new Microtron Products:`, {
