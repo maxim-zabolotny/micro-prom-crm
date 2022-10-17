@@ -6,8 +6,10 @@ import { InjectQueue } from '@nestjs/bull';
 import {
   reloadSheetName,
   syncProductsName,
+  syncPromOrdersName,
   TReloadSheetProcessorQueue,
   TSyncProductsProcessorQueue,
+  TSyncPromOrdersProcessorQueue,
 } from './consumers';
 
 @Injectable()
@@ -20,10 +22,14 @@ export class JobStaticService implements OnModuleInit {
     private configService: ConfigService,
     @InjectQueue(syncProductsName)
     private syncProductsQueue: TSyncProductsProcessorQueue,
+    @InjectQueue(syncPromOrdersName)
+    private syncPromOrdersQueue: TSyncPromOrdersProcessorQueue,
     @InjectQueue(reloadSheetName)
     private reloadSheetQueue: TReloadSheetProcessorQueue,
   ) {
-    this.staticQueues.push(...[syncProductsQueue, reloadSheetQueue]);
+    this.staticQueues.push(
+      ...[syncProductsQueue, reloadSheetQueue, syncPromOrdersQueue],
+    );
   }
 
   async onModuleInit() {
