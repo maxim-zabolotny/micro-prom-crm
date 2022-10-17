@@ -11,15 +11,16 @@ RUN apt-get update -y && \
     ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
 
+WORKDIR $API_DIR
+
+COPY ./server/package*.json ./
+RUN npm install
+
 COPY ./server $API_DIR
 COPY ./lib/dist/* $LIB_DIR
 
 RUN rm $LIB_DIR/index.d.ts
 
-WORKDIR $API_DIR
-
-COPY package*.json ./
-RUN npm install
 RUN npm run build
 
 EXPOSE $PORT
