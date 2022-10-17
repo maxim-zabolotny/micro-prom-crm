@@ -196,8 +196,8 @@ PromOrderSchema.statics.updateOrder = async function (
   // 2. PRODUCTS TO ADD CASE
   if ('productsToAdd' in data) {
     const isComplete =
-      oldPromOrder.orderProducts.length >=
-      oldPromOrder.microtronProducts.length + data.productsToAdd.length;
+      oldPromOrder.microtronProducts.length + data.productsToAdd.length >=
+      oldPromOrder.orderProducts.length;
 
     let benefitPrice = 0;
     if (isComplete) {
