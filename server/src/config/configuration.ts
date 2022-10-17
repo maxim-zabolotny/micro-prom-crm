@@ -1,4 +1,6 @@
 export default () => {
+  const PORT = parseInt(process.env.PORT, 10);
+
   const rules = {
     adminIsSuperuser: Boolean(Number(process.env.ADMIN_IS_SUPERUSER)),
   };
@@ -61,10 +63,13 @@ export default () => {
   };
 
   const cors = {
-    whiteList: [client.url, `http://localhost:${client.localPort}`],
+    whiteList: [
+      client.url,
+      `http://localhost:${client.localPort}`,
+      `http://localhost:${PORT}`,
+      `http://192.168.31.202:${PORT}`,
+    ],
   };
-
-  const PORT = parseInt(process.env.PORT, 10);
 
   return {
     port: PORT,
