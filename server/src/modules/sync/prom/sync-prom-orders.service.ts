@@ -140,7 +140,8 @@ export class SyncPromOrdersService implements OnModuleInit {
           !_.find(
             promOrder.microtronProducts,
             (microtronProduct) =>
-              microtronProduct.internalId === orderProduct.internalId,
+              microtronProduct.internalId.toString() ===
+              orderProduct.internalId.toString(),
           )
         );
       },
