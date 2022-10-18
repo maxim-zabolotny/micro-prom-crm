@@ -162,7 +162,7 @@ const buildDefaultJobOptions = (
         removeOnFail: 4,
         removeOnComplete: 2,
         repeat: {
-          cron: '*/10 7-22 * * *', // At every 10th minute past every hour from 7 through 22.
+          cron: '*/10 3-23 * * *', // At every 10th minute past every hour from 3 through 23.
         },
         backoff: {
           type: 'fixed',
