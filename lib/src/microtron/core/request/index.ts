@@ -158,23 +158,22 @@ export abstract class Request<TInstance = unknown, TRawInstance = unknown> {
           case (_.isString(response.data) && _.isEmpty(response.data)): {
             // NOTE: If Microtron server is disabled we receive such response: { data: '' }
 
-            const timeToSleep = 1000 * 60 * 5;
+            const error = new Error('Microtron Error: Server is disabled') as Record<string, any>;
+            error.timestamp = moment(new Date(), 'DD.MM.YYYY HH:mm:ss').toDate();
+            error.description = '!!! Microtron server is disabled !!!';
+            error.url = response.config.url;
+            error.timeToSleep = 1000 * 60 * 3;
 
-            console.error('!!! Microtron server disabled !!!:');
-            console.log('Sleep and repeat request:', {
-              timeToSleep: timeToSleep / 1000,
+            console.error('!!! Microtron server disabled !!!');
+            console.log('Sleep:', {
+              timeToSleep: error.timeToSleep / 1000,
             });
 
             await new Promise((resolve) => {
-              setTimeout(resolve, timeToSleep);
+              setTimeout(resolve, error.timeToSlee);
             });
 
-            const errorData = {
-              timestamp: moment(new Date(), 'DD.MM.YYYY HH:mm:ss').toDate(),
-              status: false as const,
-              errors: '!!! Microtron server is disabled !!!',
-            };
-            throw new MicroError(errorData, entity.PATH, response);
+            throw error;
           }
           default: {
             break;
