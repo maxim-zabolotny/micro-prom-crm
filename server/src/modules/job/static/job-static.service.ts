@@ -17,6 +17,7 @@ export class JobStaticService implements OnModuleInit {
   private readonly logger = new Logger(this.constructor.name);
 
   private readonly staticQueues: Queue[] = [];
+  private readonly formerStaticQueues: Queue[] = [];
 
   constructor(
     private configService: ConfigService,
@@ -27,20 +28,30 @@ export class JobStaticService implements OnModuleInit {
     @InjectQueue(reloadSheetName)
     private reloadSheetQueue: TReloadSheetProcessorQueue,
   ) {
-    this.staticQueues.push(
-      ...[/*syncProductsQueue,*/ reloadSheetQueue, syncPromOrdersQueue],
-    );
+    this.staticQueues.push(...[reloadSheetQueue, syncPromOrdersQueue]);
+    this.formerStaticQueues.push(...[syncProductsQueue]);
   }
 
+  // POINT OF ENTRY
   async onModuleInit() {
-    this.logger.log('Starting static jobs..');
+    this.logger.log('1. Remove former static jobs..');
+
+    await this.clearFormerRepeatableJobs();
+
+    this.logger.log('1. Former static jobs removed');
+
+    this.logger.log('2. Starting static jobs..');
 
     await this.reCreateRepeatableJobs();
 
-    this.logger.log('Static jobs started');
+    this.logger.log('2. Static jobs started');
   }
 
-  public async removeAllNextJobs(staticQueue: Queue) {
+  // USEFUL FUNCTIONS
+  public async removeAllNextJobs(
+    staticQueue: Queue,
+    readableQueueName: string,
+  ) {
     const allNextJobs = await staticQueue.getJobs([
       'waiting',
       'delayed',
@@ -61,9 +72,62 @@ export class JobStaticService implements OnModuleInit {
       }),
     );
 
+    this.logger.debug(`"${readableQueueName}" next jobs removed:`, result);
+
     return result;
   }
 
+  public async removeRepeatableJobs(
+    staticQueue: Queue,
+    readableQueueName: string,
+  ) {
+    const repeatableJobs = await staticQueue.getRepeatableJobs();
+
+    if (repeatableJobs.length) {
+      await Promise.all(
+        _.map(repeatableJobs, (job) =>
+          staticQueue.removeRepeatableByKey(job.key),
+        ),
+      );
+
+      this.logger.debug(`"${readableQueueName}" repeatable jobs removed:`, {
+        oldJobs: _.map(repeatableJobs, 'key'),
+      });
+    }
+  }
+
+  public async clearStaticQueueJobs(
+    staticQueue: Queue,
+    readableQueueName: string,
+  ) {
+    try {
+      await this.removeRepeatableJobs(staticQueue, readableQueueName);
+
+      await this.removeAllNextJobs(staticQueue, readableQueueName);
+    } catch (err) {
+      this.logger.error('Received error until removing repeatable jobs:', {
+        err,
+        queueName: readableQueueName,
+      });
+    }
+  }
+
+  public async initStaticQueue(staticQueue: Queue, readableQueueName: string) {
+    try {
+      await staticQueue.add({});
+      this.logger.debug(`"${readableQueueName}" started`);
+    } catch (err) {
+      this.logger.error(
+        'Received error until init (add) repeatable job to queue:',
+        {
+          err,
+          queueName: readableQueueName,
+        },
+      );
+    }
+  }
+
+  // MAIN PART
   public async reCreateRepeatableJobs() {
     await Promise.all(
       _.map(this.staticQueues, async (staticQueue) => {
@@ -72,38 +136,22 @@ export class JobStaticService implements OnModuleInit {
           .map((k) => _.capitalize(k))
           .join(' ');
 
-        try {
-          const repeatableJobs = await staticQueue.getRepeatableJobs();
+        await this.clearStaticQueueJobs(staticQueue, readableQueueName);
 
-          if (repeatableJobs.length) {
-            await Promise.all(
-              _.map(repeatableJobs, (job) =>
-                staticQueue.removeRepeatableByKey(job.key),
-              ),
-            );
+        await this.initStaticQueue(staticQueue, readableQueueName);
+      }),
+    );
+  }
 
-            this.logger.debug(
-              `"${readableQueueName}" repeatable jobs removed:`,
-              {
-                oldJobs: _.map(repeatableJobs, 'key'),
-              },
-            );
-          }
+  public async clearFormerRepeatableJobs() {
+    await Promise.all(
+      _.map(this.formerStaticQueues, async (staticQueue) => {
+        const readableQueueName = staticQueue.name
+          .split('-')
+          .map((k) => _.capitalize(k))
+          .join(' ');
 
-          const result = await this.removeAllNextJobs(staticQueue);
-          this.logger.debug(
-            `"${readableQueueName}" next jobs removed:`,
-            result,
-          );
-
-          await staticQueue.add({});
-          this.logger.debug(`"${readableQueueName}" started`);
-        } catch (err) {
-          this.logger.error('Received error until recreate repeatable jobs:', {
-            err,
-            queueName: readableQueueName,
-          });
-        }
+        await this.clearStaticQueueJobs(staticQueue, readableQueueName);
       }),
     );
   }
