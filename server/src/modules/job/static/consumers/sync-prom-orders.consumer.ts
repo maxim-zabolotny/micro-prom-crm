@@ -1,5 +1,6 @@
 /*external modules*/
 import {
+  InjectQueue,
   OnQueueActive,
   OnQueueCompleted,
   OnQueueFailed,
@@ -14,6 +15,10 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CommonSyncConsumer } from '../../consumers/CommonSync';
 import { Connection } from 'mongoose';
 import { SyncPromOrdersService } from '../../../sync/prom/sync-prom-orders.service';
+import {
+  syncProductsName,
+  TSyncProductsProcessorQueue,
+} from './sync-products.consumer';
 
 export type TSyncPromOrdersProcessorData = void;
 export type TSyncPromOrdersProcessorQueue = Queue<TSyncPromOrdersProcessorData>;
@@ -32,6 +37,8 @@ export class SyncPromOrdersConsumer extends CommonSyncConsumer {
     protected readonly userModel: UserModel,
     @InjectConnection()
     protected readonly connection: Connection,
+    @InjectQueue(syncProductsName)
+    private syncProductsQueue: TSyncProductsProcessorQueue,
   ) {
     super(notificationBotService, userModel, connection);
   }
@@ -58,16 +65,33 @@ export class SyncPromOrdersConsumer extends CommonSyncConsumer {
       },
     });
 
-    // 2. Notify
-    await this.unionLogger(job, '2. Notify Admin');
+    // 2. Init Job "Sync Prom Products"
+    await this.unionLogger(job, '2. Init Job "Sync Prom Products"');
+
+    const syncPromProductsJob = await this.syncProductsQueue.add(null);
+
+    await this.unionLogger(job, '2. Job "Sync Prom Products" initiated:', {
+      id: syncPromProductsJob.id,
+      name: syncPromProductsJob.queue.name,
+      data: syncPromProductsJob.data,
+    });
+
+    // 3. Notify
+    await this.unionLogger(job, '3. Notify Admin');
 
     await this.notifyAdmin(this.getReadableQueueName(), {
       addedOrdersCount: mainResult.added.length,
       updatedOrdersCount: mainResult.updated.length,
+      initiatedQueues: [
+        {
+          id: syncPromProductsJob.id,
+          name: syncPromProductsJob.queue.name,
+        },
+      ],
     });
 
-    // 3. Result
-    await this.unionLogger(job, '3. Build result');
+    // 4. Result
+    await this.unionLogger(job, '4. Build result');
 
     const result = {
       main: {
@@ -77,6 +101,10 @@ export class SyncPromOrdersConsumer extends CommonSyncConsumer {
       products: {
         addedPromOrderProducts: productsResult.added,
         updatedPromOrderProducts: productsResult.updated,
+      },
+      syncProductsJob: {
+        id: syncPromProductsJob.id,
+        name: syncPromProductsJob.queue.name,
       },
     };
 

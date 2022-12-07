@@ -28,7 +28,7 @@ export class JobStaticService implements OnModuleInit {
     private reloadSheetQueue: TReloadSheetProcessorQueue,
   ) {
     this.staticQueues.push(
-      ...[syncProductsQueue, reloadSheetQueue, syncPromOrdersQueue],
+      ...[/*syncProductsQueue,*/ reloadSheetQueue, syncPromOrdersQueue],
     );
   }
 

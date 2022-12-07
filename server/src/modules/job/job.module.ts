@@ -137,32 +137,33 @@ const buildDefaultJobOptions = (
         maxStalledCount: 0,
       },
       defaultJobOptions: {
-        attempts: 2,
-        timeout: ms('10m'),
-        removeOnFail: 8,
-        removeOnComplete: 16,
-        repeat: {
-          cron: '*/15 7-22 * * *', // At every 30th minute past every hour from 7 through 22.
-        },
-        backoff: {
-          type: 'fixed',
-          delay: ms('2m'),
-        },
+        ...buildDefaultJobOptions(ms('10m'), [4, 4]),
+        // attempts: 2,
+        // timeout: ms('10m'),
+        // removeOnFail: 8,
+        // removeOnComplete: 16,
+        // repeat: {
+        //   cron: '*/15 7-22 * * *', // At every 30th minute past every hour from 7 through 22.
+        // },
+        // backoff: {
+        //   type: 'fixed',
+        //   delay: ms('2m'),
+        // },
       },
     }),
     BullModule.registerQueue({
       name: syncPromOrdersName,
       settings: {
-        lockDuration: ms('10m'),
+        lockDuration: ms('5m'),
         maxStalledCount: 0,
       },
       defaultJobOptions: {
         attempts: 2,
-        timeout: ms('10m'),
+        timeout: ms('5m'),
         removeOnFail: 4,
         removeOnComplete: 2,
         repeat: {
-          cron: '*/10 3-23 * * *', // At every 10th minute past every hour from 3 through 23.
+          cron: '*/15 3-23 * * *', // At every 15th minute past every hour from 3 through 23.
         },
         backoff: {
           type: 'fixed',
