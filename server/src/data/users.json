@@ -3,6 +3,7 @@
     "telegramId": 347255152,
     "chatId": 347255152,
     "name": "денис",
+    "hasBotAccess": true,
     "username": "skroll17",
     "role": "admin"
   },
@@ -10,6 +11,7 @@
     "telegramId": 673874731,
     "chatId": 673874731,
     "name": "Аня",
+    "hasBotAccess": false,
     "username": "Anya1922",
     "role": "sales"
   },
@@ -17,11 +19,13 @@
     "telegramId": 560731563,
     "chatId": 560731563,
     "name": "Алексей",
+    "hasBotAccess": false,
     "role": "provider"
   },
   {
     "telegramId": 5533808809,
     "chatId": 5533808809,
+    "hasBotAccess": false,
     "name": "Lena",
     "role": "sales"
   }
