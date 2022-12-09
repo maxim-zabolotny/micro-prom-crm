@@ -23,6 +23,9 @@ export class User {
   @Prop({ type: String, required: true })
   name: string;
 
+  @Prop({ type: Boolean, required: true })
+  hasBotAccess: boolean;
+
   @Prop({ type: String })
   username?: string;
 
