@@ -10,9 +10,10 @@ import { Constant, ConstantSchema } from '@schemas/constant';
 import { IntegrationSeed } from '../../database/seeds/integration.seed';
 import { Integration, IntegrationSchema } from '@schemas/integration';
 import { ReloadConstantCategoriesCommand } from '../../database/commands/reload-constant-categories.command';
+import { ReloadUsersCommand } from '../../database/commands/reload-users.command';
 
 const seeds = [UserSeed, ConstantSeed, IntegrationSeed];
-const commands = [ReloadConstantCategoriesCommand];
+const commands = [ReloadConstantCategoriesCommand, ReloadUsersCommand];
 
 @Module({
   imports: [
