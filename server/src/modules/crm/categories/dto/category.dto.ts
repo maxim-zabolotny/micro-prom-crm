@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
 import { ICategoryInConstant } from '@common/interfaces/category';
 
 export class CategoryDto implements ICategoryInConstant {
@@ -17,4 +17,8 @@ export class CategoryDto implements ICategoryInConstant {
   @IsNumber()
   @IsNotEmpty()
   markup = 0; // default
+
+  @IsString()
+  @MinLength(0)
+  promName = ''; // default
 }
