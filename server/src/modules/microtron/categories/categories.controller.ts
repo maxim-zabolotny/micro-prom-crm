@@ -27,7 +27,7 @@ export class MicrotronCategoriesController {
 
   @Get('/')
   @HttpCode(200)
-  @TimeoutLimit(5000)
+  @TimeoutLimit(15000)
   @Auth(UserRole.General)
   async get(
     @Query('force', new DefaultValuePipe(false), ParseBoolPipe) force: boolean,
@@ -60,5 +60,14 @@ export class MicrotronCategoriesController {
     @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
   ) {
     return this.microtronCategoriesService.getSavedRUTranslate(tree);
+  }
+
+  @Get('/saved-with-all')
+  @HttpCode(200)
+  @Auth(UserRole.General)
+  getSavedWithAll(
+    @Query('tree', new DefaultValuePipe(false), ParseBoolPipe) tree: boolean,
+  ) {
+    return this.microtronCategoriesService.getSavedWithAll(tree);
   }
 }

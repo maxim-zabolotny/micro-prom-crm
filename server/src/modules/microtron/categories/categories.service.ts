@@ -9,6 +9,8 @@ import { DataUtilsHelper } from '@common/helpers';
 import {
   ICategoryInConstant,
   ICategoryTreeInConstant,
+  ICategoryTreeWithSelectStatus,
+  ICategoryWithSelectStatus,
   ITranslatedCategoryInConstant,
 } from '@common/interfaces/category';
 import { SetMarkupDto } from './dto/set-markup.dto';
@@ -152,7 +154,7 @@ export class MicrotronCategoriesService {
       const data = this.constantModel.getParsedCategories(categoriesData);
 
       if (tree) {
-        this.logger.debug('Build and return categories tree ');
+        this.logger.debug('Build and return categories tree');
         return MicrotronAPI.Category.buildCategoriesTree(
           data,
         ) as unknown as ICategoryTreeInConstant[];
@@ -178,6 +180,47 @@ export class MicrotronCategoriesService {
     }
 
     return ruCategories;
+  }
+
+  public async getSavedWithAll(
+    tree: boolean,
+  ): Promise<Array<ICategoryWithSelectStatus | ICategoryTreeWithSelectStatus>> {
+    const apiCategories = (await this.getByAPI(true, false)) as ICategory[];
+    const savedCategories = (await this.getSaved(
+      false,
+    )) as ICategoryInConstant[];
+
+    const savedCategoriesMap = new Map(
+      _.map(savedCategories, (category) => [category.id, category]),
+    );
+
+    this.logger.debug('Mapping Saved and All Categories');
+    const categoriesWithStatus = _.map(apiCategories, (apiCategory) => {
+      const savedCategory = savedCategoriesMap.get(apiCategory.id);
+      if (savedCategory) {
+        return {
+          ...apiCategory,
+          ..._.pick(savedCategory, ['markup', 'promName']),
+          selected: true,
+        };
+      }
+
+      return {
+        ...apiCategory,
+        markup: 0,
+        promName: '',
+        selected: false,
+      };
+    });
+
+    if (tree) {
+      this.logger.debug('Build and return Mapped categories tree');
+      return MicrotronAPI.Category.buildCategoriesTree(
+        categoriesWithStatus,
+      ) as unknown as ICategoryTreeWithSelectStatus[];
+    }
+
+    return categoriesWithStatus;
   }
 
   public async getFullCategoriesInfo(): Promise<
