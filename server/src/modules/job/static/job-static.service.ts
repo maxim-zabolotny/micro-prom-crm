@@ -53,14 +53,18 @@ export class JobStaticService implements OnModuleInit {
     readableQueueName: string,
   ) {
     const allNextJobs = await staticQueue.getJobs([
+      'active',
       'waiting',
       'delayed',
       'paused',
+      'failed',
     ]);
     const result = {
+      active: 0,
       waiting: 0,
       delayed: 0,
       paused: 0,
+      failed: 0,
     };
 
     await Promise.all(
