@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+import { json } from 'express'
 
 process.env.UV_THREADPOOL_SIZE = '8';
 process.env.TZ = 'Europe/Kiev';
@@ -20,6 +21,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // TOP-LEVEL MIDDLEWARE
+  app.use(json({ limit: '50mb' }));
 
   // START
   await app.listen(configService.get('port'), () => {
