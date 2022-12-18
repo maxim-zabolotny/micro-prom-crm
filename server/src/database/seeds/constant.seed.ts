@@ -17,6 +17,11 @@ export class ConstantSeed {
 
   @Command({ command: 'create:constants', describe: 'create constants' })
   async create() {
+    await this.loadCategories();
+    await this.loadExcludedProducts();
+  }
+
+  async loadCategories() {
     const selectedCategories = await Data.SelectedCategories.read();
 
     const categoriesConstant = new this.constantModel({
@@ -25,6 +30,24 @@ export class ConstantSeed {
     });
     await categoriesConstant.save();
 
-    console.log('SAVED: constant => ', categoriesConstant.toObject());
+    console.log(
+      'SAVED: categories constant => ',
+      categoriesConstant.toObject(),
+    );
+  }
+
+  async loadExcludedProducts() {
+    const excludedProducts = await Data.ExcludedProducts.read();
+
+    const excludedProductsConstant = new this.constantModel({
+      name: ConstantEntities.EXCLUDED_PRODUCTS,
+      value: JSON.stringify(excludedProducts),
+    });
+    await excludedProductsConstant.save();
+
+    console.log(
+      'SAVED: excluded products constant => ',
+      excludedProductsConstant.toObject(),
+    );
   }
 }

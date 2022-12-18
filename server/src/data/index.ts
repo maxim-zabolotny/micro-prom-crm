@@ -4,50 +4,50 @@ import { promises as fs } from 'fs';
 import { ICategory } from '@lib/microtron/core/category/ICategorie';
 import { IUserSeed } from '@common/interfaces/user';
 import { ICategoryInConstant } from '@common/interfaces/category';
+import { IExcludedProductsConstant } from '@common/interfaces/constant';
 
 export namespace Data {
-  export namespace SelectedCategories {
-    export const fileName = 'selected-categories.json';
-    export const filePathDist = path.join(__dirname, fileName);
-    export const filePathSRC = filePathDist.replace('dist', 'src');
+  namespace Builder {
+    export function buildBaseReadWrite<TInput, TOutput>(fileName: string) {
+      const filePathDist = path.join(__dirname, fileName);
+      const filePathSRC = filePathDist.replace('dist', 'src');
 
-    export async function read(): Promise<ICategoryInConstant[]> {
-      const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
-      return JSON.parse(data);
-    }
-
-    export async function write(categories: ICategoryInConstant[]) {
-      const data = JSON.stringify(categories, null, 2);
-      await fs.writeFile(filePathSRC, data, { encoding: 'utf-8' });
-    }
-  }
-
-  export namespace SelectedRUCategories {
-    export const fileName = 'selected-ru-categories.json';
-    export const filePathDist = path.join(__dirname, fileName);
-    export const filePathSRC = filePathDist.replace('dist', 'src');
-
-    export async function read(): Promise<ICategory[]> {
-      const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
-      return JSON.parse(data);
-    }
-
-    export async function write(categories: ICategory[]) {
-      const data = JSON.stringify(categories, null, 2);
-      await fs.writeFile(filePathSRC, data, { encoding: 'utf-8' });
+      return {
+        fileName,
+        filePathDist,
+        filePathSRC,
+        async read(): Promise<TOutput> {
+          const outputData = await fs.readFile(filePathSRC, {
+            encoding: 'utf-8',
+          });
+          return JSON.parse(outputData);
+        },
+        async write(inputData: TInput) {
+          const data = JSON.stringify(inputData, null, 2);
+          await fs.writeFile(filePathSRC, data, { encoding: 'utf-8' });
+        },
+      };
     }
   }
 
-  export namespace Users {
-    export const fileName = 'users.json';
-    export const filePathDist = path.join(__dirname, fileName);
-    export const filePathSRC = filePathDist.replace('dist', 'src');
+  export const SelectedCategories = Builder.buildBaseReadWrite<
+    ICategoryInConstant[],
+    ICategoryInConstant[]
+  >('selected-categories.json');
 
-    export async function read(): Promise<IUserSeed[]> {
-      const data = await fs.readFile(filePathSRC, { encoding: 'utf-8' });
-      return JSON.parse(data);
-    }
-  }
+  export const SelectedRUCategories = Builder.buildBaseReadWrite<
+    ICategory[],
+    ICategory[]
+  >('selected-ru-categories.json');
+
+  export const ExcludedProducts = Builder.buildBaseReadWrite<
+    IExcludedProductsConstant,
+    IExcludedProductsConstant
+  >('excluded-products.json');
+
+  export const Users = Builder.buildBaseReadWrite<never, IUserSeed[]>(
+    'users.json',
+  );
 
   export namespace Logs {
     export const fileName = 'logs.txt';
