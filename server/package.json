@@ -26,8 +26,9 @@
     "seeds:users": "CLI_PATH=./src/cli.ts npx nestjs-command create:users",
     "seeds:constants": "CLI_PATH=./src/cli.ts npx nestjs-command create:constants",
     "seeds:integrations": "CLI_PATH=./src/cli.ts npx nestjs-command create:integrations",
-    "commands": "npm run command:reload-categories && command:reload-users",
+    "commands": "npm run command:reload-excluded-products && npm run command:reload-categories && npm run command:reload-users",
     "command:reload-categories": "CLI_PATH=./src/cli.ts npx nestjs-command reload:categories-constant",
+    "command:reload-excluded-products": "CLI_PATH=./src/cli.ts npx nestjs-command reload:excluded-products-constant",
     "command:reload-users": "CLI_PATH=./src/cli.ts npx nestjs-command reload:users"
   },
   "dependencies": {
