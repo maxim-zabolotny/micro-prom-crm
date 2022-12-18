@@ -29,7 +29,10 @@ export type TAddProductToDB = Omit<IProductFullInfo, 'categoryId'> & {
 };
 
 export type TUpdateProductInDB = Partial<
-  Pick<Product, 'originalPrice' | 'originalPriceCurrency' | 'quantity'> & {
+  Pick<
+    Product,
+    'sitePrice' | 'originalPrice' | 'originalPriceCurrency' | 'quantity'
+  > & {
     'sync.localAt': ProductSync['localAt'];
     'sync.prom': ProductSync['prom'];
     'sync.lastPromAt': ProductSync['lastPromAt'];
@@ -145,6 +148,12 @@ type TStaticMethods = {
     this: ProductModel,
     product: Pick<IProductFullInfo, 'quantity' | 'quantity_s'>,
   ) => number;
+  getProductSpecifications: (
+    this: ProductModel,
+    product: Pick<IProductFullInfo, 'warranty'> & {
+      parse: Pick<IProductFullInfo['parse'], 'specifications' | 'new'>;
+    },
+  ) => Record<string, string>;
   calculateProductPrice: (
     this: ProductModel,
     originalPrice: number,
@@ -242,6 +251,39 @@ ProductSchema.statics.getProductPrice = function (product) {
 ProductSchema.statics.getProductQuantity = function (product) {
   return _.isNumber(product.quantity) ? product.quantity : product.quantity_s;
 } as TStaticMethods['getProductQuantity'];
+
+ProductSchema.statics.getProductSpecifications = function (product) {
+  const ProductConstants = AppConstants.Prom.Sheet.Product;
+
+  const specifications = _.reduce(
+    product.parse.specifications,
+    (acc, value, key) => {
+      acc[String(key)] = String(value);
+      return acc;
+    },
+    {},
+  );
+
+  if (
+    product.warranty > 0 &&
+    !specifications[ProductConstants.SpecialSpecificationKeys.GuaranteeTerm]
+  ) {
+    specifications[
+      ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
+    ] = `${product.warranty}`;
+  }
+
+  if (!specifications[ProductConstants.SpecialSpecificationKeys.State]) {
+    specifications[ProductConstants.SpecialSpecificationKeys.State] = product
+      .parse.new
+      ? 'Новое'
+      : 'Б/У';
+  }
+
+  return Object.fromEntries(
+    _.sortBy(Object.entries(specifications), ([key]) => key),
+  );
+} as TStaticMethods['getProductSpecifications'];
 
 ProductSchema.statics.calculateProductPrice = function (
   originalPrice,
@@ -460,8 +502,6 @@ ProductSchema.statics.getProductsForSyncWithProm = async function (options) {
 } as TStaticMethods['getProductsForSyncWithProm'];
 
 ProductSchema.statics.addProduct = async function (productData, session) {
-  const ProductConstants = AppConstants.Prom.Sheet.Product;
-
   productLogger.debug('Process add Product:', {
     id: productData.id,
     name: productData.name,
@@ -508,31 +548,7 @@ ProductSchema.statics.addProduct = async function (productData, session) {
     parse.cost.price,
   );
 
-  // SPEC PART
-  const specifications = _.reduce(
-    parse.specifications,
-    (acc, value, key) => {
-      acc[String(key)] = String(value);
-      return acc;
-    },
-    {},
-  );
-
-  if (
-    productData.warranty > 0 &&
-    !specifications[ProductConstants.SpecialSpecificationKeys.GuaranteeTerm]
-  ) {
-    specifications[
-      ProductConstants.SpecialSpecificationKeys.GuaranteeTerm
-    ] = `${productData.warranty}`;
-  }
-
-  if (!specifications[ProductConstants.SpecialSpecificationKeys.State]) {
-    specifications[ProductConstants.SpecialSpecificationKeys.State] = parse.new
-      ? 'Новое'
-      : 'Б/У';
-  }
-  // END SPEC PART
+  const specifications = this.getProductSpecifications(productData);
 
   const product = new this({
     name: productData.name,
@@ -625,7 +641,7 @@ ProductSchema.statics.updateProduct = async function (
     );
     const siteMarkup = this.calculateSiteProductMarkup(
       rawPrice,
-      oldProduct.sitePrice,
+      data.sitePrice ?? oldProduct.sitePrice,
     );
 
     dataForUpdate.originalPrice = originalPrice;
