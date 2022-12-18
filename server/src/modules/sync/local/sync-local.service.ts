@@ -569,18 +569,16 @@ export class SyncLocalService {
                 productsFromAPIByCategoryMap.get(productId);
               const productFromDB = productsFromDBMap.get(productId);
 
-              const price = this.productModel.getProductPrice(productFromAPI);
-              const quantity =
-                this.productModel.getProductQuantity(productFromAPI);
+              let dataToUpdate = {};
 
-              const currency = productFromAPI.currency;
-              const { ourPrice } = this.productModel.calculateProductPrice(
-                price,
-                currency,
-                category,
-              );
+              // PRICE & CURRENCY & QUANTITY
+              const { price, quantity, currency, ourPrice } =
+                this.productModel.getProductCostInfo({
+                  ...productFromAPI,
+                  category,
+                });
 
-              const isEqual = _.isEqual(
+              const priceOrQuantityAreChanged = !_.isEqual(
                 {
                   price,
                   currency,
@@ -594,19 +592,65 @@ export class SyncLocalService {
                   ourPrice: productFromDB.ourPrice,
                 },
               );
-              if (isEqual) return null;
-
-              return [
-                productFromDB._id,
-                {
+              if (priceOrQuantityAreChanged) {
+                dataToUpdate = {
+                  ...dataToUpdate,
                   category,
                   originalPrice: price,
                   originalPriceCurrency: currency,
                   quantity: quantity,
                   'sync.localAt': new Date(),
                   'sync.prom': false,
+                };
+              }
+
+              // NAME & DESCRIPTION & IMAGES & SPECIFICATIONS
+              const newProductInformation = {
+                name: productFromAPI.name,
+                description: productFromAPI.parse.description,
+                brand: productFromAPI.brand,
+                url: productFromAPI.url,
+                'translate.name': productFromAPI.translate.name,
+                'translate.description': productFromAPI.translate.description,
+                images: _.sortBy(productFromAPI.images, (image) => image),
+                specifications:
+                  this.productModel.getProductSpecifications(productFromAPI),
+                sitePrice: productFromAPI.parse.cost.price,
+              };
+
+              const productInformationIsChanged = !_.isEqual(
+                newProductInformation,
+                {
+                  name: productFromDB.name,
+                  description: productFromDB.description,
+                  brand: productFromDB.brand,
+                  url: productFromDB.url,
+                  'translate.name': productFromDB.translate.name,
+                  'translate.description': productFromDB.translate.description,
+                  images: _.sortBy(productFromDB.images, (image) => image),
+                  specifications: this.productModel.getProductSpecifications({
+                    parse: {
+                      specifications: productFromDB.specifications,
+                      new: productFromDB.new,
+                    },
+                    warranty: productFromDB.warranty,
+                  }),
+                  sitePrice: productFromDB.sitePrice,
                 },
-              ] as TArray.Pair<Types.ObjectId, TUpdateProductInDB>;
+              );
+              if (productInformationIsChanged) {
+                dataToUpdate = {
+                  ...dataToUpdate,
+                  ...newProductInformation,
+                };
+              }
+
+              if (_.isEmpty(dataToUpdate)) return null;
+
+              return [productFromDB._id, dataToUpdate] as TArray.Pair<
+                Types.ObjectId,
+                TUpdateProductInDB
+              >;
             }),
           );
 
