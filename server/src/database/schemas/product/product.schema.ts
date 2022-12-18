@@ -17,7 +17,7 @@ import {
 } from '@schemas/product/product-sync.schema';
 import { HttpException, HttpStatus, Logger, Type } from '@nestjs/common';
 import { DataGenerateHelper } from '@common/helpers';
-import { IProductFullInfo } from '@common/interfaces/product';
+import { IProductCostInfo, IProductFullInfo } from '@common/interfaces/product';
 import { AppConstants } from '../../../app.constants';
 import { Data } from '../../../data';
 
@@ -165,6 +165,16 @@ type TStaticMethods = {
     rawPrice: number,
     sitePrice: number,
   ) => number;
+  getProductCostInfo: (
+    this: ProductModel,
+    product: Pick<
+      IProductFullInfo,
+      'currency' | 'price' | 'price_s' | 'quantity' | 'quantity_s'
+    > & {
+      category: Pick<Category, 'course' | 'markup'>;
+      parse?: Pick<IProductFullInfo['parse'], 'cost'>;
+    },
+  ) => IProductCostInfo;
   // MAIN
   findProducts: (
     this: ProductModel,
@@ -313,6 +323,34 @@ ProductSchema.statics.calculateSiteProductMarkup = function (
 
   return Number(siteMarkup.toFixed(3));
 } as TStaticMethods['calculateSiteProductMarkup'];
+
+ProductSchema.statics.getProductCostInfo = function (product) {
+  const result: Record<string, number> = {};
+
+  result.price = this.getProductPrice(product);
+  result.quantity = this.getProductQuantity(product);
+
+  const { rawPrice, ourPrice } = this.calculateProductPrice(
+    result.price,
+    product.currency,
+    product.category,
+  );
+
+  result.rawPrice = rawPrice;
+  result.ourPrice = ourPrice;
+
+  if (product.parse) {
+    result.siteMarkup = this.calculateSiteProductMarkup(
+      result.rawPrice,
+      product.parse.cost.price,
+    );
+  }
+
+  return {
+    ...result,
+    currency: product.currency,
+  };
+} as TStaticMethods['getProductCostInfo'];
 
 // MAIN
 ProductSchema.statics.findProducts = async function (
@@ -533,22 +571,14 @@ ProductSchema.statics.addProduct = async function (productData, session) {
 
   const { parse, translate, category } = productData;
 
-  const price = this.getProductPrice(productData);
-  const quantity = this.getProductQuantity(productData);
-
-  const available = quantity > 0;
-
-  const { rawPrice, ourPrice } = this.calculateProductPrice(
-    price,
-    productData.currency,
+  const { price, quantity, ourPrice, siteMarkup } = this.getProductCostInfo({
+    ...productData,
     category,
-  );
-  const siteMarkup = this.calculateSiteProductMarkup(
-    rawPrice,
-    parse.cost.price,
-  );
+  });
 
   const specifications = this.getProductSpecifications(productData);
+
+  const available = quantity > 0;
 
   const product = new this({
     name: productData.name,
