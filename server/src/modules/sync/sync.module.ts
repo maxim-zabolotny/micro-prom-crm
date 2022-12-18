@@ -11,6 +11,7 @@ import { Category, CategorySchema } from '@schemas/category';
 import { Product, ProductSchema } from '@schemas/product';
 import { SyncPromOrdersService } from './prom/sync-prom-orders.service';
 import { PromOrder, PromOrderSchema } from '@schemas/promOrder';
+import {Constant, ConstantSchema} from "@schemas/constant";
 
 @Module({
   imports: [
@@ -38,6 +39,12 @@ import { PromOrder, PromOrderSchema } from '@schemas/promOrder';
       {
         name: PromOrder.name,
         schema: PromOrderSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: Constant.name,
+        schema: ConstantSchema,
       },
     ]),
   ],

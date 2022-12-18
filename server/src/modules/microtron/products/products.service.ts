@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as path from 'path';
 import { promises as fs } from 'fs';
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataUtilsHelper, TimeHelper } from '@common/helpers';
 import MicrotronAPI, { ParserV2, Product, Types } from '@lib/microtron';
@@ -19,6 +19,9 @@ import { MicrotronCategoriesService } from '../categories/categories.service';
 import { ICategoryInConstant } from '@common/interfaces/category';
 import { ProductsParseMap } from './utils/ProductsParseMap';
 import { MicrotronCoursesService } from '../courses/courses.service';
+import { IExcludedProductsConstant } from '@common/interfaces/constant';
+import { InjectModel } from '@nestjs/mongoose';
+import { Constant, ConstantModel } from '@schemas/constant';
 
 type IProductFull = Product.IProductFull;
 type IProductRequestOptions = Product.IProductRequestOptions;
@@ -51,10 +54,41 @@ export class MicrotronProductsService {
     lang: Types.Lang.UA,
   };
 
+  private readonly isExcludedProduct = (
+    excludedProductsConstant: IExcludedProductsConstant,
+    product: Pick<IProductFull, 'id' | 'name' | 'brand' | 'url'>,
+  ) => {
+    // IDS
+    if (excludedProductsConstant.ids.includes(product.id)) {
+      return true;
+    }
+
+    // NAME
+    if (_.isEmpty(product.name)) return true;
+    if (excludedProductsConstant.names.includes(product.name)) {
+      return true;
+    }
+
+    // BRAND
+    if (
+      excludedProductsConstant.brands.includes(product.brand?.toLowerCase())
+    ) {
+      return true;
+    }
+
+    // URL
+    if (_.isEmpty(product.url)) return true;
+    if (excludedProductsConstant.links.includes(product.url)) {
+      return true;
+    }
+
+    return false;
+  };
+
   private readonly isValidProduct = (
     product: Pick<
       IProductFull,
-      'url' | 'brand' | 'price' | 'price_s' | 'quantity' | 'quantity_s'
+      'url' | 'price' | 'price_s' | 'quantity' | 'quantity_s'
     >,
   ) => {
     // DATA
@@ -63,29 +97,20 @@ export class MicrotronProductsService {
       ? product.quantity
       : product.quantity_s;
 
-    const excludeBrands = ['imou', 'hikvision', 'dahua'];
-
     // CHECKS
-    const baseCheck = _.conformsTo<Pick<IProductFull, 'url' | 'brand'>>(
-      product,
-      {
-        url: (url: string) => {
-          const isEmptyUrl = _.isEmpty(url);
-          if (isEmptyUrl) return false;
+    const baseCheck = _.conformsTo<Pick<IProductFull, 'url'>>(product, {
+      url: (url: string) => {
+        const isEmptyUrl = _.isEmpty(url);
+        if (isEmptyUrl) return false;
 
-          const isInvalidUrl = url
-            .slice(0, url.lastIndexOf('/p'))
-            .endsWith('microtron.ua');
-          if (isInvalidUrl) return false;
+        const isInvalidUrl = url
+          .slice(0, url.lastIndexOf('/p'))
+          .endsWith('microtron.ua');
+        if (isInvalidUrl) return false;
 
-          return true;
-        },
-        brand: (brand: string) => {
-          const isExcluded = excludeBrands.includes(brand.toLowerCase());
-          return !isExcluded;
-        },
+        return true;
       },
-    );
+    });
 
     const minPriceCheck = this.validProductConfig.checkMinPrice(price);
     const minQuantityCheck = this.validProductConfig.checkMinQuantity(quantity); // TODO: temp solution
@@ -161,21 +186,28 @@ export class MicrotronProductsService {
     private translateService: TranslateService,
     private dataUtilHelper: DataUtilsHelper,
     private timeHelper: TimeHelper,
+    @InjectModel(Constant.name) private constantModel: ConstantModel,
   ) {
     this.productsAPI = new MicrotronAPI.Product({
       token: configService.get('microtron.otpToken'),
     });
   }
 
-  private excludeInvalidProducts(products: IProductFull[]) {
+  private excludeInvalidProducts(
+    excludedProductsConstant: IExcludedProductsConstant,
+    products: IProductFull[],
+  ) {
     this.logger.debug('Passed Products for filtering:', {
       count: products.length,
     });
 
-    const validProducts = _.filter(
-      products,
-      this.isValidProduct,
-    ) as IProductFull[];
+    const validProducts = _.filter(products, (product) => {
+      return (
+        this.isValidProduct(product) &&
+        !this.isExcludedProduct(excludedProductsConstant, product)
+      );
+    }) as IProductFull[];
+
     this.logger.debug('Filter Products result:', {
       valid: validProducts.length,
       invalid: products.length - validProducts.length,
@@ -202,6 +234,14 @@ export class MicrotronProductsService {
     if (_.isEmpty(categoryIds)) return {};
 
     try {
+      const excludedProducts = await this.constantModel.getExcludedProducts();
+      if (!excludedProducts) {
+        throw new HttpException(
+          'No saved excluded products in DB',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       const products = await this.productsAPI.getProducts(
         {
           ...this.productsAPIDefaultOptions,
@@ -221,6 +261,7 @@ export class MicrotronProductsService {
 
         if (!_.isEmpty(groupedProducts[categoryId])) {
           groupedProducts[categoryId] = this.excludeInvalidProducts(
+            this.constantModel.getParsedExcludedProducts(excludedProducts),
             groupedProducts[categoryId],
           );
         }
@@ -720,50 +761,46 @@ export class MicrotronProductsService {
           size: chunk.length,
         });
 
-        const parsedChunkProducts = _.compact(
-          _.flattenDeep(
-            await Promise.all(
-              chunk.map(async (product) => {
-                try {
-                  const parse = await this.parse(product.url, true);
+        const parsedChunkProducts: Array<{
+          url: string;
+          parse: IParseResult;
+        }> = [];
+        for (const product of chunk) {
+          try {
+            const parse = await this.parse(product.url, true);
 
-                  return {
-                    url: product.url,
-                    parse: parse,
-                  };
-                } catch (err) {
-                  const response = err?.response;
-                  if (response && response.status === 502) {
-                    this.logger.debug('Request limit exceeded:', {
-                      productId: product.id,
-                      productUrl: product.url,
-                      response: {
-                        status: response.status,
-                        text: response.statusText,
-                      },
-                    });
+            parsedChunkProducts.push({
+              url: product.url,
+              parse: parse,
+            });
+          } catch (err) {
+            const response = err?.response;
+            if (response && response.status === 502) {
+              this.logger.debug('Request limit exceeded:', {
+                productId: product.id,
+                productUrl: product.url,
+                response: {
+                  status: response.status,
+                  text: response.statusText,
+                },
+              });
 
-                    this.logger.log(
-                      'Push product to current chunk array and sleep...',
-                      {
-                        productId: product.id,
-                        productUrl: product.url,
-                        sleepMS: config.getAwaySleep,
-                      },
-                    );
+              this.logger.log(
+                'Push product to current chunk array and sleep...',
+                {
+                  productId: product.id,
+                  productUrl: product.url,
+                  sleepMS: config.getAwaySleep,
+                },
+              );
 
-                    chunk.push(product);
-                    await this.timeHelper.sleep(config.getAwaySleep);
-
-                    return;
-                  } else {
-                    throw err;
-                  }
-                }
-              }),
-            ),
-          ),
-        );
+              chunk.push(product);
+              await this.timeHelper.sleep(config.getAwaySleep);
+            } else {
+              throw err;
+            }
+          }
+        }
 
         _.forEach(
           parsedChunkProducts,
