@@ -31,7 +31,16 @@ export type TAddProductToDB = Omit<IProductFullInfo, 'categoryId'> & {
 export type TUpdateProductInDB = Partial<
   Pick<
     Product,
-    'sitePrice' | 'originalPrice' | 'originalPriceCurrency' | 'quantity'
+    | 'name'
+    | 'description'
+    | 'brand'
+    | 'url'
+    | 'images'
+    | 'specifications'
+    | 'sitePrice'
+    | 'originalPrice'
+    | 'originalPriceCurrency'
+    | 'quantity'
   > & {
     'sync.localAt': ProductSync['localAt'];
     'sync.prom': ProductSync['prom'];
@@ -39,6 +48,8 @@ export type TUpdateProductInDB = Partial<
     'sync.loaded': ProductSync['loaded'];
     'sync.lastLoadedAt': ProductSync['lastLoadedAt'];
     'sync.tableLine': ProductSync['tableLine'];
+    'translate.name': Product['translate']['name'];
+    'translate.description': Product['translate']['description'];
   } & {
     category: Pick<Category, 'course' | 'markup'>;
   }
@@ -663,6 +674,7 @@ ProductSchema.statics.updateProduct = async function (
     const originalPrice = data.originalPrice ?? oldProduct.originalPrice;
     const originalPriceCurrency =
       data.originalPriceCurrency ?? oldProduct.originalPriceCurrency;
+    const sitePrice = data.sitePrice ?? oldProduct.sitePrice
 
     const { rawPrice, ourPrice } = this.calculateProductPrice(
       originalPrice,
@@ -671,12 +683,13 @@ ProductSchema.statics.updateProduct = async function (
     );
     const siteMarkup = this.calculateSiteProductMarkup(
       rawPrice,
-      data.sitePrice ?? oldProduct.sitePrice,
+      sitePrice,
     );
 
     dataForUpdate.originalPrice = originalPrice;
     dataForUpdate.originalPriceCurrency = originalPriceCurrency;
     dataForUpdate.ourPrice = ourPrice;
+    dataForUpdate.sitePrice = sitePrice;
     dataForUpdate.siteMarkup = siteMarkup;
 
     productLogger.debug('Change Product price', {
@@ -684,12 +697,14 @@ ProductSchema.statics.updateProduct = async function (
         'originalPrice',
         'originalPriceCurrency',
         'ourPrice',
+        'sitePrice',
         'siteMarkup',
       ]),
       new: _.pick(dataForUpdate, [
         'originalPrice',
         'originalPriceCurrency',
         'ourPrice',
+        'sitePrice',
         'siteMarkup',
       ]),
     });
