@@ -2,7 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Model, Schema as MongooseSchema } from 'mongoose';
 import { ConstantEntities } from '@schemas/constant/constant-entities.enum';
 import * as _ from 'lodash';
-import { ICategoryInConstant } from '@common/interfaces/category';
 import { Type } from '@nestjs/common';
 
 // MONGOOSE
@@ -31,12 +30,17 @@ export const ConstantSchema = SchemaFactory.createForClass(
 // CUSTOM TYPES
 type TStaticMethods = {
   // UTILITIES
-  getParsedCategories: (
+  getParsedValue: <TReturn>(
     this: ConstantModel,
     value: string | ConstantDocument,
-  ) => ICategoryInConstant[];
+  ) => TReturn;
   // MAIN
   getCategories: (this: ConstantModel) => Promise<ConstantDocument | null>;
+  upsert: (
+    this: ConstantModel,
+    name: ConstantEntities,
+    value: string,
+  ) => Promise<ConstantDocument>;
   upsertCategories: (
     this: ConstantModel,
     value: string,
@@ -44,11 +48,11 @@ type TStaticMethods = {
 };
 
 // UTILITIES
-ConstantSchema.statics.getParsedCategories = function (entity) {
+ConstantSchema.statics.getParsedValue = function <TReturn>(entity) {
   if (typeof entity === 'string') return JSON.parse(entity);
 
-  return JSON.parse(entity.value);
-} as TStaticMethods['getParsedCategories'];
+  return JSON.parse(entity.value) as TReturn;
+} as TStaticMethods['getParsedValue'];
 
 // MAIN
 ConstantSchema.statics.getCategories = async function () {
@@ -63,10 +67,10 @@ ConstantSchema.statics.getCategories = async function () {
   return null;
 } as TStaticMethods['getCategories'];
 
-ConstantSchema.statics.upsertCategories = async function (value) {
+ConstantSchema.statics.upsert = async function (name, value) {
   const constant = await this.findOneAndUpdate(
     {
-      name: ConstantEntities.CATEGORIES,
+      name,
     },
     {
       $set: {
@@ -80,4 +84,8 @@ ConstantSchema.statics.upsertCategories = async function (value) {
   );
 
   return constant;
+} as TStaticMethods['upsert'];
+
+ConstantSchema.statics.upsertCategories = async function (value) {
+  return await this.upsert(ConstantEntities.CATEGORIES, value);
 } as TStaticMethods['upsertCategories'];

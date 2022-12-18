@@ -122,7 +122,7 @@ export class MicrotronCategoriesService {
     }
 
     const dbCategories =
-      this.constantModel.getParsedCategories(savedCategories);
+      this.constantModel.getParsedValue<ICategoryInConstant[]>(savedCategories);
 
     const category = _.find(
       dbCategories,
@@ -151,7 +151,10 @@ export class MicrotronCategoriesService {
 
     const categoriesData = await this.constantModel.getCategories();
     if (categoriesData) {
-      const data = this.constantModel.getParsedCategories(categoriesData);
+      const data =
+        this.constantModel.getParsedValue<ICategoryInConstant[]>(
+          categoriesData,
+        );
 
       if (tree) {
         this.logger.debug('Build and return categories tree');
