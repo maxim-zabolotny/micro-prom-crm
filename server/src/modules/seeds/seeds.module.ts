@@ -11,9 +11,14 @@ import { IntegrationSeed } from '../../database/seeds/integration.seed';
 import { Integration, IntegrationSchema } from '@schemas/integration';
 import { ReloadConstantCategoriesCommand } from '../../database/commands/reload-constant-categories.command';
 import { ReloadUsersCommand } from '../../database/commands/reload-users.command';
+import { ReloadConstantExcludedProductsCommand } from '../../database/commands/reload-constant-excluded-products.command';
 
 const seeds = [UserSeed, ConstantSeed, IntegrationSeed];
-const commands = [ReloadConstantCategoriesCommand, ReloadUsersCommand];
+const commands = [
+  ReloadConstantExcludedProductsCommand,
+  ReloadConstantCategoriesCommand,
+  ReloadUsersCommand,
+];
 
 @Module({
   imports: [
