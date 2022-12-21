@@ -604,46 +604,46 @@ export class SyncLocalService {
                 };
               }
 
-              // NAME & DESCRIPTION & IMAGES & SPECIFICATIONS
-              const newProductInformation = {
-                name: productFromAPI.name,
-                description: productFromAPI.parse.description,
-                brand: productFromAPI.brand,
-                url: productFromAPI.url,
-                'translate.name': productFromAPI.translate.name,
-                'translate.description': productFromAPI.translate.description,
-                images: _.sortBy(productFromAPI.images, (image) => image),
-                specifications:
-                  this.productModel.getProductSpecifications(productFromAPI),
-                sitePrice: productFromAPI.parse.cost.price,
-              };
-
-              const productInformationIsChanged = !_.isEqual(
-                newProductInformation,
-                {
-                  name: productFromDB.name,
-                  description: productFromDB.description,
-                  brand: productFromDB.brand,
-                  url: productFromDB.url,
-                  'translate.name': productFromDB.translate.name,
-                  'translate.description': productFromDB.translate.description,
-                  images: _.sortBy(productFromDB.images, (image) => image),
-                  specifications: this.productModel.getProductSpecifications({
-                    parse: {
-                      specifications: productFromDB.specifications,
-                      new: productFromDB.new,
-                    },
-                    warranty: productFromDB.warranty,
-                  }),
-                  sitePrice: productFromDB.sitePrice,
-                },
-              );
-              if (productInformationIsChanged) {
-                dataToUpdate = {
-                  ...dataToUpdate,
-                  ...newProductInformation,
-                };
-              }
+              // // NAME & DESCRIPTION & IMAGES & SPECIFICATIONS
+              // const newProductInformation = {
+              //   name: productFromAPI.name,
+              //   description: productFromAPI.parse.description,
+              //   brand: productFromAPI.brand,
+              //   url: productFromAPI.url,
+              //   'translate.name': productFromAPI.translate.name,
+              //   'translate.description': productFromAPI.translate.description,
+              //   images: _.sortBy(productFromAPI.images, (image) => image),
+              //   specifications:
+              //     this.productModel.getProductSpecifications(productFromAPI),
+              //   sitePrice: productFromAPI.parse.cost.price,
+              // };
+              //
+              // const productInformationIsChanged = !_.isEqual(
+              //   newProductInformation,
+              //   {
+              //     name: productFromDB.name,
+              //     description: productFromDB.description,
+              //     brand: productFromDB.brand,
+              //     url: productFromDB.url,
+              //     'translate.name': productFromDB.translate.name,
+              //     'translate.description': productFromDB.translate.description,
+              //     images: _.sortBy(productFromDB.images, (image) => image),
+              //     specifications: this.productModel.getProductSpecifications({
+              //       parse: {
+              //         specifications: productFromDB.specifications,
+              //         new: productFromDB.new,
+              //       },
+              //       warranty: productFromDB.warranty,
+              //     }),
+              //     sitePrice: productFromDB.sitePrice,
+              //   },
+              // );
+              // if (productInformationIsChanged) {
+              //   dataToUpdate = {
+              //     ...dataToUpdate,
+              //     ...newProductInformation,
+              //   };
+              // }
 
               if (_.isEmpty(dataToUpdate)) return null;
 
