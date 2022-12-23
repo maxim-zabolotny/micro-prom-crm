@@ -133,11 +133,11 @@ const buildDefaultJobOptions = (
     BullModule.registerQueue({
       name: syncProductsName,
       settings: {
-        lockDuration: ms('10m'),
+        lockDuration: ms('20m'),
         maxStalledCount: 0,
       },
       defaultJobOptions: {
-        ...buildDefaultJobOptions(ms('10m'), [4, 4]),
+        ...buildDefaultJobOptions(ms('20m'), [4, 4]),
         // attempts: 2,
         // timeout: ms('10m'),
         // removeOnFail: 8,
@@ -154,12 +154,12 @@ const buildDefaultJobOptions = (
     BullModule.registerQueue({
       name: syncPromOrdersName,
       settings: {
-        lockDuration: ms('5m'),
+        lockDuration: ms('10m'),
         maxStalledCount: 0,
       },
       defaultJobOptions: {
         attempts: 2,
-        timeout: ms('5m'),
+        timeout: ms('10m'),
         removeOnFail: 4,
         removeOnComplete: 2,
         repeat: {
