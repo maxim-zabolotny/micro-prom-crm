@@ -54,6 +54,7 @@ export class MicrotronProductsController {
 
   @Get('/all-products-full-info-by-saved-categories')
   @HttpCode(200)
+  @TimeoutLimit(900000)
   @Auth(UserRole.General)
   async getAllFullInfoBySavedCategories(
     @Query('forceParse', new DefaultValuePipe(false), ParseBoolPipe)

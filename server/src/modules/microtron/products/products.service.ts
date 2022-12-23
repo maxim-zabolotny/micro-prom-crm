@@ -148,7 +148,7 @@ export class MicrotronProductsService {
 
       const siteMarkup = (sitePrice - rawPrice) / onePercentFromRawPrice;
 
-      isValidPrice = siteMarkup >= -20;
+      isValidPrice = siteMarkup >= -30;
     }
 
     // VERIFY
@@ -161,7 +161,7 @@ export class MicrotronProductsService {
   private productsParseCache: TProductsParseCache = new ProductsParseMap();
 
   private parseProductsConfig: TParseProductsConfig = {
-    chunk: 10,
+    chunk: 15,
     limit: Infinity,
     sleep: 1000 * 2,
     getAwaySleep: 1000 * 30,
